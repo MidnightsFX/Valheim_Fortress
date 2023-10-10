@@ -1,0 +1,13 @@
+﻿{
+  // Whitemarble pieces
+  "item_arrow_greenmetal": "Blackmetal Arrow",
+  // Rugs
+  "vfpiece_carpet_circle_green": "Circular Green Jute Carpet",
+  "vfpiece_carpet_circle_red": "Circular Red Jute Carpet",
+  "vfpiece_carpet_circle_yellow": "Circular Yellow Jute Carpet",
+  // Crystal wall segments
+  "vfpiece_crystalwall_blue": "Blue Crystal Wall",
+  "vfpiece_crystalwall_green": "Green Crystal Wall",
+  "vfpiece_crystalwall_red": "Red Crystal Wall"
+
+}
