@@ -9,8 +9,6 @@ namespace ValheimFortress.Challenge
 {
     public class Shrine : MonoBehaviour, Hoverable, Interactable
     {
-        // This field will be the actual gameobject of the shrine
-        [SerializeField] private GameObject shrineObject;
 
         private void Awake()
         {
@@ -42,7 +40,7 @@ namespace ValheimFortress.Challenge
             {
                 Jotunn.Logger.LogInfo("Attempting to spawn UI with shrine ref.");
                 // This, for the shrine object passthrough to tell the spawner script where tf we are
-                UI.DisplayUI(this.shrineObject);
+                UI.DisplayUI(this.gameObject);
             }
 
             return true;

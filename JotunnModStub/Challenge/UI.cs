@@ -47,8 +47,7 @@ namespace ValheimFortress.Challenge
             availableRewards = new List<String> { "wood" };
             // These should actually track the global keys...
             if (Jotunn.Utils.GameConstants.GlobalKey.KilledEikthyr == "defeated_eikthyr") {
-                max_level += 10;
-                availableRewards.Add("fine wood");
+                max_level += 5;
             }
             if (Jotunn.Utils.GameConstants.GlobalKey.KilledElder == "defeated_gdking") { 
                 max_level += 10;
@@ -58,14 +57,17 @@ namespace ValheimFortress.Challenge
             if (Jotunn.Utils.GameConstants.GlobalKey.KilledBonemass == "defeated_bonemass") {
                 max_level += 10;
                 availableRewards.Add("iron");
+                availableRewards.Add("coreWood");
             }
             if (Jotunn.Utils.GameConstants.GlobalKey.KilledModer == "defeated_dragon") { 
                 max_level += 10;
                 availableRewards.Add("silver");
+                availableRewards.Add("fineWood");
             }
             if (Jotunn.Utils.GameConstants.GlobalKey.KilledYagluth == "defeated_goblinking") {
                 max_level += 10;
                 availableRewards.Add("darkmetal");
+                availableRewards.Add("tar");
             }
             // If you have killed all of the tracked bosses, set the max possible level to 100.
             // if (max_level == 55) { max_level = 100; }
@@ -86,7 +88,9 @@ namespace ValheimFortress.Challenge
         {
             HideUI();
             String selected_reward = availableRewards[rewardSelector.GetComponent<Dropdown>().value];
-            Int16 selected_level = (Int16)levelSelector.GetComponent<Dropdown>().value;
+            // Trying to decide if we want to do this, which will use the wave dropdown text value as the entry, or if we should just do the index + 1, which is currently the same
+            // TODO: this should be reworked when we switch from wave levels to another system
+            Int16 selected_level = Int16.Parse(levelSelector.GetComponent<Dropdown>().options[levelSelector.GetComponent<Dropdown>().value].text);
             Jotunn.Logger.LogInfo($"Shrine challenge started. Selected reward: {selected_reward}, selected level: {selected_level}");
             Levels.generateRandomWaveWithOptions(selected_level, Shrine.transform.position);
         }
@@ -195,7 +199,7 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 1f),
                 anchorMax: new Vector2(0.5f, 1f),
-                position: new Vector2(72f, -55f),
+                position: new Vector2(72f, -200f),
                 font: GUIManager.Instance.AveriaSerifBold,
                 fontSize: 14,
                 color: GUIManager.Instance.ValheimYellow,
@@ -212,7 +216,7 @@ namespace ValheimFortress.Challenge
                 anchorMax: new Vector2(0.5f, 0.5f),
                 position: new Vector2(120f, 6f),
                 fontSize: 16,
-                width: 100f,
+                width: 150f,
                 height: 30f);
             rewardSelector.GetComponent<Dropdown>().AddOptions(availableRewards);
             // Rewards text
@@ -221,7 +225,7 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 1f),
                 anchorMax: new Vector2(0.5f, 1f),
-                position: new Vector2(60f, -200f),
+                position: new Vector2(60f, -300f),
                 font: GUIManager.Instance.AveriaSerifBold,
                 fontSize: 16,
                 color: GUIManager.Instance.ValheimBeige,
@@ -236,9 +240,9 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(124f, -64f),
+                position: new Vector2(120f, -64f),
                 fontSize: 16,
-                width: 100f,
+                width: 150f,
                 height: 30f);
             levelSelector.GetComponent<Dropdown>().AddOptions(currentLevels);
             // Level selector text
@@ -247,7 +251,7 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 1f),
                 anchorMax: new Vector2(0.5f, 1f),
-                position: new Vector2(60f, -250f),
+                position: new Vector2(60f, -350f),
                 font: GUIManager.Instance.AveriaSerifBold,
                 fontSize: 16,
                 color: GUIManager.Instance.ValheimBeige,
