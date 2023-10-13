@@ -97,6 +97,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Challenge\Levels.cs" />
+    <Compile Include="Challenge\CreatureTracker.cs" />
+    <Compile Include="Challenge\Rewards.cs" />
     <Compile Include="Challenge\Shrine.cs" />
     <Compile Include="Challenge\UI.cs" />
     <Compile Include="ValheimPiece.cs" />

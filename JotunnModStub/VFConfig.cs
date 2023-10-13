@@ -10,7 +10,6 @@ namespace ValheimFortress
     class VFConfig
     {
         public ConfigEntry<bool> EnableDebugMode;
-        public ConfigEntry<int> MaxSpawnRange;
         public ConfigEntry<int> MaxChallengeLevel;
         public ConfigFile file;
 
@@ -25,12 +24,6 @@ namespace ValheimFortress
         private void CreateConfigValues(ConfigFile Config)
         {
             Config.SaveOnConfigSet = true;
-
-            // Max Spawn Radius around the shrine
-            MaxSpawnRange = Config.Bind("Shrine of Challenge", "MaxSpawnRange", 100,
-                new ConfigDescription("Maximum spawn radius around the shrine of challenge.",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true }));
 
             // Max Spawn Radius around the shrine
             MaxChallengeLevel = Config.Bind("Shrine of Challenge", "MaxLevel", 100,
@@ -75,24 +68,6 @@ namespace ValheimFortress
         /// <param name="advanced"></param>
         /// <returns></returns>
         public ConfigEntry<string> BindServerConfig(string catagory, string key, string value, string description, bool advanced = false)
-        {
-            return file.Bind(catagory, key, value,
-                new ConfigDescription(description, null,
-                new ConfigurationManagerAttributes { IsAdminOnly = true, IsAdvanced = advanced })
-                );
-        }
-
-        /// <summary>
-        /// Helper to bind configs for Ints
-        /// </summary>
-        /// <param name="config_file"></param>
-        /// <param name="catagory"></param>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        /// <param name="description"></param>
-        /// <param name="advanced"></param>
-        /// <returns></returns>
-        public ConfigEntry<int> BindServerConfig(string catagory, string key, int value, string description, bool advanced = false)
         {
             return file.Bind(catagory, key, value,
                 new ConfigDescription(description, null,

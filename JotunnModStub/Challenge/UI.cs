@@ -17,7 +17,7 @@ namespace ValheimFortress.Challenge
         static List<String> availableRewards = new List<String> { };
         public static GameObject levelSelector;
         public static GameObject rewardSelector;
-        public static Int16 maxChallengeLevel = 5;
+        public static Int16 maxChallengeLevel = 5; // TODO: Make this configurable? make level generation dynamic?
 
         // [SerializeField] private Transform uiRoot;
 
@@ -30,9 +30,6 @@ namespace ValheimFortress.Challenge
         {
             GameObject prefab = EmbeddedResourceBundle.LoadAsset<GameObject>("Assets/Custom/UI/VFShrineUI.prefab");
             Jotunn.Logger.LogInfo("Loaded UI Prefab.");
-
-            Jotunn.Logger.LogInfo("Set inactive gameobject.");
-
             // Built the challenge UI, since this is a static class
             // all of these values and UI componets will be used when instanciating the UI for the game below
             CreateChallengeUI();
@@ -43,31 +40,58 @@ namespace ValheimFortress.Challenge
         private static void UpdateLevelsAndRewards()
         {
             Int16 max_level = 5;
-            // replace the available rewards before we rebuild it.
-            availableRewards = new List<String> { "wood" };
-            // These should actually track the global keys...
-            if (Jotunn.Utils.GameConstants.GlobalKey.KilledEikthyr == "defeated_eikthyr") {
-                max_level += 5;
+            Dictionary<String, Rewards.RewardEntry> possible_rewards = Rewards.GetResouceRewards();
+            availableRewards = new List<String> { };
+            var zs = ZoneSystem.instance;
+            foreach (KeyValuePair<string, Rewards.RewardEntry> entry in possible_rewards)
+            {
+                if(entry.Value.required_boss == "None") { 
+                    availableRewards.Add(entry.Key);
+                    continue;
+                }
+                if (!zs) 
+                { 
+                    // We can only add items that do not require a global key check if there is no zone system.
+                    continue; 
+                }
+                if(entry.Value.required_boss == "Eikythr" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledEikthyr)) {
+                    availableRewards.Add(entry.Key);
+                    continue;
+                }
+                if (entry.Value.required_boss == "TheElder" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledElder))
+                {
+                    availableRewards.Add(entry.Key);
+                    continue;
+                }
+                if (entry.Value.required_boss == "BoneMass" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledBonemass))
+                {
+                    availableRewards.Add(entry.Key);
+                    continue;
+                }
+                if (entry.Value.required_boss == "Moder" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledModer))
+                {
+                    availableRewards.Add(entry.Key);
+                    continue;
+                }
+                if (entry.Value.required_boss == "Yagluth" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledYagluth))
+                {
+                    availableRewards.Add(entry.Key);
+                    continue;
+                }
+                if (entry.Value.required_boss == "TheQueen" && zs.GetGlobalKey("defeated_queen"))
+                {
+                    availableRewards.Add(entry.Key);
+                }
             }
-            if (Jotunn.Utils.GameConstants.GlobalKey.KilledElder == "defeated_gdking") { 
-                max_level += 10;
-                availableRewards.Add("copper");
-                availableRewards.Add("tin");
-            }
-            if (Jotunn.Utils.GameConstants.GlobalKey.KilledBonemass == "defeated_bonemass") {
-                max_level += 10;
-                availableRewards.Add("iron");
-                availableRewards.Add("coreWood");
-            }
-            if (Jotunn.Utils.GameConstants.GlobalKey.KilledModer == "defeated_dragon") { 
-                max_level += 10;
-                availableRewards.Add("silver");
-                availableRewards.Add("fineWood");
-            }
-            if (Jotunn.Utils.GameConstants.GlobalKey.KilledYagluth == "defeated_goblinking") {
-                max_level += 10;
-                availableRewards.Add("darkmetal");
-                availableRewards.Add("tar");
+
+            if (zs) // If the zonesystem does not exist, we can't check global keys. So skip it. This list will be updated on the UI open anyways.
+            {
+                if (zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledEikthyr)) { max_level += 5; }
+                if (zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledElder)) { max_level += 10; }
+                if (zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledBonemass)) { max_level += 10; }
+                if (zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledModer)) { max_level += 10; }
+                if (zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledYagluth)) { max_level += 10; }
+                if (zs.GetGlobalKey("defeated_queen")) { max_level += 10; }
             }
             // If you have killed all of the tracked bosses, set the max possible level to 100.
             // if (max_level == 55) { max_level = 100; }
@@ -91,8 +115,17 @@ namespace ValheimFortress.Challenge
             // Trying to decide if we want to do this, which will use the wave dropdown text value as the entry, or if we should just do the index + 1, which is currently the same
             // TODO: this should be reworked when we switch from wave levels to another system
             Int16 selected_level = Int16.Parse(levelSelector.GetComponent<Dropdown>().options[levelSelector.GetComponent<Dropdown>().value].text);
-            Jotunn.Logger.LogInfo($"Shrine challenge started. Selected reward: {selected_reward}, selected level: {selected_level}");
-            Levels.generateRandomWaveWithOptions(selected_level, Shrine.transform.position);
+            Jotunn.Logger.LogInfo($"Shrine challenge. Selected reward: {selected_reward}, selected level: {selected_level}");
+            if (Shrine.GetComponent<Shrine>().IsChallengeActive())
+            {
+                Jotunn.Logger.LogInfo("There is a challenge active, refusing to start another.");
+            } else
+            {
+                Levels.generateRandomWaveWithOptions(selected_level, Shrine);
+                Shrine.GetComponent<Shrine>().SetLevel(selected_level);
+                Shrine.GetComponent<Shrine>().SetReward(selected_reward);
+                Jotunn.Logger.LogInfo($"Challenge started. Level: {selected_level} Reward: {selected_reward}");
+            }
         }
         
         public static void DisplayUI(GameObject shrine)

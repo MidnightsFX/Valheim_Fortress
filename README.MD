@@ -27,6 +27,11 @@ Cosmetics
 Building Variants
 * Stone Stakes
 
+## Credits
+- A big thank you to Margmas for providing some examples and answers to my silly questions
+- The valheim team for continuing to develop valheim, even after their initial roadmap!
+	- The continued blogposts about upcoming Valheim content, which got my gears grinding to make this mod
+
 
 ## Changelog
 

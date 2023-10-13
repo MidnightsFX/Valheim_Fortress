@@ -18,7 +18,7 @@ namespace ValheimFortress
     {
         public const string PluginGUID = "com.midnightsfx.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.0.1";
+        public const string PluginVersion = "1.0.0";
 
         internal static ValheimFortress Instance { get; private set; }
 
@@ -39,6 +39,11 @@ namespace ValheimFortress
 
             ValheimFortressPieces vfpieces = new ValheimFortressPieces(EmbeddedResourceBundle, cfg);
             AddLocalizations();
+
+
+            // Generate/update/set config values.
+            Levels.UpdateCreatureConfigValues(cfg);
+            Rewards.UpdateResouceRewards(cfg);
 
             GUIManager.OnCustomGUIAvailable += () => UI.Init(EmbeddedResourceBundle);
 

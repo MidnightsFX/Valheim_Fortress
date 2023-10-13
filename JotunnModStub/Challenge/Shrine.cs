@@ -9,9 +9,86 @@ namespace ValheimFortress.Challenge
 {
     public class Shrine : MonoBehaviour, Hoverable, Interactable
     {
+        public Int32 spawned_creatures = 0;
+        private static bool challenge_active = false;
+        private static string selected_reward = "";
+        private static Int16 selected_level = 0;
+        private ZNetView zNetView;
+
+        public bool IsChallengeActive()
+        {
+            return challenge_active;
+        }
+
+        public void SetReward(String reward)
+        {
+            selected_reward = reward;
+        }
+
+        public void SetLevel(Int16 level)
+        {
+            selected_level = level;
+        }
+
+        public void IncrementSpawned()
+        {
+            spawned_creatures += 1;
+        }
+
+        public void StartChallengeMode()
+        {
+            if (zNetView.IsOwner())
+            {
+                Jotunn.Logger.LogInfo("Challenge started!");
+                challenge_active = true;
+            } else
+            {
+                Jotunn.Logger.LogInfo("Not scene owner, doing nothing.");
+            }
+            
+        }
+
+        public void DecrementSpawned()
+        {
+            if (!zNetView.IsOwner())
+            {
+                Jotunn.Logger.LogInfo("Not scene owner, not decrementing.");
+                return;
+            }
+            // We don't want to try to decrease this past what is expected.
+            // The spawned creatures data could be lost at some point so lets avoid going negative.
+            if (spawned_creatures > 0)
+            {
+                spawned_creatures -= 1;
+            }
+            
+        }
+
+        public void Update()
+        {
+            if (!zNetView.IsOwner())
+            {
+                Jotunn.Logger.LogInfo("Not updating challenge status.");
+                return;
+            }
+            if (challenge_active == true)
+            {
+                if (spawned_creatures == 0)
+                {
+                    Jotunn.Logger.LogInfo("Challenge complete! Spawning reward.");
+                    Rewards.SpawnReward(selected_reward, selected_level, this.gameObject);
+                    challenge_active = false;
+                } else
+                {
+                    // Jotunn.Logger.LogInfo($"Challege in progress... {spawned_creatures} creatures remaining.");
+                }
+            }
+
+        }
 
         private void Awake()
         {
+            zNetView = GetComponent<ZNetView>();
         }
 
         public string GetHoverText()

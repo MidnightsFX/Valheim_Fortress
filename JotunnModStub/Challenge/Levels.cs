@@ -19,12 +19,6 @@ namespace ValheimFortress.Challenge
         static private String[] requiredBosses = { "Eikythr", "TheElder", "BoneMass", "Moder", "Yagluth", "TheQueen" };
         static private String[] spawnTypes = { "common", "rare", "unique" };
 
-        public Levels()
-        {
-            // On init check for config values/set defaults for creature config costs
-            // UpdateCreatureConfigValues(config);
-        }
-
         public class HoardConfig
         {
             public String creature;
@@ -66,9 +60,9 @@ namespace ValheimFortress.Challenge
 
         class CreatureValues
         {
-            public Int16 spawnCost;
+            public short spawnCost;
             public String prefabName;
-            public Int16 maxStars;
+            public short maxStars;
             public String requiredBoss;
             public String spawnType;
 
@@ -79,7 +73,7 @@ namespace ValheimFortress.Challenge
             /// <param name="prefabName"></param>
             /// <param name="maxStars"></param>
             /// <param name="requiredBoss"></param>
-            public CreatureValues(Int16 spawnCost, String prefabName, Int16 maxStars, String requiredBoss, String spawnType)
+            public CreatureValues(short spawnCost, String prefabName, short maxStars, String requiredBoss, String spawnType)
             {
                 this.spawnCost = spawnCost;
                 this.prefabName = prefabName;
@@ -153,34 +147,36 @@ namespace ValheimFortress.Challenge
 
             foreach (KeyValuePair<string, CreatureValues> entry in SpawnableCreatures)
             {
-
+                
                 short attempted_spawncost = cfg.BindServerConfig(
                     "shine of challenge - monsters",
                     $"{entry.Key}_creaturevalue",
                     entry.Value.spawnCost,
-                    $"the generation cost spawn a {entry.Key}, smaller values will allow more of the creature to spawn per challenge.",
+                    $"the generation cost spawn a {entry.Key}, smaller values (whole numbers only) will allow more of the creature to spawn per challenge.",
                     true).Value;
                 if (attempted_spawncost > 1000 || attempted_spawncost < 0)
                 {
                     Jotunn.Logger.LogWarning($"{entry.Key}_creaturevalue={attempted_spawncost}. is not valid, reseting to default ({entry.Value.spawnCost}).");
-                    attempted_spawncost = entry.Value.spawnCost;
                 }
                 else
                 {
                     SpawnableCreatures[entry.Key].spawnCost = attempted_spawncost;
                 }
+                Jotunn.Logger.LogInfo($"Config {entry.Key}_creaturevalue Added.");
                 SpawnableCreatures[entry.Key].spawnType = cfg.BindServerConfig(
                     "shine of challenge - monsters",
                     $"{entry.Key}_spawntype",
                     entry.Value.spawnType,
                     $"the generation type for {entry.Key}, valid values are: common,rare,unique. this governs how frequently the creature can be added to a waves generation.",
                     true).Value;
+                Jotunn.Logger.LogInfo($"Config {entry.Key}_spawntype Added.");
                 SpawnableCreatures[entry.Key].maxStars = cfg.BindServerConfig(
                     "shine of challenge - monsters",
-                    $"{entry.Key}_spawntype",
+                    $"{entry.Key}_maxstars",
                     entry.Value.maxStars,
                     $"the max number of stars for {entry.Key}. in vanilla above 2 is meaningless & bosses do not have multistar varients.",
                     true).Value;
+                Jotunn.Logger.LogInfo($"Config {entry.Key}_maxstars Added.");
             }
         }
 
@@ -204,23 +200,16 @@ namespace ValheimFortress.Challenge
             return allocated_challenge_points;
         }
 
-        public Dictionary<String, Boolean> DetermineAllowedSpawns(Int16 level)
+        public static void generateRandomWaveWithOptions(Int16 level, GameObject shrine)
         {
-            Dictionary<String, Boolean> allowedSpawns = new Dictionary<string, bool> { };
-
-
-            return allowedSpawns;
-        }
-
-        public static void generateRandomWaveWithOptions(Int16 level, Vector3 spawn_position)
-        {
+            
             Int16 wave_total_points = ComputeChallengePoints(level);
             Jotunn.Logger.LogInfo($"Wave Challenge points: {wave_total_points}");
             // Builds out a template for wave generation
             WaveTemplate wavedefinition = getLevelTemplate(level, wave_total_points);
 
-            bool status = TrySpawningHoard(wavedefinition.GetWaves(), spawn_position);
-            Jotunn.Logger.LogWarning($"Status: spawn wave success? {status} at {spawn_position}");
+            bool status = TrySpawningHoard(wavedefinition.GetWaves(), shrine);
+            Jotunn.Logger.LogWarning($"Status: spawn wave success? {status} at {shrine.transform.position}");
         }
 
         public static WaveTemplate getLevelTemplate(Int16 level, Int16 max_wave_points)
@@ -306,42 +295,46 @@ namespace ValheimFortress.Challenge
             return leveldefinition;
         }
 
-        public static bool TrySpawningHoard(List<Levels.HoardConfig> hoards, Vector3 position)
+        public static bool TrySpawningHoard(List<Levels.HoardConfig> hoards, GameObject shrine)
         {
             Jotunn.Logger.LogInfo($"Trying to spawn {hoards.Count} hoards.");
             // Should check if you are the runtime owner of this chunk
             foreach (Levels.HoardConfig hoard in hoards)
             {
                 Jotunn.Logger.LogInfo($"Starting spawn for {hoard.amount} {hoard.creature}");
-                Spawn(hoard, position);
+                Spawn(hoard, shrine);
             }
 
             return true;
         }
 
 
-        private static bool Spawn(Levels.HoardConfig hoard, Vector3 position)
+        private static bool Spawn(Levels.HoardConfig hoard, GameObject shrine)
         {
+            Vector3 spawn_position = shrine.transform.position;
             float height;
-            if (ZoneSystem.instance.FindFloor(position, out height))
+            spawn_position.x += 1;
+            spawn_position.z += 1;
+            if (ZoneSystem.instance.FindFloor(spawn_position, out height))
             {
-                position.y = height;
+                spawn_position.y = height;
             }
             GameObject gameObject = PrefabManager.Instance.GetPrefab(hoard.creature);
             int num = hoard.amount;
 
-            // This should ultimately be a check to ensure that there are not currently creatures at the shrine
-            if (SpawnSystem.GetNrOfInstances(gameObject, position, 100) >= num)
-            {
-                Jotunn.Logger.LogInfo("Too many creatures nearby");
-                return false;
-            }
             // Spawn our requested number of creatures, modify them as required.
             for (int i = 0; i < hoard.amount; i++)
             {
                 Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
-                GameObject creature = UnityEngine.Object.Instantiate(gameObject, position, rotation);
-                creature.GetComponent<ZNetView>();
+                GameObject creature = UnityEngine.Object.Instantiate(gameObject, spawn_position, rotation);
+                creature.GetComponent<ZNetView>(); // but why
+                // TODO: set the faction for all spawned creatures to be BOSS or the same faction so they don't fight each other
+                shrine.GetComponent<Shrine>().IncrementSpawned();
+
+                // Add the rewards tracker, and set the reference shrine
+                creature.AddComponent<CreatureTracker>();
+                creature.GetComponent<CreatureTracker>().SetShrine(shrine);
+                // Add the tracker script & set the shrine gameobject
                 BaseAI ai = creature.GetComponent<BaseAI>();
                 if (ai != null)
                 {
@@ -356,7 +349,8 @@ namespace ValheimFortress.Challenge
                     }
                 }
             }
-            // We need to add a tracker to the creatures spawned by this so we can track how many are remaining and if the challenge is complete
+
+            shrine.GetComponent<Shrine>().StartChallengeMode();
             Jotunn.Logger.LogDebug("Spawned: " + hoard.creature);
             return true;
         }
