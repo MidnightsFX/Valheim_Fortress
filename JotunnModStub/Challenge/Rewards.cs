@@ -97,10 +97,9 @@ namespace ValheimFortress.Challenge
             Jotunn.Logger.LogInfo($"Points available {total_reward_points}, reward selected: {reward_resource} cost: {resourceRewards[reward_resource].resouce_cost}");
             float number_of_rewards = total_reward_points / resourceRewards[reward_resource].resouce_cost;
 
-            Vector3 spawn_position = shrine.transform.position;
+            GameObject shrine_spawnpoint = shrine.transform.Find("spawnpoint").gameObject;
+            Vector3 spawn_position = shrine_spawnpoint.transform.position;
             float height;
-            spawn_position.x += 1;
-            spawn_position.z += 1;
             if (ZoneSystem.instance.FindFloor(spawn_position, out height))
             {
                 spawn_position.y = height;

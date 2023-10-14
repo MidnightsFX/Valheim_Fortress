@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Jotunn.Managers;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -35,6 +37,19 @@ namespace ValheimFortress.Challenge
             spawned_creatures += 1;
         }
 
+        public void EnablePortal()
+        {
+            // gets the child object which holds all of the portal fx etc, and enables it
+            GameObject shrine_portal = transform.Find("portal").gameObject;
+            shrine_portal.SetActive(true);
+        }
+
+        public void Disableportal()
+        {
+            GameObject shrine_portal = transform.Find("portal").gameObject;
+            shrine_portal.SetActive(false);
+        }
+
         public void StartChallengeMode()
         {
             if (zNetView.IsOwner())
@@ -68,7 +83,7 @@ namespace ValheimFortress.Challenge
         {
             if (!zNetView.IsOwner())
             {
-                Jotunn.Logger.LogInfo("Not updating challenge status.");
+                //Jotunn.Logger.LogInfo("Not updating challenge status.");
                 return;
             }
             if (challenge_active == true)
@@ -76,13 +91,19 @@ namespace ValheimFortress.Challenge
                 if (spawned_creatures == 0)
                 {
                     Jotunn.Logger.LogInfo("Challenge complete! Spawning reward.");
-                    Rewards.SpawnReward(selected_reward, selected_level, this.gameObject);
+                    Rewards.SpawnReward(selected_reward, selected_level, gameObject);
                     challenge_active = false;
+                    Destroy(this.GetComponent<Spawner>()); // remove the spawner since its completed its work and will be recreated for the next challenge.
                 } else
                 {
                     // Jotunn.Logger.LogInfo($"Challege in progress... {spawned_creatures} creatures remaining.");
                 }
             }
+            //if (UI.IsPanelVisible(gameObject) && (Input.GetKeyDown(KeyCode.Escape) || ZInput.GetButtonDown("Use") || ZInput.GetButtonDown("Inventory")))
+            //{
+            //    Jotunn.Logger.LogInfo("Shrine UI detected close commands.");
+            //    UI.HideUI();
+            //}
 
         }
 
@@ -115,7 +136,7 @@ namespace ValheimFortress.Challenge
 
             if (!UI.IsPanelVisible())
             {
-                Jotunn.Logger.LogInfo("Attempting to spawn UI with shrine ref.");
+                // Jotunn.Logger.LogInfo("Attempting to spawn UI with shrine ref.");
                 // This, for the shrine object passthrough to tell the spawner script where tf we are
                 UI.DisplayUI(this.gameObject);
             }

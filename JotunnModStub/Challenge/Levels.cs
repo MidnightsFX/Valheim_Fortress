@@ -1,6 +1,7 @@
 ﻿using BepInEx.Configuration;
 using Jotunn.Managers;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +13,6 @@ namespace ValheimFortress.Challenge
     class Levels
     {
         static private Double challenge_slope = 0.1;
-        static private Double spawn_delay = 0.5;
         static private Int16 base_challenge_points = 100;
         static private Int16 base_challenge_points_increase = 20;
         static private Int16 max_challenge_points = 3000;
@@ -180,6 +180,8 @@ namespace ValheimFortress.Challenge
             }
         }
 
+
+
         // Logarithmic with a cap
         // y = a + b ln x
         // allocated_challenge_points = base_challenge_points + base_challenge_points_increase * computed_slope
@@ -207,9 +209,11 @@ namespace ValheimFortress.Challenge
             Jotunn.Logger.LogInfo($"Wave Challenge points: {wave_total_points}");
             // Builds out a template for wave generation
             WaveTemplate wavedefinition = getLevelTemplate(level, wave_total_points);
-
-            bool status = TrySpawningHoard(wavedefinition.GetWaves(), shrine);
-            Jotunn.Logger.LogWarning($"Status: spawn wave success? {status} at {shrine.transform.position}");
+            
+            // Add the component, and call it
+            shrine.AddComponent<Spawner>();
+            Spawner spawn_controller = shrine.GetComponent<Spawner>();
+            spawn_controller.TrySpawningHoard(wavedefinition.GetWaves(), shrine);
         }
 
         public static WaveTemplate getLevelTemplate(Int16 level, Int16 max_wave_points)
@@ -295,64 +299,6 @@ namespace ValheimFortress.Challenge
             return leveldefinition;
         }
 
-        public static bool TrySpawningHoard(List<Levels.HoardConfig> hoards, GameObject shrine)
-        {
-            Jotunn.Logger.LogInfo($"Trying to spawn {hoards.Count} hoards.");
-            // Should check if you are the runtime owner of this chunk
-            foreach (Levels.HoardConfig hoard in hoards)
-            {
-                Jotunn.Logger.LogInfo($"Starting spawn for {hoard.amount} {hoard.creature}");
-                Spawn(hoard, shrine);
-            }
-
-            return true;
-        }
-
-
-        private static bool Spawn(Levels.HoardConfig hoard, GameObject shrine)
-        {
-            Vector3 spawn_position = shrine.transform.position;
-            float height;
-            spawn_position.x += 1;
-            spawn_position.z += 1;
-            if (ZoneSystem.instance.FindFloor(spawn_position, out height))
-            {
-                spawn_position.y = height;
-            }
-            GameObject gameObject = PrefabManager.Instance.GetPrefab(hoard.creature);
-            int num = hoard.amount;
-
-            // Spawn our requested number of creatures, modify them as required.
-            for (int i = 0; i < hoard.amount; i++)
-            {
-                Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
-                GameObject creature = UnityEngine.Object.Instantiate(gameObject, spawn_position, rotation);
-                creature.GetComponent<ZNetView>(); // but why
-                // TODO: set the faction for all spawned creatures to be BOSS or the same faction so they don't fight each other
-                shrine.GetComponent<Shrine>().IncrementSpawned();
-
-                // Add the rewards tracker, and set the reference shrine
-                creature.AddComponent<CreatureTracker>();
-                creature.GetComponent<CreatureTracker>().SetShrine(shrine);
-                // Add the tracker script & set the shrine gameobject
-                BaseAI ai = creature.GetComponent<BaseAI>();
-                if (ai != null)
-                {
-                    ai.SetHuntPlayer(true);
-                }
-                if (hoard.stars > 0)
-                {
-                    Character character = creature.GetComponent<Character>();
-                    if ((bool)character)
-                    {
-                        character.SetLevel(hoard.stars);
-                    }
-                }
-            }
-
-            shrine.GetComponent<Shrine>().StartChallengeMode();
-            Jotunn.Logger.LogDebug("Spawned: " + hoard.creature);
-            return true;
-        }
+       
     }
 }

@@ -100,6 +100,7 @@
     <Compile Include="Challenge\CreatureTracker.cs" />
     <Compile Include="Challenge\Rewards.cs" />
     <Compile Include="Challenge\Shrine.cs" />
+    <Compile Include="Challenge\Spawner.cs" />
     <Compile Include="Challenge\UI.cs" />
     <Compile Include="ValheimPiece.cs" />
     <Compile Include="Properties\IgnoreAccessModifiers.cs" />

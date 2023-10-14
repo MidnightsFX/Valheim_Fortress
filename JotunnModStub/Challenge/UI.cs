@@ -1,5 +1,6 @@
 ﻿using Jotunn.Managers;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,17 +14,24 @@ namespace ValheimFortress.Challenge
         // this is unset until the shrine building calls for the UI, in which case it is then set
         static GameObject Shrine;
 
+        // The warning for a wave to start
+        static GameObject WarningTextObj;
+
         static List<String> currentLevels = new List<String> {};
         static List<String> availableRewards = new List<String> { };
         public static GameObject levelSelector;
         public static GameObject rewardSelector;
         public static Int16 maxChallengeLevel = 5; // TODO: Make this configurable? make level generation dynamic?
 
-        // [SerializeField] private Transform uiRoot;
 
         public static bool IsPanelVisible()
         {
             return ChallengePanel.activeSelf;
+        }
+
+        public static bool IsPanelVisible(GameObject obj)
+        {
+            return obj.activeSelf;
         }
 
         public static void Init(AssetBundle EmbeddedResourceBundle)
@@ -102,7 +110,7 @@ namespace ValheimFortress.Challenge
             // Empty out the current levels if it exists so we don't get duplicates
             currentLevels = new List<String> { };
             // Toss in all of the available levels
-            for (int i = 1; i < max_level; i++)
+            for (int i = 1; i <= max_level; i++)
             {
                 currentLevels.Add($"{i}");
             }
@@ -114,20 +122,91 @@ namespace ValheimFortress.Challenge
             String selected_reward = availableRewards[rewardSelector.GetComponent<Dropdown>().value];
             // Trying to decide if we want to do this, which will use the wave dropdown text value as the entry, or if we should just do the index + 1, which is currently the same
             // TODO: this should be reworked when we switch from wave levels to another system
-            Int16 selected_level = Int16.Parse(levelSelector.GetComponent<Dropdown>().options[levelSelector.GetComponent<Dropdown>().value].text);
+            // Int16 selected_level = Int16.Parse(levelSelector.GetComponent<Dropdown>().options[levelSelector.GetComponent<Dropdown>().value].text);
+            // This takes the dropdowns index, which means we always need the full number of levels populated, but that we can rename the levels however
+            Int16 selected_level = (Int16)levelSelector.GetComponent<Dropdown>().value;
             Jotunn.Logger.LogInfo($"Shrine challenge. Selected reward: {selected_reward}, selected level: {selected_level}");
             if (Shrine.GetComponent<Shrine>().IsChallengeActive())
             {
                 Jotunn.Logger.LogInfo("There is a challenge active, refusing to start another.");
             } else
             {
-                Levels.generateRandomWaveWithOptions(selected_level, Shrine);
+                // Start the coroutine that sends the warning text
+                PreparePhase(selected_level, Shrine);
+                //Destroy(WarningTextObj);
+                //WarningTextObj.SetActive(false);
+                Jotunn.Logger.LogInfo("Destroyed wave warning");
+                
                 Shrine.GetComponent<Shrine>().SetLevel(selected_level);
                 Shrine.GetComponent<Shrine>().SetReward(selected_reward);
+                Levels.generateRandomWaveWithOptions(selected_level, Shrine);
                 Jotunn.Logger.LogInfo($"Challenge started. Level: {selected_level} Reward: {selected_reward}");
             }
         }
-        
+
+        private static void PreparePhase(Int16 selected_level, GameObject shrine)
+        {
+            if (GUIManager.Instance == null)
+            {
+                Jotunn.Logger.LogError("GUIManager instance is null");
+                return;
+            }
+
+            if (!GUIManager.CustomGUIFront)
+            {
+                Jotunn.Logger.LogError("GUIManager CustomGUI is null");
+                return;
+            }
+            String challenge_warning = "";
+            switch (selected_level)
+            {
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                    challenge_warning = "The Meadow is no longer calm.";
+                    break;
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 10:
+                    challenge_warning = "The Forest grows restless.";
+                    break;
+                case 11:
+                case 12:
+                case 13:
+                case 14:
+                case 15:
+                    challenge_warning = "The Swamp keeps its dead.";
+                    break;
+            }
+
+            // Create the warning
+            //WarningTextObj = GUIManager.Instance.CreateText(
+            //    text: challenge_warning,
+            //    parent: GUIManager.CustomGUIFront.transform,
+            //    anchorMin: new Vector2(0.5f, 1f),
+            //    anchorMax: new Vector2(0.5f, 1f),
+            //    position: new Vector2(10f, -40f),
+            //    font: GUIManager.Instance.AveriaSerifBold,
+            //    fontSize: 48,
+            //    color: GUIManager.Instance.ValheimYellow,
+            //    outline: true,
+            //    outlineColor: Color.black,
+            //    width: 400f,
+            //    height: 40f,
+            //    addContentSizeFitter: false);
+            //Jotunn.Logger.LogInfo("Wave warning text generated.");
+            // Sleep for a second before spawning the portal
+            // for forcing the check
+            //WarningTextObj.SetActive(true);
+            shrine.GetComponent<Shrine>().EnablePortal();
+            Jotunn.Logger.LogInfo("Activated Shrine portal.");
+        }
+
+
         public static void DisplayUI(GameObject shrine)
         {
             Shrine = shrine;
@@ -201,9 +280,9 @@ namespace ValheimFortress.Challenge
             GUIManager.Instance.CreateText(
                 text: "Face Odins Enemies",
                 parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 1f),
-                anchorMax: new Vector2(0.5f, 1f),
-                position: new Vector2(10f, -40f),
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(50f, 175f),
                 font: GUIManager.Instance.AveriaSerifBold,
                 fontSize: 30,
                 color: GUIManager.Instance.ValheimOrange,
@@ -216,9 +295,9 @@ namespace ValheimFortress.Challenge
             GUIManager.Instance.CreateText(
                 text: "Face an overwhelming challenge in return for a desired reward.\nMore rewards can be unlocked by defeating the world bosses.\nHigher levels give larger rewards.",
                 parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 1f),
-                anchorMax: new Vector2(0.5f, 1f),
-                position: new Vector2(1.5f, -121f),
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(5f, 100f),
                 font: GUIManager.Instance.AveriaSerifBold,
                 fontSize: 14,
                 color: GUIManager.Instance.ValheimBeige,
@@ -230,9 +309,9 @@ namespace ValheimFortress.Challenge
             GUIManager.Instance.CreateText(
                 text: "You will face overwhelming odds.",
                 parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 1f),
-                anchorMax: new Vector2(0.5f, 1f),
-                position: new Vector2(72f, -200f),
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(85f, 40f),
                 font: GUIManager.Instance.AveriaSerifBold,
                 fontSize: 14,
                 color: GUIManager.Instance.ValheimYellow,
@@ -256,17 +335,17 @@ namespace ValheimFortress.Challenge
             GUIManager.Instance.CreateText(
                 text: "Desired Reward",
                 parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 1f),
-                anchorMax: new Vector2(0.5f, 1f),
-                position: new Vector2(60f, -300f),
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(-35f, 10f),
                 font: GUIManager.Instance.AveriaSerifBold,
                 fontSize: 16,
                 color: GUIManager.Instance.ValheimBeige,
                 outline: true,
                 outlineColor: Color.black,
-                width: 350f,
+                width: 200f,
                 height: 40f,
-                addContentSizeFitter: false);
+                addContentSizeFitter: true);
 
             // create the wave selector dropdown
             levelSelector = GUIManager.Instance.CreateDropDown(
@@ -282,17 +361,17 @@ namespace ValheimFortress.Challenge
             GUIManager.Instance.CreateText(
                 text: "Wave Strength",
                 parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 1f),
-                anchorMax: new Vector2(0.5f, 1f),
-                position: new Vector2(60f, -350f),
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(-35f, -65f),
                 font: GUIManager.Instance.AveriaSerifBold,
                 fontSize: 16,
                 color: GUIManager.Instance.ValheimBeige,
                 outline: true,
                 outlineColor: Color.black,
-                width: 350f,
+                width: 200f,
                 height: 40f,
-                addContentSizeFitter: false);
+                addContentSizeFitter: true);
 
 
             // Create the start button object

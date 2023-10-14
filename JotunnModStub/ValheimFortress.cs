@@ -75,7 +75,7 @@ namespace ValheimFortress
                 var localization_name = embeddedResouce.Split('.');
                 Logger.LogInfo($"Adding localization: {localization_name[2]}");
                 // Logging some characters seem to cause issues sometimes
-                // if (cfg.EnableDebugMode.Value == true) { Logger.LogInfo($"Localization Text: {cleaned_localization}"); }
+                // if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"Localization Text: {cleaned_localization}"); }
                 //Localization.AddTranslation(localization_name[2], localization);
                 Localization.AddJsonFile(localization_name[2], cleaned_localization);
             }

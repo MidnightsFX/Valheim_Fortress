@@ -17,7 +17,7 @@ namespace ValheimFortress
     {
         public ValheimFortressPieces(AssetBundle EmbeddedResourceBundle, VFConfig config)
         {
-            if (config.EnableDebugMode.Value == true)
+            if (VFConfig.EnableDebugMode.Value == true)
             {
                 Logger.LogInfo("Loading Items.");
             }
@@ -219,14 +219,14 @@ namespace ValheimFortress
                 metadata["short_item_name"] = string.Join("", metadata["name"].Split(default(string[]), StringSplitOptions.RemoveEmptyEntries));
 
                 // create config
-                if (cfg.EnableDebugMode.Value == true) { Logger.LogInfo($"Creating Configuration Values for {metadata["name"]}"); }
+                if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"Creating Configuration Values for {metadata["name"]}"); }
                 CreateAndLoadConfigValues(cfg, metadata, piecetoggle, recipedata);
 
                 // If the item is not enabled we do not load it
                 if (piecetoggle["enabled"] != false)
                 {
                     // load assets
-                    if (cfg.EnableDebugMode.Value == true) { Logger.LogInfo($"Loading bundled assets for {metadata["name"]}"); }
+                    if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"Loading bundled assets for {metadata["name"]}"); }
                     GameObject prefab = EmbeddedResourceBundle.LoadAsset<GameObject>($"Assets/Custom/Pieces/{metadata["catagory"]}/{metadata["prefab"]}.prefab");
                     Sprite sprite = EmbeddedResourceBundle.LoadAsset<Sprite>($"Assets/Custom/Icons/piece_icons/{metadata["sprite"]}.png");
 
@@ -237,7 +237,7 @@ namespace ValheimFortress
                     }
 
                     // Add the recipe with helper
-                    if (cfg.EnableDebugMode.Value == true) { Logger.LogInfo($"Loading {metadata["name"]} updated Recipe."); }
+                    if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"Loading {metadata["name"]} updated Recipe."); }
                     RequirementConfig[] recipe = new RequirementConfig[recipedata.Count];
                     int recipe_index = 0;
                     foreach (KeyValuePair<string, int> entry in recipedata)
@@ -245,7 +245,7 @@ namespace ValheimFortress
                         recipe[recipe_index] = new RequirementConfig { Item = entry.Key, Amount = entry.Value };
                         recipe_index++;
                     }
-                    if (cfg.EnableDebugMode.Value == true) { Logger.LogInfo($"Building Piececonfig for {metadata["name"]}."); }
+                    if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"Building Piececonfig for {metadata["name"]}."); }
                     PieceConfig piececfg = new PieceConfig()
                     {
                         CraftingStation = $"{metadata["requiredBench"]}",
@@ -255,11 +255,11 @@ namespace ValheimFortress
                         Requirements = recipe
                     };
                     PieceManager.Instance.AddPiece(new CustomPiece(prefab, fixReference: true, piececfg));
-                    if (cfg.EnableDebugMode.Value == true) { Logger.LogInfo($"Piece {metadata["name"]} Added!"); }
+                    if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"Piece {metadata["name"]} Added!"); }
                 }
                 else
                 {
-                    if (cfg.EnableDebugMode.Value == true) { Logger.LogInfo($"{metadata["name"]} is not enabled, and was not loaded."); }
+                    if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"{metadata["name"]} is not enabled, and was not loaded."); }
                 }
             }
 
@@ -289,12 +289,12 @@ namespace ValheimFortress
                 }
                 String RawRecipe;
                 RawRecipe = config.BindServerConfig($"{metadata["catagory"]} - {metadata["name"]}", $"{metadata["short_item_name"]}-recipe", recipe_cfg, $"Recipe to craft, Find item ids: https://valheim.fandom.com/wiki/Item_IDs, at most 4 costs. Format: resouce_id,craft_cost eg: Wood,8|Iron,12", true).Value;
-                if (config.EnableDebugMode.Value == true) { Logger.LogInfo($"recieved rawrecipe data: '{RawRecipe}'"); }
+                if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"recieved rawrecipe data: '{RawRecipe}'"); }
                 String[] RawRecipeEntries = RawRecipe.Split('|');
                 Dictionary<String, int> updated_recipe = new Dictionary<String, int>();
                 // we only clear out the default recipe if there is recipe data provided, otherwise we will continue to use the default recipe
                 // TODO: Add a sanity check to ensure that recipe formatting is correct
-                if (config.EnableDebugMode.Value == true)
+                if (VFConfig.EnableDebugMode.Value == true)
                 {
                     Logger.LogInfo($"recipe entries: {RawRecipeEntries.Length} : {RawRecipeEntries}");
                 }
@@ -303,7 +303,7 @@ namespace ValheimFortress
                     foreach (String recipe_entry in RawRecipeEntries)
                     {
                         String[] recipe_segments = recipe_entry.Split(',');
-                        if (config.EnableDebugMode.Value == true)
+                        if (VFConfig.EnableDebugMode.Value == true)
                         {
                             String split_segments = "";
                             foreach (String segment in recipe_segments)
@@ -319,7 +319,7 @@ namespace ValheimFortress
                     recipedata.Clear();
                     foreach (KeyValuePair<string, int> entry in updated_recipe)
                     {
-                        if (config.EnableDebugMode.Value == true) { Logger.LogInfo($"Updated recipe: resouce: {entry.Key} build: {entry.Value}"); }
+                        if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"Updated recipe: resouce: {entry.Key} build: {entry.Value}"); }
                         recipedata.Add(entry.Key, entry.Value);
                     }
                 }

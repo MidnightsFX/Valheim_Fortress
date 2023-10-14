@@ -9,8 +9,9 @@ namespace ValheimFortress
 {
     class VFConfig
     {
-        public ConfigEntry<bool> EnableDebugMode;
-        public ConfigEntry<int> MaxChallengeLevel;
+        public static ConfigEntry<bool> EnableDebugMode;
+        public static ConfigEntry<bool> EnableHordeDrops;
+        public static ConfigEntry<int> MaxChallengeLevel;
         public ConfigFile file;
 
         public VFConfig(ConfigFile Config)
@@ -28,6 +29,11 @@ namespace ValheimFortress
             // Max Spawn Radius around the shrine
             MaxChallengeLevel = Config.Bind("Shrine of Challenge", "MaxLevel", 100,
                 new ConfigDescription("The Maximum level the shrine can be set to, you must still beat bosses to increase your allowed level.",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true }));
+
+            EnableHordeDrops = Config.Bind("Shrine of Challenge", "EnableHordeDrops", false,
+                new ConfigDescription("Whether or not creatures spawned from the shrine should drop their usual loot (this can be overwhelming overpowered).",
                 null,
                 new ConfigurationManagerAttributes { IsAdvanced = true }));
 
