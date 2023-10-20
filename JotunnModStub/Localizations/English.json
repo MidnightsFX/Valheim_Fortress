@@ -1,13 +1,26 @@
 ﻿{
   // Whitemarble pieces
-  "item_arrow_greenmetal": "Blackmetal Arrow",
+  "piece_vf_whitemarble_block": "Whitemarble tile",
   // Rugs
-  "vfpiece_carpet_circle_green": "Circular Green Jute Carpet",
-  "vfpiece_carpet_circle_red": "Circular Red Jute Carpet",
-  "vfpiece_carpet_circle_yellow": "Circular Yellow Jute Carpet",
+  "piece_vf_carpet_circle_green": "Circular Green Jute Carpet",
+  "piece_vf_carpet_circle_red": "Circular Red Jute Carpet",
+  "piece_vf_carpet_circle_yellow": "Circular Yellow Jute Carpet",
   // Crystal wall segments
-  "vfpiece_crystalwall_blue": "Blue Crystal Wall",
-  "vfpiece_crystalwall_green": "Green Crystal Wall",
-  "vfpiece_crystalwall_red": "Red Crystal Wall"
-
+  "piece_vf_crystalwall_blue": "Blue Crystal Wall",
+  "piece_vf_crystalwall_green": "Green Crystal Wall",
+  "piece_vf_crystalwall_red": "Red Crystal Wall",
+  "piece_vf_crystalwall_yellow": "Yellow Crystal Wall",
+  // Localizations for the shrine of challenge UI
+  "shrine_warning_meadows": "The Meadow is no longer calm.",
+  "shrine_warning_meadows_boss": "Eikthyr is angry.",
+  "shrine_warning_forest": "The Forest grows restless.",
+  "shrine_warning_forest_boss": "The Forest walks with The Elder.",
+  "shrine_warning_swamp": "The Swamp keeps its dead.",
+  "shrine_warning_swamp_boss": "Bonemass rises from the swamp.",
+  "shrine_warning_mountain": "The Mountain echos in howls.",
+  "shrine_warning_mountain_boss": "Moder descends from the mountain.",
+  "shrine_warning_plains": "The Plains sends its warbands.",
+  "shrine_warning_plains_boss": "Yagluth rises for revenge.",
+  "shrine_warning_mistlands": "The Mists part to a skittering horde.",
+  "shrine_warning_mistlands_boss": "The Queen stalks her prey."
 }

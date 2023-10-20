@@ -12,6 +12,7 @@ namespace ValheimFortress.Challenge
     class Spawner : MonoBehaviour
     {
         static private float wave_spawn_delay = 5f;
+        static private List<String> bosses = new List<String>(new string[] { "Eikythr", "TheElder", "BoneMass", "Moder", "Yagluth", "TheQueen" });
 
         public void TrySpawningHoard(List<Levels.HoardConfig> hoards, GameObject shrine)
         {
@@ -26,7 +27,7 @@ namespace ValheimFortress.Challenge
 
         IEnumerator Spawn(Levels.HoardConfig hoard, GameObject shrine)
         {
-            yield return new WaitForSeconds(3f);
+            yield return new WaitForSeconds(5f);
             GameObject shrine_spawnpoint = shrine.transform.Find("spawnpoint").gameObject;
             Vector3 spawn_position = shrine_spawnpoint.transform.position;
             float height;
@@ -36,13 +37,19 @@ namespace ValheimFortress.Challenge
             }
             GameObject gameObject = PrefabManager.Instance.GetPrefab(hoard.creature);
             int hoard_frac = hoard.amount / 3;
-            Jotunn.Logger.LogInfo($"Hoard {hoard.creature} pausepoints {hoard_frac} {hoard_frac * 2}");
+            bool should_pause_during_horde = true;
+            if (hoard_frac == 0) 
+            { 
+                should_pause_during_horde = false;
+            } else {
+                Jotunn.Logger.LogInfo($"Hoard {hoard.creature} pausepoints {hoard_frac} {hoard_frac * 2}");
+            }
 
             // Spawn our requested number of creatures, modify them as required.
             for (int i = 0; i < hoard.amount; i++)
             {
 
-                if (i == hoard_frac || i == (hoard_frac * 2))
+                if (should_pause_during_horde && i == hoard_frac || i == (hoard_frac * 2))
                 {
                     yield return new WaitForSeconds(wave_spawn_delay);
                 }
@@ -55,6 +62,10 @@ namespace ValheimFortress.Challenge
                 // creature.GetComponent<Humanoid>().m_faction = "Undead";
                 // Set the Itemdrop script to be disabled for these creatures, otherwise these hoards are likely to be more rewarding than the reward
                 if (!VFConfig.EnableHordeDrops.Value)
+                {
+                    Destroy(creature.GetComponent<CharacterDrop>());
+                }
+                if (!VFConfig.EnableBossDrops.Value && bosses.Contains(hoard.creature))
                 {
                     Destroy(creature.GetComponent<CharacterDrop>());
                 }

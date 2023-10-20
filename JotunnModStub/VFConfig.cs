@@ -11,6 +11,7 @@ namespace ValheimFortress
     {
         public static ConfigEntry<bool> EnableDebugMode;
         public static ConfigEntry<bool> EnableHordeDrops;
+        public static ConfigEntry<bool> EnableBossDrops;
         public static ConfigEntry<int> MaxChallengeLevel;
         public ConfigFile file;
 
@@ -34,6 +35,11 @@ namespace ValheimFortress
 
             EnableHordeDrops = Config.Bind("Shrine of Challenge", "EnableHordeDrops", false,
                 new ConfigDescription("Whether or not creatures spawned from the shrine should drop their usual loot (this can be overwhelming overpowered).",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true }));
+
+            EnableBossDrops = Config.Bind("Shrine of Challenge", "EnableBossDrops", false,
+                new ConfigDescription("Whether or not bosses spawned from the shrine should drop their usual loot.",
                 null,
                 new ConfigurationManagerAttributes { IsAdvanced = true }));
 

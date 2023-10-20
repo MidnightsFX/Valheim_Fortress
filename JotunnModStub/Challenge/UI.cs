@@ -14,9 +14,6 @@ namespace ValheimFortress.Challenge
         // this is unset until the shrine building calls for the UI, in which case it is then set
         static GameObject Shrine;
 
-        // The warning for a wave to start
-        static GameObject WarningTextObj;
-
         static List<String> currentLevels = new List<String> {};
         static List<String> availableRewards = new List<String> { };
         public static GameObject levelSelector;
@@ -95,14 +92,14 @@ namespace ValheimFortress.Challenge
             if (zs) // If the zonesystem does not exist, we can't check global keys. So skip it. This list will be updated on the UI open anyways.
             {
                 if (zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledEikthyr)) { max_level += 5; }
-                if (zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledElder)) { max_level += 10; }
-                if (zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledBonemass)) { max_level += 10; }
-                if (zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledModer)) { max_level += 10; }
-                if (zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledYagluth)) { max_level += 10; }
-                if (zs.GetGlobalKey("defeated_queen")) { max_level += 10; }
+                if (zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledElder)) { max_level += 5; }
+                if (zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledBonemass)) { max_level += 5; }
+                if (zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledModer)) { max_level += 5; }
+                if (zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledYagluth)) { max_level += 5; }
+                if (zs.GetGlobalKey("defeated_queen")) { max_level += 5; }
             }
-            // If you have killed all of the tracked bosses, set the max possible level to 100.
-            // if (max_level == 55) { max_level = 100; }
+            // If you have killed all of the tracked bosses, set the max possible level to 50.
+            // if (max_level == 35) { max_level = 50; }
 
             // If the max challenge level is bigger than the level we determined we lower it to that
             if (max_level > maxChallengeLevel) { max_level = maxChallengeLevel; }
@@ -123,8 +120,8 @@ namespace ValheimFortress.Challenge
             // Trying to decide if we want to do this, which will use the wave dropdown text value as the entry, or if we should just do the index + 1, which is currently the same
             // TODO: this should be reworked when we switch from wave levels to another system
             // Int16 selected_level = Int16.Parse(levelSelector.GetComponent<Dropdown>().options[levelSelector.GetComponent<Dropdown>().value].text);
-            // This takes the dropdowns index, which means we always need the full number of levels populated, but that we can rename the levels however
-            Int16 selected_level = (Int16)levelSelector.GetComponent<Dropdown>().value;
+            // This takes the dropdowns index (+1 since its zero indexd), which means we always need the full number of levels populated, but that we can rename the levels however
+            Int16 selected_level = (Int16)(levelSelector.GetComponent<Dropdown>().value + 1);
             Jotunn.Logger.LogInfo($"Shrine challenge. Selected reward: {selected_reward}, selected level: {selected_level}");
             if (Shrine.GetComponent<Shrine>().IsChallengeActive())
             {
@@ -133,10 +130,7 @@ namespace ValheimFortress.Challenge
             {
                 // Start the coroutine that sends the warning text
                 PreparePhase(selected_level, Shrine);
-                //Destroy(WarningTextObj);
-                //WarningTextObj.SetActive(false);
-                Jotunn.Logger.LogInfo("Destroyed wave warning");
-                
+
                 Shrine.GetComponent<Shrine>().SetLevel(selected_level);
                 Shrine.GetComponent<Shrine>().SetReward(selected_reward);
                 Levels.generateRandomWaveWithOptions(selected_level, Shrine);
@@ -146,17 +140,6 @@ namespace ValheimFortress.Challenge
 
         private static void PreparePhase(Int16 selected_level, GameObject shrine)
         {
-            if (GUIManager.Instance == null)
-            {
-                Jotunn.Logger.LogError("GUIManager instance is null");
-                return;
-            }
-
-            if (!GUIManager.CustomGUIFront)
-            {
-                Jotunn.Logger.LogError("GUIManager CustomGUI is null");
-                return;
-            }
             String challenge_warning = "";
             switch (selected_level)
             {
@@ -164,46 +147,61 @@ namespace ValheimFortress.Challenge
                 case 2:
                 case 3:
                 case 4:
-                case 5:
                     challenge_warning = "The Meadow is no longer calm.";
+                    break;
+                case 5:
+                    challenge_warning = "Eikthyr is angry.";
                     break;
                 case 6:
                 case 7:
                 case 8:
                 case 9:
-                case 10:
                     challenge_warning = "The Forest grows restless.";
+                    break;
+                case 10:
+                    challenge_warning = "The Forest walks with The Elder.";
                     break;
                 case 11:
                 case 12:
                 case 13:
                 case 14:
-                case 15:
                     challenge_warning = "The Swamp keeps its dead.";
+                    break;
+                case 15:
+                    challenge_warning = "Bonemass rises from the swamp.";
+                    break;
+                case 16:
+                case 17:
+                case 18:
+                case 19:
+                    challenge_warning = "The Mountain echos in howls.";
+                    break;
+                case 20:
+                    challenge_warning = "Moder descends from the mountain.";
+                    break;
+                case 21:
+                case 22:
+                case 23:
+                case 24:
+                    challenge_warning = "The Plains sends its warbands.";
+                    break;
+                case 25:
+                    challenge_warning = "Yagluth rises for revenge.";
+                    break;
+                case 26:
+                case 27:
+                case 28:
+                case 29:
+                    challenge_warning = "The Mists part to a skittering horde.";
+                    break;
+                case 30:
+                    challenge_warning = "The Queen stalks her prey.";
                     break;
             }
 
-            // Create the warning
-            //WarningTextObj = GUIManager.Instance.CreateText(
-            //    text: challenge_warning,
-            //    parent: GUIManager.CustomGUIFront.transform,
-            //    anchorMin: new Vector2(0.5f, 1f),
-            //    anchorMax: new Vector2(0.5f, 1f),
-            //    position: new Vector2(10f, -40f),
-            //    font: GUIManager.Instance.AveriaSerifBold,
-            //    fontSize: 48,
-            //    color: GUIManager.Instance.ValheimYellow,
-            //    outline: true,
-            //    outlineColor: Color.black,
-            //    width: 400f,
-            //    height: 40f,
-            //    addContentSizeFitter: false);
-            //Jotunn.Logger.LogInfo("Wave warning text generated.");
-            // Sleep for a second before spawning the portal
-            // for forcing the check
-            //WarningTextObj.SetActive(true);
+            Player.m_localPlayer.Message(MessageHud.MessageType.Center, challenge_warning);
             shrine.GetComponent<Shrine>().EnablePortal();
-            Jotunn.Logger.LogInfo("Activated Shrine portal.");
+            Jotunn.Logger.LogInfo("Activated Shrine portal & sent warning message");
         }
 
 
@@ -398,7 +396,6 @@ namespace ValheimFortress.Challenge
 
             // Add a listener to the button to close the panel again
             Button cancelButton = cancelButtonObj.GetComponent<Button>();
-            // TODO: Might want to get this working
             cancelButton.onClick.AddListener(HideUI);
             // Add a listener to the button to close the panel and trigger the challenge scripts
             Button startButton = startButtonObj.GetComponent<Button>();

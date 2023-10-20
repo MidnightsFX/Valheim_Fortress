@@ -16,7 +16,7 @@ namespace ValheimFortress.Challenge
         static private Int16 base_challenge_points = 100;
         static private Int16 base_challenge_points_increase = 20;
         static private Int16 max_challenge_points = 3000;
-        static private String[] requiredBosses = { "Eikythr", "TheElder", "BoneMass", "Moder", "Yagluth", "TheQueen" };
+        static private String[] bosses = { "Eikythr", "TheElder", "BoneMass", "Moder", "Yagluth", "TheQueen" };
         static private String[] spawnTypes = { "common", "rare", "unique" };
 
         public class HoardConfig
@@ -86,11 +86,11 @@ namespace ValheimFortress.Challenge
         static Dictionary<String, CreatureValues> SpawnableCreatures = new Dictionary<string, CreatureValues>
         {
             // Meadow Creatures
-            {"Neck", new CreatureValues(spawnCost: 1, "Neck",  maxStars: 2, "false", spawnType: "common") },
+            {"Neck", new CreatureValues(spawnCost: 2, "Neck",  maxStars: 2, "false", spawnType: "common") },
             {"Boar", new CreatureValues(spawnCost: 2, "Boar",  maxStars: 2, "false", spawnType: "common") },
             {"Greyling", new CreatureValues(spawnCost: 3, "Greyling", maxStars: 2, "false", spawnType: "common") },
             // Black Forest Creatures
-            {"GreyDwarf", new CreatureValues(spawnCost: 4, "GreyDwarf", maxStars: 2, "Eikythr", spawnType: "common") },
+            {"GreyDwarf", new CreatureValues(spawnCost: 4, "Greydwarf", maxStars: 2, "Eikythr", spawnType: "common") },
             {"GreyDwarfBrute", new CreatureValues(spawnCost: 8, "Greydwarf_Elite", maxStars: 2, "Eikythr", spawnType: "rare") },
             {"GreyDwarfShaman", new CreatureValues(spawnCost: 8, "Greydwarf_Shaman", maxStars: 2, "Eikythr", spawnType: "rare") },
             {"Skeleton", new CreatureValues(spawnCost: 4, "Skeleton_NoArcher", maxStars: 2, "Eikythr", spawnType: "common") },
@@ -134,7 +134,7 @@ namespace ValheimFortress.Challenge
             {"DvergerMageIce", new CreatureValues(spawnCost: 40, "DvergerMageIce", maxStars: 1, "Yagluth", spawnType: "rare") },
             {"DvergerMageSupport", new CreatureValues(spawnCost: 40, "DvergerMageSupport", maxStars: 1, "Yagluth", spawnType: "rare") },
             // Boss Creatures
-            {"Eikthyr", new CreatureValues(spawnCost: 60, "Eikthyr", maxStars: 0, "false", spawnType: "unique") },
+            {"Eikthyr", new CreatureValues(spawnCost: 40, "Eikthyr", maxStars: 0, "false", spawnType: "unique") },
             {"TheElder", new CreatureValues(spawnCost: 180, "gd_king", maxStars: 0, "false", spawnType: "unique") },
             {"BoneMass", new CreatureValues(spawnCost: 250, "DvergerMageSupport", maxStars: 0, "false", spawnType: "unique") },
             {"Moder", new CreatureValues(spawnCost: 320, "DvergerMageSupport", maxStars: 0, "false", spawnType: "unique") },
@@ -162,21 +162,21 @@ namespace ValheimFortress.Challenge
                 {
                     SpawnableCreatures[entry.Key].spawnCost = attempted_spawncost;
                 }
-                Jotunn.Logger.LogInfo($"Config {entry.Key}_creaturevalue Added.");
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Config {entry.Key}_creaturevalue Added."); } 
                 SpawnableCreatures[entry.Key].spawnType = cfg.BindServerConfig(
                     "shine of challenge - monsters",
                     $"{entry.Key}_spawntype",
                     entry.Value.spawnType,
                     $"the generation type for {entry.Key}, valid values are: common,rare,unique. this governs how frequently the creature can be added to a waves generation.",
                     true).Value;
-                Jotunn.Logger.LogInfo($"Config {entry.Key}_spawntype Added.");
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Config {entry.Key}_spawntype Added."); }
                 SpawnableCreatures[entry.Key].maxStars = cfg.BindServerConfig(
                     "shine of challenge - monsters",
                     $"{entry.Key}_maxstars",
                     entry.Value.maxStars,
                     $"the max number of stars for {entry.Key}. in vanilla above 2 is meaningless & bosses do not have multistar varients.",
                     true).Value;
-                Jotunn.Logger.LogInfo($"Config {entry.Key}_maxstars Added.");
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Config {entry.Key}_maxstars Added."); }
             }
         }
 
@@ -189,8 +189,8 @@ namespace ValheimFortress.Challenge
         // Challenge slope should always be positive.
         public static Int16 ComputeChallengePoints(Int16 level)
         {
-            Int16 computed_slope = (Int16)Math.Log(10 + challenge_slope + level);
-            Int16 challenge_increase = (Int16)(base_challenge_points_increase * computed_slope);
+            Double computed_slope = Math.Log(10 + challenge_slope + level);
+            Double challenge_increase = base_challenge_points_increase * computed_slope;
             Int16 allocated_challenge_points = (Int16)(base_challenge_points + challenge_increase);
             
             // Cap the challenge points if they are over the defined max
