@@ -18,7 +18,8 @@ namespace ValheimFortress.Challenge
         static List<String> availableRewards = new List<String> { };
         public static GameObject levelSelector;
         public static GameObject rewardSelector;
-        public static Int16 maxChallengeLevel = 5; // TODO: Make this configurable? make level generation dynamic?
+        public static Int16 maxChallengeLevel = 30; // TODO: Make this configurable? make level generation dynamic?
+        // Right now maxlevel needs to correlate to: defined levels & level warning messages
 
 
         public static bool IsPanelVisible()
@@ -33,8 +34,8 @@ namespace ValheimFortress.Challenge
 
         public static void Init(AssetBundle EmbeddedResourceBundle)
         {
-            GameObject prefab = EmbeddedResourceBundle.LoadAsset<GameObject>("Assets/Custom/UI/VFShrineUI.prefab");
-            Jotunn.Logger.LogInfo("Loaded UI Prefab.");
+            //GameObject prefab = EmbeddedResourceBundle.LoadAsset<GameObject>("Assets/Custom/UI/VFShrineUI.prefab");
+            //Jotunn.Logger.LogInfo("Loaded UI Prefab.");
             // Built the challenge UI, since this is a static class
             // all of these values and UI componets will be used when instanciating the UI for the game below
             CreateChallengeUI();
@@ -55,37 +56,45 @@ namespace ValheimFortress.Challenge
                     continue;
                 }
                 if (!zs) 
-                { 
+                {
+                    Jotunn.Logger.LogInfo("Zone system not available, skipping checks for global keys to set rewards options.");
                     // We can only add items that do not require a global key check if there is no zone system.
                     continue; 
                 }
                 if(entry.Value.required_boss == "Eikythr" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledEikthyr)) {
                     availableRewards.Add(entry.Key);
+                    Jotunn.Logger.LogInfo($"Killed Eikythr, enabling reward {entry.Key}.");
                     continue;
                 }
                 if (entry.Value.required_boss == "TheElder" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledElder))
                 {
                     availableRewards.Add(entry.Key);
+                    Jotunn.Logger.LogInfo($"Killed TheElder, enabling rewards {entry.Key}.");
                     continue;
                 }
                 if (entry.Value.required_boss == "BoneMass" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledBonemass))
                 {
                     availableRewards.Add(entry.Key);
+                    Jotunn.Logger.LogInfo($"Killed BoneMass, enabling rewards {entry.Key}.");
                     continue;
                 }
                 if (entry.Value.required_boss == "Moder" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledModer))
                 {
                     availableRewards.Add(entry.Key);
+                    Jotunn.Logger.LogInfo($"Killed Moder, enabling rewards {entry.Key}.");
                     continue;
                 }
                 if (entry.Value.required_boss == "Yagluth" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledYagluth))
                 {
                     availableRewards.Add(entry.Key);
+                    Jotunn.Logger.LogInfo($"Killed Yagluth, enabling rewards {entry.Key}.");
                     continue;
                 }
                 if (entry.Value.required_boss == "TheQueen" && zs.GetGlobalKey("defeated_queen"))
                 {
                     availableRewards.Add(entry.Key);
+                    Jotunn.Logger.LogInfo($"Killed TheQueen, enabling rewards {entry.Key}.");
+                    continue;
                 }
             }
 
@@ -97,6 +106,9 @@ namespace ValheimFortress.Challenge
                 if (zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledModer)) { max_level += 5; }
                 if (zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledYagluth)) { max_level += 5; }
                 if (zs.GetGlobalKey("defeated_queen")) { max_level += 5; }
+            } else
+            {
+                Jotunn.Logger.LogInfo("Zone system not available, skipping checks for global keys to increase max shrine levels.");
             }
             // If you have killed all of the tracked bosses, set the max possible level to 50.
             // if (max_level == 35) { max_level = 50; }
@@ -107,15 +119,24 @@ namespace ValheimFortress.Challenge
             // Empty out the current levels if it exists so we don't get duplicates
             currentLevels = new List<String> { };
             // Toss in all of the available levels
+            String biome_or_boss = "";
             for (int i = 1; i <= max_level; i++)
             {
-                currentLevels.Add($"{i}");
+                if (i == 5 || i == 10 || i == 15 || i == 20 || i == 25 || i == 30) { biome_or_boss = "Boss"; }
+                if (i > 0 && i < 5) { biome_or_boss = "Meadows"; }
+                if (i > 5 && i < 10) { biome_or_boss = "BlackForest"; }
+                if (i > 10 && i < 15) { biome_or_boss = "Swamp"; }
+                if (i > 15 && i < 20) { biome_or_boss = "Mountain"; }
+                if (i > 20 && i < 25) { biome_or_boss = "Plains"; }
+                if (i > 25 && i < 30) { biome_or_boss = "Mistlands"; }
+                currentLevels.Add($"{i} - {biome_or_boss}");
             }
+            Jotunn.Logger.LogInfo("Levels and rewards updated.");
         }
 
         private static void StartChallenge()
         {
-            HideUI();
+            Shrine.GetComponent<Shrine>().DisableUI();
             String selected_reward = availableRewards[rewardSelector.GetComponent<Dropdown>().value];
             // Trying to decide if we want to do this, which will use the wave dropdown text value as the entry, or if we should just do the index + 1, which is currently the same
             // TODO: this should be reworked when we switch from wave levels to another system
@@ -129,8 +150,8 @@ namespace ValheimFortress.Challenge
             } else
             {
                 // Start the coroutine that sends the warning text
-                PreparePhase(selected_level, Shrine);
-
+                PreparePhase(selected_level);
+                Shrine.GetComponent<Shrine>().EnablePortal();
                 Shrine.GetComponent<Shrine>().SetLevel(selected_level);
                 Shrine.GetComponent<Shrine>().SetReward(selected_reward);
                 Levels.generateRandomWaveWithOptions(selected_level, Shrine);
@@ -138,7 +159,7 @@ namespace ValheimFortress.Challenge
             }
         }
 
-        private static void PreparePhase(Int16 selected_level, GameObject shrine)
+        private static void PreparePhase(Int16 selected_level)
         {
             String challenge_warning = "";
             switch (selected_level)
@@ -200,7 +221,6 @@ namespace ValheimFortress.Challenge
             }
 
             Player.m_localPlayer.Message(MessageHud.MessageType.Center, challenge_warning);
-            shrine.GetComponent<Shrine>().EnablePortal();
             Jotunn.Logger.LogInfo("Activated Shrine portal & sent warning message");
         }
 
@@ -208,6 +228,7 @@ namespace ValheimFortress.Challenge
         public static void DisplayUI(GameObject shrine)
         {
             Shrine = shrine;
+            CreateChallengeUI();
             ChallengePanel.SetActive(true);
             GUIManager.BlockInput(true);
             Jotunn.Logger.LogInfo("Enabled UI from Shrine object.");
@@ -219,36 +240,11 @@ namespace ValheimFortress.Challenge
             GUIManager.BlockInput(false);
         }
 
-        public static void ToggleUI()
-        {
-            // Switch the current state
-            bool state = !ChallengePanel.activeSelf;
-            // Set the active state of the panel
-            ChallengePanel.SetActive(state);
-            // Toggle input for the player and camera while displaying the GUI
-            GUIManager.BlockInput(state);
-        }
-
-        private void Update()
-        {
-
-            if (IsPanelVisible() && (Input.GetKeyDown(KeyCode.Escape) || ZInput.GetButtonDown("Use") || ZInput.GetButtonDown("Inventory")))
-            {
-                Jotunn.Logger.LogInfo("UI detected close commands.");
-                HideUI();
-            }
-
-        }
-
         public static void CreateChallengeUI()
         {
             // Always want to update the rewards and challenge levels
             UpdateLevelsAndRewards();
-            // We don't want to recreate the panel if it already exists
-            if (ChallengePanel)
-            {
-                return;
-            }
+            // We specifically want to be able to completely rebuild the UI when this is called again to update the levels and rewards dynamically
 
             if (GUIManager.Instance == null)
             {
@@ -394,13 +390,14 @@ namespace ValheimFortress.Challenge
                 height: 40f);
             cancelButtonObj.SetActive(true);
 
+            Jotunn.Logger.LogInfo("Adding UI Listeners");
             // Add a listener to the button to close the panel again
             Button cancelButton = cancelButtonObj.GetComponent<Button>();
-            cancelButton.onClick.AddListener(HideUI);
+            cancelButton.onClick.AddListener(Shrine.GetComponent<Shrine>().DisableUI);
             // Add a listener to the button to close the panel and trigger the challenge scripts
             Button startButton = startButtonObj.GetComponent<Button>();
             startButton.onClick.AddListener(StartChallenge);
-
+            Jotunn.Logger.LogInfo("Shrine UI Created.");
         }
     }
 }

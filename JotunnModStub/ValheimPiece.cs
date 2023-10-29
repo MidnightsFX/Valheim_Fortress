@@ -35,7 +35,7 @@ namespace ValheimFortress
                 cfg,
                 new Dictionary<string, string>() {
                     { "name", "Green Jute Carpet" },
-                    { "catagory", "Furniture" },
+                    { "catagory", "VFortress" },
                     { "prefab", "VFgreen_jute_carpet_circle" },
                     { "sprite", "arrow_greenmetal" },
                     { "requiredBench", "piece_workbench" }
@@ -53,7 +53,7 @@ namespace ValheimFortress
                 cfg,
                 new Dictionary<string, string>() {
                     { "name", "Red Jute Carpet" },
-                    { "catagory", "Furniture" },
+                    { "catagory", "VFortress" },
                     { "prefab", "VFred_jute_carpet_circle" },
                     { "sprite", "arrow_greenmetal" },
                     { "requiredBench", "piece_workbench" }
@@ -70,7 +70,7 @@ namespace ValheimFortress
                 cfg,
                 new Dictionary<string, string>() {
                     { "name", "Yellow Jute Carpet" },
-                    { "catagory", "Furniture" },
+                    { "catagory", "VFortress" },
                     { "prefab", "VFyellow_jute_carpet_circle" },
                     { "sprite", "arrow_greenmetal" },
                     { "requiredBench", "piece_workbench" }
@@ -92,7 +92,7 @@ namespace ValheimFortress
                 cfg,
                 new Dictionary<string, string>() {
                     { "name", "Blue Crystal Wall" },
-                    { "catagory", "Building" },
+                    { "catagory", "VFortress" },
                     { "prefab", "VFblue_crystal_wall" },
                     { "sprite", "blue_crystal_wall" },
                     { "requiredBench", "piece_workbench" }
@@ -110,7 +110,7 @@ namespace ValheimFortress
                 cfg,
                 new Dictionary<string, string>() {
                     { "name", "Red Crystal Wall" },
-                    { "catagory", "Building" },
+                    { "catagory", "VFortress" },
                     { "prefab", "VFred_crystal_wall" },
                     { "sprite", "red_crystal_wall" },
                     { "requiredBench", "piece_workbench" }
@@ -128,7 +128,7 @@ namespace ValheimFortress
                 cfg,
                 new Dictionary<string, string>() {
                     { "name", "Yellow Crystal Wall" },
-                    { "catagory", "Building" },
+                    { "catagory", "VFortress" },
                     { "prefab", "VFyellow_crystal_wall" },
                     { "sprite", "yellow_crystal_wall" },
                     { "requiredBench", "piece_workbench" }
@@ -146,7 +146,7 @@ namespace ValheimFortress
                 cfg,
                 new Dictionary<string, string>() {
                     { "name", "Green Crystal Wall" },
-                    { "catagory", "Building" },
+                    { "catagory", "VFortress" },
                     { "prefab", "VFgreen_crystal_wall" },
                     { "sprite", "green_crystal_wall" },
                     { "requiredBench", "piece_workbench" }
@@ -186,7 +186,7 @@ namespace ValheimFortress
 
         class ValheimPiece
         {
-            String[] allowed_catagories = { "Furniture", "Building", "Crafting", "Misc" };
+            String[] allowed_catagories = { "Furniture", "Building", "Crafting", "Misc", "VFortress" };
             String[] crafting_stations = { "forge", "piece_workbench", "blackforge", "piece_artisanstation" };
             /// <summary>
             /// 
@@ -312,7 +312,7 @@ namespace ValheimFortress
                             }
                             Logger.LogInfo($"recipe segments: {split_segments} from {recipe_entry}");
                         }
-                        Logger.LogInfo($"Setting recipe requirement: {recipe_segments[0]}={recipe_segments[1]}");
+                        if(VFConfig.EnableDebugMode.Value) { Logger.LogInfo($"Setting recipe requirement: {recipe_segments[0]}={recipe_segments[1]}"); }
                         // Add a sanity check to ensure the prefab we are trying to use exists
                         updated_recipe.Add(recipe_segments[0], (Int32.Parse(recipe_segments[1])));
                     }

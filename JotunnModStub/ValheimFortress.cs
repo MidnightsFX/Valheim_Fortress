@@ -45,7 +45,7 @@ namespace ValheimFortress
             Levels.UpdateCreatureConfigValues(cfg);
             Rewards.UpdateResouceRewards(cfg);
 
-            GUIManager.OnCustomGUIAvailable += () => UI.Init(EmbeddedResourceBundle);
+            // GUIManager.OnCustomGUIAvailable += () => UI.Init(EmbeddedResourceBundle);
 
             Logger.LogInfo("Valheim Fortress loaded.");
             // EmbeddedResourceBundle.Unload(false); // unload anything extra

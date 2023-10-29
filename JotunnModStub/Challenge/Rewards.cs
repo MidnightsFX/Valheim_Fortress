@@ -31,7 +31,7 @@ namespace ValheimFortress.Challenge
         public static Dictionary<String, RewardEntry> resourceRewards = new Dictionary<string, RewardEntry>
         {
             { "Coin", new RewardEntry(resource_prefab: "Coins", resouce_cost: 5, required_boss: "None", enabled: true)},
-            { "Wood", new RewardEntry(resource_prefab: "Wood", resouce_cost: 12, required_boss: "Eikythr", enabled: true)},
+            { "Wood", new RewardEntry(resource_prefab: "Wood", resouce_cost: 8, required_boss: "Eikythr", enabled: true)},
             { "CoreWood", new RewardEntry(resource_prefab: "RoundLog", resouce_cost: 15, required_boss: "BoneMass", enabled: true)},
             { "FineWood", new RewardEntry(resource_prefab: "FineWood", resouce_cost: 18, required_boss: "Moder", enabled: true)},
             { "Copper", new RewardEntry(resource_prefab: "CopperOre", resouce_cost: 30, required_boss: "TheElder", enabled: true)},

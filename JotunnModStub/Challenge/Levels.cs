@@ -12,27 +12,31 @@ namespace ValheimFortress.Challenge
 {
     class Levels
     {
-        static private Double challenge_slope = 0.1;
-        static private Int16 base_challenge_points = 100;
-        static private Int16 base_challenge_points_increase = 20;
-        static private Int16 max_challenge_points = 3000;
+        // TODO once these values are someone defined in a sane way and have a reasonable tuning scale, lets make them configurable
+        static private Double challenge_slope = 0.2; // TODO make configurable
+        static private Int16 base_challenge_points = 100; // TODO make configurable
+        static private Int16 base_challenge_points_increase = 10; // TODO make configurable
+        static private Int16 max_challenge_points = 3000; // TODO make configurable
         static private String[] bosses = { "Eikythr", "TheElder", "BoneMass", "Moder", "Yagluth", "TheQueen" };
         static private String[] spawnTypes = { "common", "rare", "unique" };
 
         public class HoardConfig
         {
             public String creature;
+            public String prefab;
             public Int16 amount;
             public Int16 stars;
 
             public HoardConfig(
                 String creatureName,
+                string prefabName,
                 Int16 min_spawned,
                 Int16 max_spawned,
                 Int16 min_stars = 0,
                 Int16 max_stars = 0
                 )
             {
+                prefab = prefabName;
                 creature = creatureName;
                 amount = (short)UnityEngine.Random.Range(min_spawned, max_spawned);
                 stars = (short)UnityEngine.Random.Range(min_stars, max_stars);
@@ -90,7 +94,7 @@ namespace ValheimFortress.Challenge
             {"Boar", new CreatureValues(spawnCost: 2, "Boar",  maxStars: 2, "false", spawnType: "common") },
             {"Greyling", new CreatureValues(spawnCost: 3, "Greyling", maxStars: 2, "false", spawnType: "common") },
             // Black Forest Creatures
-            {"GreyDwarf", new CreatureValues(spawnCost: 4, "Greydwarf", maxStars: 2, "Eikythr", spawnType: "common") },
+            {"GreyDwarf", new CreatureValues(spawnCost: 4, "Greydwarf", maxStars: 2, "false", spawnType: "common") },
             {"GreyDwarfBrute", new CreatureValues(spawnCost: 8, "Greydwarf_Elite", maxStars: 2, "Eikythr", spawnType: "rare") },
             {"GreyDwarfShaman", new CreatureValues(spawnCost: 8, "Greydwarf_Shaman", maxStars: 2, "Eikythr", spawnType: "rare") },
             {"Skeleton", new CreatureValues(spawnCost: 4, "Skeleton_NoArcher", maxStars: 2, "Eikythr", spawnType: "common") },
@@ -136,10 +140,10 @@ namespace ValheimFortress.Challenge
             // Boss Creatures
             {"Eikthyr", new CreatureValues(spawnCost: 40, "Eikthyr", maxStars: 0, "false", spawnType: "unique") },
             {"TheElder", new CreatureValues(spawnCost: 180, "gd_king", maxStars: 0, "false", spawnType: "unique") },
-            {"BoneMass", new CreatureValues(spawnCost: 250, "DvergerMageSupport", maxStars: 0, "false", spawnType: "unique") },
-            {"Moder", new CreatureValues(spawnCost: 320, "DvergerMageSupport", maxStars: 0, "false", spawnType: "unique") },
-            {"Yagluth", new CreatureValues(spawnCost: 450, "DvergerMageSupport", maxStars: 0, "false", spawnType: "unique") },
-            {"TheQueen", new CreatureValues(spawnCost: 600, "DvergerMageSupport", maxStars: 0, "false", spawnType: "unique") },
+            {"Bonemass", new CreatureValues(spawnCost: 250, "Bonemass", maxStars: 0, "false", spawnType: "unique") },
+            {"Moder", new CreatureValues(spawnCost: 320, "Dragon", maxStars: 0, "false", spawnType: "unique") },
+            {"Yagluth", new CreatureValues(spawnCost: 450, "GoblinKing", maxStars: 0, "false", spawnType: "unique") },
+            {"TheQueen", new CreatureValues(spawnCost: 600, "SeekerQueen", maxStars: 0, "false", spawnType: "unique") },
         };
 
         public static void UpdateCreatureConfigValues(VFConfig cfg)
@@ -185,12 +189,12 @@ namespace ValheimFortress.Challenge
         // Logarithmic with a cap
         // y = a + b ln x
         // allocated_challenge_points = base_challenge_points + base_challenge_points_increase * computed_slope
-        // Computed slope is simply the log of 10 + the challenge slope, resulting in a small to larger increase based on the defined challenge slope.
+        // Computed slope is simply the log of (10 + the challenge slope + level), resulting in a small to larger increase based on the defined challenge slope.
         // Challenge slope should always be positive.
         public static Int16 ComputeChallengePoints(Int16 level)
         {
             Double computed_slope = Math.Log(10 + challenge_slope + level);
-            Double challenge_increase = base_challenge_points_increase * computed_slope;
+            Double challenge_increase = (base_challenge_points_increase * level) * computed_slope;
             Int16 allocated_challenge_points = (Int16)(base_challenge_points + challenge_increase);
             
             // Cap the challenge points if they are over the defined max
@@ -225,6 +229,9 @@ namespace ValheimFortress.Challenge
             Dictionary<String, Tuple<int , int, int>> waveComp = new Dictionary<string, Tuple<int, int, int>> { };
             // I was planning on doing something much more programmatic for this, so will probably rewrite
             // but I also hit a lot of writers block and wanted to get an actual working steel thread out before this collapsed in dust
+
+            // There is also the debate of how much of this should be extremely dynamic? Shouldn't everyone have relatively similar experiances up to a certain point?
+            // I could also just turn this into a buncha json objects now that it looks somewhat defined
             switch (level)
             {
                 case 1:
@@ -252,6 +259,157 @@ namespace ValheimFortress.Challenge
                     waveComp.Add("Greyling", new Tuple<int, int, int>(45, 0, 0));
                     waveComp.Add("GreyDwarf", new Tuple<int, int, int>(45, 0, 0));
                     break;
+                case 6:
+                    waveComp.Add("GreyDwarf", new Tuple<int, int, int>(65, 0, 0));
+                    waveComp.Add("Skeleton", new Tuple<int, int, int>(30, 0, 0));
+                    waveComp.Add("GreyDwarfShaman", new Tuple<int, int, int>(15, 0, 0));
+                    break;
+                case 7:
+                    waveComp.Add("Skeleton", new Tuple<int, int, int>(65, 0, 0));
+                    waveComp.Add("RancidSkeleton", new Tuple<int, int, int>(15, 0, 0));
+                    waveComp.Add("GreyDwarfBrute", new Tuple<int, int, int>(10, 0, 0));
+                    waveComp.Add("GreyDwarfShaman", new Tuple<int, int, int>(10, 0, 0));
+                    break;
+                case 8:
+                    waveComp.Add("Troll", new Tuple<int, int, int>(10, 0, 0));
+                    waveComp.Add("GreyDwarfShaman", new Tuple<int, int, int>(15, 0, 0));
+                    waveComp.Add("SkeletonArcher", new Tuple<int, int, int>(25, 0, 0));
+                    waveComp.Add("GreyDwarf", new Tuple<int, int, int>(50, 0, 0));
+                    break;
+                case 9:
+                    waveComp.Add("Troll", new Tuple<int, int, int>(15, 0, 0));
+                    waveComp.Add("Ghost", new Tuple<int, int, int>(15, 0, 0));
+                    waveComp.Add("SkeletonArcher", new Tuple<int, int, int>(30, 0, 0));
+                    waveComp.Add("Skeleton", new Tuple<int, int, int>(30, 0, 0));
+                    break;
+                case 10:
+                    waveComp.Add("TheElder", new Tuple<int, int, int>(1, 0, 0));
+                    waveComp.Add("GreyDwarfShaman", new Tuple<int, int, int>(15, 0, 0));
+                    waveComp.Add("GreyDwarfBrute", new Tuple<int, int, int>(10, 0, 0));
+                    waveComp.Add("GreyDwarf", new Tuple<int, int, int>(50, 0, 0));
+                    break;
+                case 11:
+                    waveComp.Add("Blob", new Tuple<int, int, int>(15, 0, 0));
+                    waveComp.Add("Skeleton", new Tuple<int, int, int>(55, 0, 0));
+                    waveComp.Add("Draugr", new Tuple<int, int, int>(30, 0, 0));
+                    break;
+                case 12:
+                    waveComp.Add("Draugr", new Tuple<int, int, int>(65, 0, 0));
+                    waveComp.Add("DraugrElite", new Tuple<int, int, int>(15, 0, 0));
+                    waveComp.Add("DraugrArcher", new Tuple<int, int, int>(20, 0, 0));
+                    break;
+                case 13:
+                    waveComp.Add("Abomination", new Tuple<int, int, int>(10, 0, 0));
+                    waveComp.Add("DraugrArcher", new Tuple<int, int, int>(25, 0, 0));
+                    waveComp.Add("Draugr", new Tuple<int, int, int>(35, 0, 0));
+                    waveComp.Add("Blob", new Tuple<int, int, int>(15, 0, 0));
+                    waveComp.Add("Surtling", new Tuple<int, int, int>(15, 0, 0));
+                    break;
+                case 14:
+                    waveComp.Add("DraugrElite", new Tuple<int, int, int>(15, 0, 0));
+                    waveComp.Add("Draugr", new Tuple<int, int, int>(35, 0, 0));
+                    waveComp.Add("Surtling", new Tuple<int, int, int>(20, 0, 0));
+                    waveComp.Add("Wraith", new Tuple<int, int, int>(10, 0, 0));
+                    waveComp.Add("DraugrArcher", new Tuple<int, int, int>(20, 0, 0));
+                    break;
+                case 15:
+                    waveComp.Add("Bonemass", new Tuple<int, int, int>(1, 0, 0));
+                    waveComp.Add("Draugr", new Tuple<int, int, int>(50, 0, 0));
+                    waveComp.Add("DraugrElite", new Tuple<int, int, int>(10, 0, 0));
+                    waveComp.Add("BlobElite", new Tuple<int, int, int>(30, 0, 0));
+                    waveComp.Add("Wraith", new Tuple<int, int, int>(10, 0, 0));
+                    break;
+                case 16:
+                    waveComp.Add("Wolf", new Tuple<int, int, int>(15, 0, 0));
+                    waveComp.Add("IceDrake", new Tuple<int, int, int>(25, 0, 0));
+                    waveComp.Add("Bat", new Tuple<int, int, int>(30, 0, 0));
+                    waveComp.Add("Ulv", new Tuple<int, int, int>(45, 0, 0));
+                    break;
+                case 17:
+                    waveComp.Add("Ulv", new Tuple<int, int, int>(65, 0, 0));
+                    waveComp.Add("Cultist", new Tuple<int, int, int>(15, 0, 0));
+                    waveComp.Add("Fenring", new Tuple<int, int, int>(30, 0, 0));
+                    break;
+                case 18:
+                    waveComp.Add("StoneGolemn", new Tuple<int, int, int>(10, 0, 0));
+                    waveComp.Add("Cultist", new Tuple<int, int, int>(25, 0, 0));
+                    waveComp.Add("IceDrake", new Tuple<int, int, int>(25, 0, 0));
+                    waveComp.Add("Bat", new Tuple<int, int, int>(15, 0, 0));
+                    waveComp.Add("Skeleton", new Tuple<int, int, int>(25, 0, 0));
+                    break;
+                case 19:
+                    waveComp.Add("IceDrake", new Tuple<int, int, int>(100, 0, 0));
+                    waveComp.Add("Bat", new Tuple<int, int, int>(25, 0, 0));
+                    waveComp.Add("Wraith", new Tuple<int, int, int>(10, 0, 0));
+                    waveComp.Add("Wolf", new Tuple<int, int, int>(15, 0, 0));
+                    break;
+                case 20:
+                    waveComp.Add("Moder", new Tuple<int, int, int>(1, 0, 0));
+                    waveComp.Add("IceDrake", new Tuple<int, int, int>(50, 0, 0));
+                    waveComp.Add("Wolf", new Tuple<int, int, int>(30, 0, 0));
+                    waveComp.Add("Cultist", new Tuple<int, int, int>(10, 0, 0));
+                    waveComp.Add("Fenring", new Tuple<int, int, int>(20, 0, 0));
+                    break;
+                case 21:
+                    waveComp.Add("Deathsquito", new Tuple<int, int, int>(15, 0, 0));
+                    waveComp.Add("Fuling", new Tuple<int, int, int>(25, 0, 0));
+                    waveComp.Add("FulingArcher", new Tuple<int, int, int>(30, 0, 0));
+                    waveComp.Add("Skeleton", new Tuple<int, int, int>(45, 0, 0));
+                    break;
+                case 22:
+                    waveComp.Add("FulingShaman", new Tuple<int, int, int>(30, 0, 0));
+                    waveComp.Add("Growth", new Tuple<int, int, int>(35, 0, 0));
+                    waveComp.Add("Deathsquito", new Tuple<int, int, int>(30, 0, 0));
+                    break;
+                case 23:
+                    waveComp.Add("FulingBerserker", new Tuple<int, int, int>(10, 0, 0));
+                    waveComp.Add("Fuling", new Tuple<int, int, int>(50, 0, 0));
+                    waveComp.Add("FulingArcher", new Tuple<int, int, int>(25, 0, 0));
+                    waveComp.Add("Deathsquito", new Tuple<int, int, int>(15, 0, 0));
+                    break;
+                case 24:
+                    waveComp.Add("FulingBerserker", new Tuple<int, int, int>(25, 0, 0));
+                    waveComp.Add("FulingShaman", new Tuple<int, int, int>(25, 0, 0));
+                    waveComp.Add("Growth", new Tuple<int, int, int>(25, 0, 0));
+                    waveComp.Add("Deathsquito", new Tuple<int, int, int>(25, 0, 0));
+                    break;
+                case 25:
+                    waveComp.Add("Yagluth", new Tuple<int, int, int>(1, 0, 0));
+                    waveComp.Add("FulingShaman", new Tuple<int, int, int>(15, 0, 0));
+                    waveComp.Add("FulingBerserker", new Tuple<int, int, int>(15, 0, 0));
+                    waveComp.Add("Fuling", new Tuple<int, int, int>(45, 0, 0));
+                    break;
+                case 26:
+                    waveComp.Add("Seeker", new Tuple<int, int, int>(35, 0, 0));
+                    waveComp.Add("SeekerBrood", new Tuple<int, int, int>(45, 0, 0));
+                    waveComp.Add("Tick", new Tuple<int, int, int>(15, 0, 0));
+                    break;
+                case 27:
+                    waveComp.Add("Seeker", new Tuple<int, int, int>(40, 0, 0));
+                    waveComp.Add("Gjall", new Tuple<int, int, int>(10, 0, 0));
+                    waveComp.Add("DvergerRouge", new Tuple<int, int, int>(25, 0, 0));
+                    waveComp.Add("DvergerMage", new Tuple<int, int, int>(25, 0, 0));
+                    break;
+                case 28:
+                    waveComp.Add("Seeker", new Tuple<int, int, int>(50, 0, 0));
+                    waveComp.Add("SeekerBrood", new Tuple<int, int, int>(20, 0, 0));
+                    waveComp.Add("DvergerMage", new Tuple<int, int, int>(7, 0, 0));
+                    waveComp.Add("DvergerMageFire", new Tuple<int, int, int>(8, 0, 0));
+                    waveComp.Add("DvergerMageIce", new Tuple<int, int, int>(7, 0, 0));
+                    waveComp.Add("DvergerMageSupport", new Tuple<int, int, int>(8, 0, 0));
+                    break;
+                case 29:
+                    waveComp.Add("Gjall", new Tuple<int, int, int>(35, 0, 0));
+                    waveComp.Add("SeekerSoldier", new Tuple<int, int, int>(15, 0, 0));
+                    waveComp.Add("Tick", new Tuple<int, int, int>(10, 0, 0));
+                    waveComp.Add("DvergerRouge", new Tuple<int, int, int>(35, 0, 0));
+                    break;
+                case 30:
+                    waveComp.Add("TheQueen", new Tuple<int, int, int>(1, 0, 0));
+                    waveComp.Add("Seeker", new Tuple<int, int, int>(25, 0, 0));
+                    waveComp.Add("SeekerBrood", new Tuple<int, int, int>(55, 0, 0));
+                    waveComp.Add("SeekerSoldier", new Tuple<int, int, int>(10, 0, 0));
+                    break;
                 default:
                     Jotunn.Logger.LogWarning($"Wave: {level} was not matched, no waves will spawn.");
                     break;
@@ -260,7 +418,8 @@ namespace ValheimFortress.Challenge
 
             foreach (KeyValuePair<string, Tuple<int, int, int>> entry in waveComp)
             {
-               String spawnTypeRule = SpawnableCreatures[entry.Key].spawnType;
+                Jotunn.Logger.LogInfo($"Determining {entry.Key} spawn parameters.");
+                String spawnTypeRule = SpawnableCreatures[entry.Key].spawnType;
                 Int16 max_percent_spawnable = 5; // switch case assignment availabe in 8+
                 switch(spawnTypeRule)
                 {
@@ -283,15 +442,17 @@ namespace ValheimFortress.Challenge
                 double min_spawnable = max_spawnable * 0.8;
                 if (spawnTypeRule == "unique") { max_spawnable = 1; min_spawnable = 1; };
 
+                if (min_spawnable < 1) { min_spawnable = 1; }
+                if (max_spawnable < 1) { max_spawnable = 1; }
+
                 Jotunn.Logger.LogInfo($"Max spawnable: {max_spawnable} = ({max_wave_points} * {percent_of_wave}) / ({SpawnableCreatures[entry.Key].spawnCost})");
                 Jotunn.Logger.LogInfo($"Min spawnable: {min_spawnable} = {max_spawnable} * 0.8");
                 Jotunn.Logger.LogInfo($"hoard: {entry.Key}, {max_spawnable}, stars: {entry.Value.Item2}-{entry.Value.Item3}");
-                HoardConfig creatureWave = new HoardConfig(entry.Key, (Int16)min_spawnable, (Int16)max_spawnable, (Int16)entry.Value.Item2, (Int16)entry.Value.Item3);
+                HoardConfig creatureWave = new HoardConfig(entry.Key, SpawnableCreatures[entry.Key].prefabName, (Int16)min_spawnable, (Int16)max_spawnable, (Int16)entry.Value.Item2, (Int16)entry.Value.Item3);
                 leveldefinition.AddHoard(creatureWave);
             }
 
             Jotunn.Logger.LogInfo("Built wave definition.");
-            Jotunn.Logger.LogInfo($"{leveldefinition.GetWaves()}");
             foreach (Levels.HoardConfig hoard in leveldefinition.GetWaves())
             {
                 Jotunn.Logger.LogInfo($"Hoard {hoard.creature} - {hoard.amount}");

@@ -1,7 +1,9 @@
 ﻿# ValheimFortress
 !!BETA!!
 
-This project is in beta, its likely to be functional by the time anyone actually reads this. But, its probably going to have some bugs. They might not be bugs that I have seen already!
+What does Beta mean for this project? It should be functional, and likely mostly stable. But may have bugs, and some significant features may change as it gets developed.
+
+There are likely to be some bugs. They might not be bugs that I have seen already!
 Please report any bugs you find on the [Github tracker](https://github.com/MidnightsFX/Valheim_Fortress/issues)
 
 ---
@@ -18,15 +20,24 @@ That being, more colorways for buildable pieces along with new variants with the
 ## Features
 Wave survival through the Shrine of Challenge. Cosmetic building variants, and functional building variants.
 
-* Shrine of Challenge - summon enemies, kill them, and be rewarded!
+### The shrine of challenge
+
+| Name | Description | Icon |
+| ----------- | ----------- | ----------- | ----------- |
+| Shrine of Challenge | Summon enemies, kill them, and be rewarded! | ![Antler Bow Icon](https://i.imgur.com/mEcWfTp.png) |
+
+This is what the vast majority of the code from this mod supports. A building which allows you to call dangerous enemies to attack you, in exchange for a reward.
+Do you like fighting? Well you can now fight to get more resources!
+
+The shrine of challenge is highly configurable. However it only updates configuration values at startup. This is something I am considering changing, but it massively simplifies this mod.
+
+
+### Cosmetics
+The secondary goal of this mod is to help in providing cosmetics and functional base building pieces!
 
 Cosmetics
 * Rug color variants
 * Crystal wall variants
-* Lampost color variants
-
-Building Variants
-* Stone Stakes
 
 ## Future Features / Incomplete things
 There are a number of things that are not yet complete and these are the things I plan on working towards.
@@ -45,6 +56,7 @@ There are a number of things that are not yet complete and these are the things 
 * A stake variant that is more expensive but does not get completely destroyed (stops doing damage before it gets destroyed, allows creatures to walk over it)
 * Whitemarble cosmetic variant of blackmarble
 * Torch color variants
+* Lampost color variants
 * Darkwood variant to aesthetically fit other tar coated wood pieces
 
 ## Credits

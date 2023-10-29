@@ -12,7 +12,9 @@ namespace ValheimFortress
         public static ConfigEntry<bool> EnableDebugMode;
         public static ConfigEntry<bool> EnableHordeDrops;
         public static ConfigEntry<bool> EnableBossDrops;
+        public static ConfigEntry<bool> EnableGladiatorMode;
         public static ConfigEntry<int> MaxChallengeLevel;
+        public static ConfigEntry<int> MaxSpawnRange;
         public ConfigFile file;
 
         public VFConfig(ConfigFile Config)
@@ -28,8 +30,18 @@ namespace ValheimFortress
             Config.SaveOnConfigSet = true;
 
             // Max Spawn Radius around the shrine
+            MaxSpawnRange = Config.Bind("Shrine of Challenge", "MaxSpawnRange", 400,
+                new ConfigDescription("The radius around the shrine that enemies can spawn in. When the shrine is not in gladiator mode.",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = false }));
+
             MaxChallengeLevel = Config.Bind("Shrine of Challenge", "MaxLevel", 100,
                 new ConfigDescription("The Maximum level the shrine can be set to, you must still beat bosses to increase your allowed level.",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true }));
+
+            EnableGladiatorMode = Config.Bind("Shrine of Challenge", "EnableGladiatorMode", false,
+                new ConfigDescription("Whether the shrine of challenge should default to spawning mobs on itself (gladiator arena), or remotely (fortress siege).",
                 null,
                 new ConfigurationManagerAttributes { IsAdvanced = true }));
 

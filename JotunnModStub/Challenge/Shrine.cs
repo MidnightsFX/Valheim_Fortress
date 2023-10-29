@@ -16,6 +16,8 @@ namespace ValheimFortress.Challenge
         private static string selected_reward = "";
         private static Int16 selected_level = 0;
         private ZNetView zNetView;
+        public static bool shrine_ui_active = false;
+        public static Int16 spawned_waves = 0;
 
         public bool IsChallengeActive()
         {
@@ -37,6 +39,16 @@ namespace ValheimFortress.Challenge
             spawned_creatures += 1;
         }
 
+        public void WaveSpawned()
+        {
+            spawned_waves -= 1;
+        }
+
+        public void setSpawnedWaveTarget(Int16 target)
+        {
+            spawned_waves = target;
+        }
+
         public void EnablePortal()
         {
             // gets the child object which holds all of the portal fx etc, and enables it
@@ -52,13 +64,13 @@ namespace ValheimFortress.Challenge
 
         public void StartChallengeMode()
         {
-            if (zNetView.IsOwner())
+            if (zNetView.IsOwner() && challenge_active == false)
             {
                 Jotunn.Logger.LogInfo("Challenge started!");
                 challenge_active = true;
             } else
             {
-                Jotunn.Logger.LogInfo("Not scene owner, doing nothing.");
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Not scene owner, doing nothing."); }
             }
             
         }
@@ -67,7 +79,7 @@ namespace ValheimFortress.Challenge
         {
             if (!zNetView.IsOwner())
             {
-                Jotunn.Logger.LogInfo("Not scene owner, not decrementing.");
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Not zview owner, not decrementing."); }
                 return;
             }
             // We don't want to try to decrease this past what is expected.
@@ -88,22 +100,33 @@ namespace ValheimFortress.Challenge
             }
             if (challenge_active == true)
             {
-                if (spawned_creatures == 0)
+                if (spawned_creatures == 0 && spawned_waves <= 0)
                 {
+                    spawned_waves = 0;
                     Jotunn.Logger.LogInfo("Challenge complete! Spawning reward.");
+                    Player.m_localPlayer.Message(MessageHud.MessageType.Center, "Challenge Complete!");
                     Rewards.SpawnReward(selected_reward, selected_level, gameObject);
                     challenge_active = false;
                     Destroy(this.GetComponent<Spawner>()); // remove the spawner since its completed its work and will be recreated for the next challenge.
                 } else
                 {
-                    // Jotunn.Logger.LogInfo($"Challege in progress... {spawned_creatures} creatures remaining.");
+                    // This is INSANELY verbose because its EVERY update
+                    //if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Challege in progress... {spawned_creatures} creatures remaining."); }
+                }
+            } else
+            {
+                // challenge mode is not active yet
+                if (spawned_creatures > 0 && spawned_waves <= 0)
+                {
+                    StartChallengeMode();
+                    Disableportal();
                 }
             }
-            //if (UI.IsPanelVisible(gameObject) && (Input.GetKeyDown(KeyCode.Escape) || ZInput.GetButtonDown("Use") || ZInput.GetButtonDown("Inventory")))
-            //{
-            //    Jotunn.Logger.LogInfo("Shrine UI detected close commands.");
-            //    UI.HideUI();
-            //}
+            if (shrine_ui_active && (Input.GetKeyDown(KeyCode.Escape) || ZInput.GetButtonDown("Use") || ZInput.GetButtonDown("Inventory")))
+            {
+                Jotunn.Logger.LogInfo("Shrine UI detected close commands.");
+                DisableUI();
+            }
 
         }
 
@@ -134,11 +157,16 @@ namespace ValheimFortress.Challenge
 
             //TODO: Add in support for ward checks
 
-            if (!UI.IsPanelVisible())
+            if (!shrine_ui_active)
             {
-                // Jotunn.Logger.LogInfo("Attempting to spawn UI with shrine ref.");
-                // This, for the shrine object passthrough to tell the spawner script where tf we are
-                UI.DisplayUI(this.gameObject);
+                if (challenge_active) 
+                {
+                    Player.m_localPlayer.Message(MessageHud.MessageType.Center, $"A challenge is active! Creatures remaining {spawned_creatures}");
+                } else
+                {
+                    EnableUI();
+                }
+                
             }
 
             return true;
@@ -146,6 +174,18 @@ namespace ValheimFortress.Challenge
         public bool UseItem(Humanoid user, ItemDrop.ItemData item)
         {
             return false;
+        }
+
+        public void EnableUI()
+        {
+            shrine_ui_active = true;
+            UI.DisplayUI(this.gameObject);
+        }
+
+        public void DisableUI()
+        {
+            shrine_ui_active = false;
+            UI.HideUI();
         }
     }
 }
