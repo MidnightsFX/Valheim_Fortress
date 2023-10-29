@@ -1,9 +1,9 @@
 ﻿{
   "name": "ValheimFortress",
-  "description": "",
-  "version_number": "0.0.1",
-  "website_url": "",
+  "description": "Build a base, summon a challenge, defeat it and reap the rewards!",
+  "version_number": "0.5.0",
+  "website_url": "https://discord.gg/Dmr9PQTy9m",
   "dependencies": [
-    "ValheimModding-Jotunn-2.7.9",
+    "ValheimModding-Jotunn-2.14.5",
   ]
 }

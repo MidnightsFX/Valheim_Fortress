@@ -37,7 +37,7 @@ namespace ValheimFortress
                     { "name", "Green Jute Carpet" },
                     { "catagory", "VFortress" },
                     { "prefab", "VFgreen_jute_carpet_circle" },
-                    { "sprite", "arrow_greenmetal" },
+                    { "sprite", "cricle_rug_green" },
                     { "requiredBench", "piece_workbench" }
                 },
                 new Dictionary<string, bool>() { },
@@ -55,7 +55,7 @@ namespace ValheimFortress
                     { "name", "Red Jute Carpet" },
                     { "catagory", "VFortress" },
                     { "prefab", "VFred_jute_carpet_circle" },
-                    { "sprite", "arrow_greenmetal" },
+                    { "sprite", "cricle_rug_red" },
                     { "requiredBench", "piece_workbench" }
                 },
                 new Dictionary<string, bool>() { },
@@ -72,7 +72,7 @@ namespace ValheimFortress
                     { "name", "Yellow Jute Carpet" },
                     { "catagory", "VFortress" },
                     { "prefab", "VFyellow_jute_carpet_circle" },
-                    { "sprite", "arrow_greenmetal" },
+                    { "sprite", "cricle_rug_yellow" },
                     { "requiredBench", "piece_workbench" }
                 },
                 new Dictionary<string, bool>() { },
