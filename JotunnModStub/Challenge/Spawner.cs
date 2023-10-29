@@ -67,7 +67,7 @@ namespace ValheimFortress.Challenge
                     yield return new WaitForSeconds(wave_spawn_delay);
                     Chat.instance.SendPing(spawn_position);
                 }
-                Jotunn.Logger.LogInfo($"Spawning {hoard.creature}");
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Spawning {hoard.creature}"); }
                 Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
                 GameObject creature = UnityEngine.Object.Instantiate(gameObject, spawn_position, rotation);
                 // creature.GetComponent<ZNetView>(); // but why

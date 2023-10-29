@@ -36,10 +36,8 @@ namespace ValheimFortress
             EmbeddedResourceBundle = AssetUtils.LoadAssetBundleFromResources("ValheimFortress.AssetsEmbedded.vfbundle", typeof(ValheimFortress).Assembly);
             // For debug logging, not working right now, again
             // Logger.LogInfo($"Embedded resources: {string.Join(",", typeof(ValheimFortress).Assembly.GetManifestResourceNames())}");
-
-            ValheimFortressPieces vfpieces = new ValheimFortressPieces(EmbeddedResourceBundle, cfg);
             AddLocalizations();
-
+            ValheimFortressPieces vfpieces = new ValheimFortressPieces(EmbeddedResourceBundle, cfg);
 
             // Generate/update/set config values.
             Levels.UpdateCreatureConfigValues(cfg);

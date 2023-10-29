@@ -94,7 +94,7 @@ namespace ValheimFortress.Challenge
         public static void SpawnReward(String reward_resource, Int16 level, GameObject shrine)
         {
             float total_reward_points = rewardsMultiplier * (float)Levels.ComputeChallengePoints(level);
-            Jotunn.Logger.LogInfo($"Points available {total_reward_points}, reward selected: {reward_resource} cost: {resourceRewards[reward_resource].resouce_cost}");
+            Jotunn.Logger.LogInfo($"Points available {total_reward_points}, reward selected: {reward_resource} cost: {resourceRewards[reward_resource].resouce_cost} = {(total_reward_points/ resourceRewards[reward_resource].resouce_cost)}");
             float number_of_rewards = total_reward_points / resourceRewards[reward_resource].resouce_cost;
 
             GameObject shrine_spawnpoint = shrine.transform.Find("spawnpoint").gameObject;
