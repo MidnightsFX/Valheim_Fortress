@@ -70,7 +70,7 @@ namespace ValheimFortress.Challenge
                 challenge_active = true;
             } else
             {
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Not scene owner, doing nothing."); }
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Challenge mode is already active."); }
             }
             
         }
@@ -93,9 +93,14 @@ namespace ValheimFortress.Challenge
 
         public void Update()
         {
+            if (shrine_ui_active && (Input.GetKeyDown(KeyCode.Escape)))
+            {
+                Jotunn.Logger.LogInfo("Shrine UI detected close commands.");
+                DisableUI();
+            }
+            // Everything past here should only be run once, by whatever main thread is controlling the ticks in this region.
             if (!zNetView.IsOwner())
             {
-                //Jotunn.Logger.LogInfo("Not updating challenge status.");
                 return;
             }
             if (challenge_active == true)
@@ -107,27 +112,17 @@ namespace ValheimFortress.Challenge
                     Player.m_localPlayer.Message(MessageHud.MessageType.Center, "Challenge Complete!");
                     Rewards.SpawnReward(selected_reward, selected_level, gameObject);
                     challenge_active = false;
+                    Disableportal();
                     Destroy(this.GetComponent<Spawner>()); // remove the spawner since its completed its work and will be recreated for the next challenge.
-                } else
-                {
-                    // This is INSANELY verbose because its EVERY update
-                    //if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Challege in progress... {spawned_creatures} creatures remaining."); }
                 }
-            } else
-            {
+            } else {
                 // challenge mode is not active yet
                 if (spawned_creatures > 0 && spawned_waves <= 0)
                 {
                     StartChallengeMode();
-                    Disableportal();
+                    EnablePortal();
                 }
             }
-            if (shrine_ui_active && (Input.GetKeyDown(KeyCode.Escape) || ZInput.GetButtonDown("Use") || ZInput.GetButtonDown("Inventory")))
-            {
-                Jotunn.Logger.LogInfo("Shrine UI detected close commands.");
-                DisableUI();
-            }
-
         }
 
         private void Awake()

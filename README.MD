@@ -1,16 +1,12 @@
-﻿# ValheimFortress
+# ValheimFortress
 **!!BETA!!**
 
 What does Beta mean for this project? It should be functional, and probably mostly stable. But may have bugs, and some significant features may change as it gets developed.
 
-There are likely to be some bugs. They might not be bugs that I have not seen already!
-If you run into issues, have suggestions, or just want to chat about the mod you can join the discord server.
-
 Got a bug to report or just want to chat about the mod? Drop by the discord or github.
-|||
-|--|--|
-| Discord | [![discord logo](https://i.imgur.com/uE6umQE.png)](https://discord.gg/Dmr9PQTy9m) |
-| Github | [![github logo](https://i.imgur.com/lvbP5OF.png)](https://github.com/MidnightsFX/Valheim_Fortress)|
+|||||
+|--|--|--|--|
+| Discord | [![discord logo](https://i.imgur.com/uE6umQE.png)](https://discord.gg/Dmr9PQTy9m) | Github | [![github logo](https://i.imgur.com/lvbP5OF.png)](https://github.com/MidnightsFX/Valheim_Fortress) |
  
 
 ---
@@ -108,5 +104,13 @@ If you like this mod maybe you'll like my other work
 - Building pieces don't have wear and tear
 
 ## Changelog
+
+**0.5.1**
+```
+- Fixes for the UI immediately closing when being opened with a key that is also used for other keybinds
+- Fixes for the UI being unopenable by players that are not currently in control of the region
+- Fixes for the spawn-in portal being enabled at the wrong times
+- Reduction in the amount of log-spam that debug mode has when spawning creatures.
+```
 
 **0.5.0** - Initial beta release!

@@ -41,7 +41,7 @@ namespace ValheimFortress.Challenge
                 should_pause_during_horde = false;
                 Jotunn.Logger.LogInfo($"Hoard {hoard.creature} does not have any pausepoints, and will spawn immediately.");
             } else {
-                Jotunn.Logger.LogInfo($"Hoard {hoard.creature} pausepoints {hoard_frac} {hoard_frac * 2}");
+                Jotunn.Logger.LogInfo($"Hoard {hoard.creature} pausepoints {hoard_frac} {hoard_frac * 2}.");
             }
 
             int pause_point_1 = hoard_frac;
@@ -63,11 +63,12 @@ namespace ValheimFortress.Challenge
 
                 if (should_pause_during_horde && i == hoard_frac || i == (hoard_frac * 2))
                 {
-                    Jotunn.Logger.LogInfo($"Pausing for {wave_spawn_delay} seconds");
+                    Jotunn.Logger.LogInfo($"Pausing {hoard.creature} spawning for wave-delay of {wave_spawn_delay} seconds.");
                     yield return new WaitForSeconds(wave_spawn_delay);
                     Chat.instance.SendPing(spawn_position);
                 }
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Spawning {hoard.creature}"); }
+                // This is really verbose
+                // if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Spawning {hoard.creature}"); }
                 Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
                 GameObject creature = UnityEngine.Object.Instantiate(gameObject, spawn_position, rotation);
                 // creature.GetComponent<ZNetView>(); // but why
