@@ -25,7 +25,7 @@ Wave survival through the Shrine of Challenge. Cosmetic building variants, and f
 
 ### The shrine of challenge
 
-![Shrine of Challenge Icon](https://i.imgur.com/mEcWfTp.png)
+![Shrine of Challenge example](https://i.imgur.com/InPMrmL.gif)
 
 This is what the vast majority of the code from this mod supports. A building which allows you to call dangerous enemies to attack you, in exchange for a reward.
 Do you like fighting? Well you can now fight to get more resources!
@@ -106,6 +106,11 @@ If you like this mod maybe you'll like my other work
 - Building pieces don't have wear and tear
 
 ## Changelog
+**0.5.2**
+```
+- Localization works in almost every spot now (rewards selector text being the exception)
+- Added a small example of what its like using this mod
+```
 
 **0.5.1**
 ```

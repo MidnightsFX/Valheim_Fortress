@@ -25,7 +25,7 @@ Wave survival through the Shrine of Challenge. Cosmetic building variants, and f
 
 ### The shrine of challenge
 
-![Shrine of Challenge Icon](https://i.imgur.com/mEcWfTp.png)
+![Shrine of Challenge example](https://i.imgur.com/InPMrmL.gif)
 
 This is what the vast majority of the code from this mod supports. A building which allows you to call dangerous enemies to attack you, in exchange for a reward.
 Do you like fighting? Well you can now fight to get more resources!
@@ -99,6 +99,7 @@ If you like this mod maybe you'll like my other work
 ## Known issues
 - Localization for rewards is not finished
 	- Many languages do not have a localization yet
+- Shrine of challenge placement collision is not restrictive
 - No Hugin tutorial for the Shrine of Challenge
 - Sanity checking pieces recipes does not happen
 - Building pieces sometimes don't have destructable bits

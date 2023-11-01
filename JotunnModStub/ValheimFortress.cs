@@ -18,7 +18,7 @@ namespace ValheimFortress
     {
         public const string PluginGUID = "com.midnightsfx.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.5.1";
+        public const string PluginVersion = "0.5.2";
 
         internal static ValheimFortress Instance { get; private set; }
 
