@@ -111,18 +111,12 @@
   <ItemGroup>
     <None Include="app.config" />
     <EmbeddedResource Include="AssetsEmbedded\vfbundle" />
-    <None Include="Localizations\English.json" />
+    <EmbeddedResource Include="Localizations\English.json" />
     <None Include="packages.config" />
     <None Include="README.md" />
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Folder Include="Package\plugins\" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Package\manifest.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Package\icon.png" />
     <None Include="DoPrebuild.props" />
     <None Include="Environment.props" />
   </ItemGroup>

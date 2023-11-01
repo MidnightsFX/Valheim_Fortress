@@ -22,5 +22,38 @@
   "shrine_warning_plains": "The Plains sends its warbands.",
   "shrine_warning_plains_boss": "Yagluth rises for revenge.",
   "shrine_warning_mistlands": "The Mists part to a skittering horde.",
-  "shrine_warning_mistlands_boss": "The Queen stalks her prey."
+  "shrine_warning_mistlands_boss": "The Queen stalks her prey.",
+  // Shrine of challenge piecename
+  "piece_shrine_of_challenge": "Shrine of challenge",
+  // Shrine level selector menu
+  "shrine_menu_meadow": "Meadows",
+  "shrine_menu_forest": "BlackForest",
+  "shrine_menu_swamp": "Swamp",
+  "shrine_menu_mountain": "Mountains",
+  "shrine_menu_plains": "Plains",
+  "shrine_menu_mistland": "Mistlands",
+  "shrine_menu_ashland": "Ashlands",
+  "shrine_menu_boss": "Boss",
+  // Shrine rewards
+  "reward_coin": "coins",
+  "reward_wood": "wood",
+  "reward_copper": "copper",
+  "reward_tin": "tin",
+  "reward_iron": "iron",
+  "reward_silver": "silver",
+  "reward_darkmetal": "darkmetal",
+  "reward_corewood": "corewood",
+  "reward_finewood": "finewood",
+  "reward_guck": "guck",
+  "reward_tar": "tar",
+  "reward_etir": "etir",
+  "reward_tissue": "tissue",
+  // Shrine static text
+  "shrine_header": "Face Odins Enemies",
+  "shrine_description": "Face an overwhelming challenge in return for a desired reward.\nMore rewards can be unlocked by defeating the world bosses.\nHigher levels give larger rewards.",
+  "shrine_warning": "You will face overwhelming odds.",
+  "shrine_reward_label": "Desired Reward",
+  "shrine_level_label": "Wave Strength",
+  "shrine_confirm": "To Valhalla!",
+  "shrine_cancel": "x"
 }

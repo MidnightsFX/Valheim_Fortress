@@ -97,7 +97,8 @@ If you like this mod maybe you'll like my other work
 	- The continued blogposts about upcoming Valheim content, which got my gears grinding to make this mod
 
 ## Known issues
-- Localization does not work yet
+- Localization for rewards is not finished
+	- Many languages do not have a localization yet
 - No Hugin tutorial for the Shrine of Challenge
 - Sanity checking pieces recipes does not happen
 - Building pieces sometimes don't have destructable bits

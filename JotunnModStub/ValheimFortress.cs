@@ -25,11 +25,6 @@ namespace ValheimFortress
         AssetBundle EmbeddedResourceBundle;
         public VFConfig cfg;
 
-
-        // Use this class to add your own localization to the game
-        // https://valheim-modding.github.io/Jotunn/tutorials/localization.html
-        public static CustomLocalization Localization = LocalizationManager.Instance.GetLocalization();
-
         private void Awake()
         {
             cfg = new VFConfig(Config);
@@ -58,13 +53,15 @@ namespace ValheimFortress
         // https://valheim-modding.github.io/Jotunn/data/localization/language-list.html
         private void AddLocalizations()
         {
-            Localization = LocalizationManager.Instance.GetLocalization();
-
+            // Use this class to add your own localization to the game
+            // https://valheim-modding.github.io/Jotunn/tutorials/localization.html
+            CustomLocalization Localization = LocalizationManager.Instance.GetLocalization();
             // ValheimFortress.localizations.English.json
             // load all localization files within the localizations directory
+            Logger.LogInfo("Loading Localizations.");
             foreach (string embeddedResouce in typeof(ValheimFortress).Assembly.GetManifestResourceNames())
             {
-                if (!embeddedResouce.Contains("localizations")) { continue; }
+                if (!embeddedResouce.Contains("Localizations")) { continue; }
                 // Read the localization file
                 string localization = ReadEmbeddedResourceFile(embeddedResouce);
                 // since I use comments in the localization that are not valid JSON those need to be stripped

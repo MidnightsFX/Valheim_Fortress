@@ -15,7 +15,7 @@ namespace ValheimFortress.Challenge
         static GameObject Shrine;
 
         static List<String> currentLevels = new List<String> {};
-        static List<String> availableRewards = new List<String> { };
+        static List<String> availableRewards = new List<String> {};
         public static GameObject levelSelector;
         public static GameObject rewardSelector;
         public static Int16 maxChallengeLevel = 30; // TODO: Make this configurable? make level generation dynamic?
@@ -122,13 +122,13 @@ namespace ValheimFortress.Challenge
             String biome_or_boss = "";
             for (int i = 1; i <= max_level; i++)
             {
-                if (i == 5 || i == 10 || i == 15 || i == 20 || i == 25 || i == 30) { biome_or_boss = "Boss"; }
-                if (i > 0 && i < 5) { biome_or_boss = "Meadows"; }
-                if (i > 5 && i < 10) { biome_or_boss = "BlackForest"; }
-                if (i > 10 && i < 15) { biome_or_boss = "Swamp"; }
-                if (i > 15 && i < 20) { biome_or_boss = "Mountain"; }
-                if (i > 20 && i < 25) { biome_or_boss = "Plains"; }
-                if (i > 25 && i < 30) { biome_or_boss = "Mistlands"; }
+                if (i == 5 || i == 10 || i == 15 || i == 20 || i == 25 || i == 30) { biome_or_boss = Localization.instance.Localize("$shrine_menu_boss"); }
+                if (i > 0 && i < 5) { biome_or_boss = Localization.instance.Localize("$shrine_menu_meadow"); }
+                if (i > 5 && i < 10) { biome_or_boss = Localization.instance.Localize("$shrine_menu_forest"); }
+                if (i > 10 && i < 15) { biome_or_boss = Localization.instance.Localize("$shrine_menu_swamp"); }
+                if (i > 15 && i < 20) { biome_or_boss = Localization.instance.Localize("$shrine_menu_mountain"); }
+                if (i > 20 && i < 25) { biome_or_boss = Localization.instance.Localize("$shrine_menu_plains"); }
+                if (i > 25 && i < 30) { biome_or_boss = Localization.instance.Localize("$shrine_menu_mistland"); }
                 currentLevels.Add($"{i} - {biome_or_boss}");
             }
             Jotunn.Logger.LogInfo("Levels and rewards updated.");
@@ -168,55 +168,56 @@ namespace ValheimFortress.Challenge
                 case 2:
                 case 3:
                 case 4:
-                    challenge_warning = "The Meadow is no longer calm.";
+                    
+                    challenge_warning = Localization.instance.Localize("$shrine_warning_meadows");
                     break;
                 case 5:
-                    challenge_warning = "Eikthyr is angry.";
+                    challenge_warning = Localization.instance.Localize("$shrine_warning_meadows_boss");
                     break;
                 case 6:
                 case 7:
                 case 8:
                 case 9:
-                    challenge_warning = "The Forest grows restless.";
+                    challenge_warning = Localization.instance.Localize("$shrine_warning_forest");
                     break;
                 case 10:
-                    challenge_warning = "The Forest walks with The Elder.";
+                    challenge_warning = Localization.instance.Localize("$shrine_warning_forest_boss");
                     break;
                 case 11:
                 case 12:
                 case 13:
                 case 14:
-                    challenge_warning = "The Swamp keeps its dead.";
+                    challenge_warning = Localization.instance.Localize("$shrine_warning_swamp");
                     break;
                 case 15:
-                    challenge_warning = "Bonemass rises from the swamp.";
+                    challenge_warning = Localization.instance.Localize("$shrine_warning_swamp_boss");
                     break;
                 case 16:
                 case 17:
                 case 18:
                 case 19:
-                    challenge_warning = "The Mountain echos in howls.";
+                    challenge_warning = Localization.instance.Localize("$shrine_warning_mountain");
                     break;
                 case 20:
-                    challenge_warning = "Moder descends from the mountain.";
+                    challenge_warning = Localization.instance.Localize("$shrine_warning_mountain_boss");
                     break;
                 case 21:
                 case 22:
                 case 23:
                 case 24:
-                    challenge_warning = "The Plains sends its warbands.";
+                    challenge_warning = Localization.instance.Localize("$shrine_warning_plains");
                     break;
                 case 25:
-                    challenge_warning = "Yagluth rises for revenge.";
+                    challenge_warning = Localization.instance.Localize("$shrine_warning_plains_boss");
                     break;
                 case 26:
                 case 27:
                 case 28:
                 case 29:
-                    challenge_warning = "The Mists part to a skittering horde.";
+                    challenge_warning = Localization.instance.Localize("$shrine_warning_mistlands");
                     break;
                 case 30:
-                    challenge_warning = "The Queen stalks her prey.";
+                    challenge_warning = Localization.instance.Localize("$shrine_warning_mistlands_boss");
                     break;
             }
 
@@ -272,7 +273,7 @@ namespace ValheimFortress.Challenge
 
             // Create the title
             GUIManager.Instance.CreateText(
-                text: "Face Odins Enemies",
+                text: Localization.instance.Localize("$shrine_header"), 
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
@@ -287,7 +288,7 @@ namespace ValheimFortress.Challenge
                 addContentSizeFitter: false);
             // Subtitle description
             GUIManager.Instance.CreateText(
-                text: "Face an overwhelming challenge in return for a desired reward.\nMore rewards can be unlocked by defeating the world bosses.\nHigher levels give larger rewards.",
+                text: Localization.instance.Localize("$shrine_description"),
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
@@ -301,7 +302,7 @@ namespace ValheimFortress.Challenge
                 height: 80f,
                 addContentSizeFitter: false);
             GUIManager.Instance.CreateText(
-                text: "You will face overwhelming odds.",
+                text: Localization.instance.Localize("$shrine_warning"),
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
@@ -327,7 +328,7 @@ namespace ValheimFortress.Challenge
             rewardSelector.GetComponent<Dropdown>().AddOptions(availableRewards);
             // Rewards text
             GUIManager.Instance.CreateText(
-                text: "Desired Reward",
+                text: Localization.instance.Localize("$shrine_reward_label"),
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
@@ -353,7 +354,7 @@ namespace ValheimFortress.Challenge
             levelSelector.GetComponent<Dropdown>().AddOptions(currentLevels);
             // Level selector text
             GUIManager.Instance.CreateText(
-                text: "Wave Strength",
+                text: Localization.instance.Localize("$shrine_level_label"),
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
@@ -370,7 +371,7 @@ namespace ValheimFortress.Challenge
 
             // Create the start button object
             GameObject startButtonObj = GUIManager.Instance.CreateButton(
-                text: "To Valhalla!",
+                text: Localization.instance.Localize("$shrine_confirm"),
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
@@ -381,7 +382,7 @@ namespace ValheimFortress.Challenge
 
             // Create the close button object
             GameObject cancelButtonObj = GUIManager.Instance.CreateButton(
-                text: "x",
+                text: Localization.instance.Localize("$shrine_cancel"),
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),

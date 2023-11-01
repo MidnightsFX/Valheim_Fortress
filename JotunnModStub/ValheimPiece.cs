@@ -248,7 +248,6 @@ namespace ValheimFortress
                     if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"Building Piececonfig for {metadata["name"]}."); }
                     PieceConfig piececfg = new PieceConfig()
                     {
-                        Name = $"{metadata["name"]}",
                         CraftingStation = $"{metadata["requiredBench"]}",
                         PieceTable = PieceTables.Hammer,
                         Category = metadata["catagory"],

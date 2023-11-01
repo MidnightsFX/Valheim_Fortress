@@ -132,9 +132,9 @@ namespace ValheimFortress.Challenge
 
         public string GetHoverText()
         {
-            // TODO: Should be replaced with a hugin tutorial text.
-            // TODO: Localization
-            return "\n[<color=yellow><b>E</b></color>] Alter of Challenge";
+            string text = "[<color=yellow><b>$KEY_Use</b></color>] $piece_shrine_of_challenge";
+            return Localization.instance.Localize(text);
+            // return "\n[<color=yellow><b>E</b></color>] Alter of Challenge";
         }
 
         public string GetHoverName()
