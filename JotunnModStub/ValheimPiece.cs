@@ -25,6 +25,7 @@ namespace ValheimFortress
             LoadRugs(EmbeddedResourceBundle, config);
             LoadGlassWalls(EmbeddedResourceBundle, config);
             LoadAlterOfChallenge(EmbeddedResourceBundle, config);
+            LoadDefenses(EmbeddedResourceBundle, config);
         }
 
         private void LoadRugs(AssetBundle EmbeddedResourceBundle, VFConfig cfg)
@@ -41,10 +42,10 @@ namespace ValheimFortress
                     { "requiredBench", "piece_workbench" }
                 },
                 new Dictionary<string, bool>() { },
-                new Dictionary<string, int>()
+                new Dictionary<string, Tuple<int, bool>>()
                 {
-                    { "Guck", 1 },
-                    { "JuteRed", 4 },
+                    { "Guck", Tuple.Create(1, true) },
+                    { "JuteRed", Tuple.Create(4, true) },
                 }
             );
             // Red Jute Carpet
@@ -59,9 +60,9 @@ namespace ValheimFortress
                     { "requiredBench", "piece_workbench" }
                 },
                 new Dictionary<string, bool>() { },
-                new Dictionary<string, int>()
+                new Dictionary<string, Tuple<int, bool>>()
                 {
-                    { "JuteRed", 4 }
+                    { "JuteRed", Tuple.Create(4, true) }
                 }
             );
             // Yellow Jute Carpet
@@ -76,10 +77,10 @@ namespace ValheimFortress
                     { "requiredBench", "piece_workbench" }
                 },
                 new Dictionary<string, bool>() { },
-                new Dictionary<string, int>()
+                new Dictionary<string, Tuple<int, bool>>()
                 {
-                    { "Dandelion", 4 },
-                    { "JuteRed", 4 },
+                    { "Dandelion", Tuple.Create(4, true) },
+                    { "JuteRed", Tuple.Create(4, true) },
                 }
             );
         }
@@ -98,10 +99,10 @@ namespace ValheimFortress
                     { "requiredBench", "piece_workbench" }
                 },
                 new Dictionary<string, bool>() { },
-                new Dictionary<string, int>()
+                new Dictionary<string, Tuple<int, bool>>()
                 {
-                    { "Blueberries", 4 },
-                    { "Crystal", 2 },
+                    { "Blueberries", Tuple.Create(4, true)},
+                    { "Crystal", Tuple.Create(2, true)},
                 }
             );
             // Red Crystal Wall
@@ -116,10 +117,10 @@ namespace ValheimFortress
                     { "requiredBench", "piece_workbench" }
                 },
                 new Dictionary<string, bool>() { },
-                new Dictionary<string, int>()
+                new Dictionary<string, Tuple<int, bool>>()
                 {
-                    { "Raspberry", 2 },
-                    { "Crystal", 2 },
+                    { "Raspberry", Tuple.Create(2, true) },
+                    { "Crystal", Tuple.Create(2, true) },
                 }
             );
             // Yellow Crystal Wall
@@ -134,10 +135,10 @@ namespace ValheimFortress
                     { "requiredBench", "piece_workbench" }
                 },
                 new Dictionary<string, bool>() { },
-                new Dictionary<string, int>()
+                new Dictionary<string, Tuple<int, bool>>()
                 {
-                    { "Dandelion", 2 },
-                    { "Crystal", 2 },
+                    { "Dandelion", Tuple.Create(2, true) },
+                    { "Crystal", Tuple.Create(2, true) },
                 }
             );
             // Green Crystal Wall
@@ -152,10 +153,10 @@ namespace ValheimFortress
                     { "requiredBench", "piece_workbench" }
                 },
                 new Dictionary<string, bool>() { },
-                new Dictionary<string, int>()
+                new Dictionary<string, Tuple<int, bool>>()
                 {
-                    { "Guck", 2 },
-                    { "Crystal", 2 },
+                    { "Guck", Tuple.Create(2, true) },
+                    { "Crystal", Tuple.Create(2, true) },
                 }
             );
         }
@@ -174,20 +175,42 @@ namespace ValheimFortress
                     { "requiredBench", "piece_workbench" }
                 },
                 new Dictionary<string, bool>() { },
-                new Dictionary<string, int>()
+                new Dictionary<string, Tuple<int, bool>>()
                 {
-                    { "Stone", 23 },
-                    { "Ruby", 4 },
-                    { "Coins", 100 },
+                    { "Stone", Tuple.Create(23, true) },
+                    { "Ruby", Tuple.Create(4, true) },
+                    { "Coins", Tuple.Create(100, false) },
                 },
                 true
+            );
+        }
+
+        private void LoadDefenses(AssetBundle EmbeddedResourceBundle, VFConfig cfg)
+        {
+            // Stone spikes
+            new ValheimPiece(
+                EmbeddedResourceBundle,
+                cfg,
+                new Dictionary<string, string>() {
+                    { "name", "Stone Spikes" },
+                    { "catagory", "Misc" },
+                    { "prefab", "VFstone_stakes" },
+                    { "sprite", "stone_spikes" },
+                    { "requiredBench", "piece_stonecutter" }
+                },
+                new Dictionary<string, bool>() { },
+                new Dictionary<string, Tuple<int, bool>>()
+                {
+                    { "Stone", Tuple.Create(30, false) },
+                    { "Silver", Tuple.Create(2, true) },
+                }
             );
         }
 
         class ValheimPiece
         {
             String[] allowed_catagories = { "Furniture", "Building", "Crafting", "Misc", "VFortress" };
-            String[] crafting_stations = { "forge", "piece_workbench", "blackforge", "piece_artisanstation" };
+            String[] crafting_stations = { "forge", "piece_workbench", "blackforge", "piece_artisanstation", "piece_stonecutter" };
             /// <summary>
             /// 
             /// </summary>
@@ -202,7 +225,7 @@ namespace ValheimFortress
                 VFConfig cfg,
                 Dictionary<String, String> metadata,
                 Dictionary<String, bool> piecetoggle,
-                Dictionary<String, int> recipedata,
+                Dictionary<String, Tuple<int, bool>> recipedata,
                 bool prefabscript = false
                 )
             {
@@ -231,6 +254,7 @@ namespace ValheimFortress
                     Sprite sprite = EmbeddedResourceBundle.LoadAsset<Sprite>($"Assets/Custom/Icons/piece_icons/{metadata["sprite"]}.png");
 
                     // This is the interaction script for the shrine of challenge.
+                    // this is lazy and if I ever need to add more custom at-creation componets I'll be refactoring it
                     if(prefabscript)
                     {
                         prefab.AddComponent<Shrine>();
@@ -240,10 +264,18 @@ namespace ValheimFortress
                     if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"Loading {metadata["name"]} updated Recipe."); }
                     RequirementConfig[] recipe = new RequirementConfig[recipedata.Count];
                     int recipe_index = 0;
-                    foreach (KeyValuePair<string, int> entry in recipedata)
+                    foreach (KeyValuePair<string, Tuple<int, bool>> entry in recipedata)
                     {
-                        recipe[recipe_index] = new RequirementConfig { Item = entry.Key, Amount = entry.Value };
+                        recipe[recipe_index] = new RequirementConfig { Item = entry.Key, Amount = entry.Value.Item1, Recover = entry.Value.Item2 };
                         recipe_index++;
+                    }
+                    if (VFConfig.EnableDebugMode.Value == true) {
+                        Logger.LogInfo($"Piece {metadata["name"]} Recipe:");
+                        foreach (RequirementConfig requirement in recipe)
+                        {
+                            Logger.LogInfo($"Requires: {requirement.Amount} {requirement.Item} Recover: {requirement.Recover}");
+                        }
+                        
                     }
                     if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"Building Piececonfig for {metadata["name"]}."); }
                     PieceConfig piececfg = new PieceConfig()
@@ -270,7 +302,7 @@ namespace ValheimFortress
             /// <param name="metadata"></param>
             /// <param name="itemdata"></param>
             /// <param name="itemtoggles"></param>
-            private void CreateAndLoadConfigValues(VFConfig config, Dictionary<String, String> metadata, Dictionary<String, bool> piecetoggle, Dictionary<String, int> recipedata)
+            private void CreateAndLoadConfigValues(VFConfig config, Dictionary<String, String> metadata, Dictionary<String, bool> piecetoggle, Dictionary<String, Tuple<int, bool>> recipedata)
             {
                 piecetoggle["enabled"] = config.BindServerConfig($"{metadata["catagory"]} - {metadata["name"]}", $"{metadata["short_item_name"]}-Enable", piecetoggle["enabled"], $"Enable/Disable the {metadata["name"]}.").Value;
 
@@ -282,16 +314,16 @@ namespace ValheimFortress
                 }
                 // Recipe Configs
                 String recipe_cfg = "";
-                foreach (KeyValuePair<string, int> entry in recipedata)
+                foreach (KeyValuePair<string, Tuple<int, bool>> entry in recipedata)
                 {
                     if (recipe_cfg.Length > 0) { recipe_cfg += "|"; }
-                    recipe_cfg += $"{entry.Key},{entry.Value}";
+                    recipe_cfg += $"{entry.Key},{entry.Value.Item1},{entry.Value.Item2}";
                 }
                 String RawRecipe;
-                RawRecipe = config.BindServerConfig($"{metadata["catagory"]} - {metadata["name"]}", $"{metadata["short_item_name"]}-recipe", recipe_cfg, $"Recipe to craft, Find item ids: https://valheim.fandom.com/wiki/Item_IDs, at most 4 costs. Format: resouce_id,craft_cost eg: Wood,8|Iron,12", true).Value;
+                RawRecipe = config.BindServerConfig($"{metadata["catagory"]} - {metadata["name"]}", $"{metadata["short_item_name"]}-recipe", recipe_cfg, $"Recipe to craft, Find item ids: https://valheim.fandom.com/wiki/Item_IDs, at most 4 costs. Format: resouce_id,craft_cost-recover_flag eg: Wood,8,false|Iron,12,true", true).Value;
                 if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"recieved rawrecipe data: '{RawRecipe}'"); }
                 String[] RawRecipeEntries = RawRecipe.Split('|');
-                Dictionary<String, int> updated_recipe = new Dictionary<String, int>();
+                Dictionary<String, Tuple<int, bool>> updated_recipe = new Dictionary<String, Tuple<int, bool>>();
                 // we only clear out the default recipe if there is recipe data provided, otherwise we will continue to use the default recipe
                 // TODO: Add a sanity check to ensure that recipe formatting is correct
                 if (VFConfig.EnableDebugMode.Value == true)
@@ -303,7 +335,7 @@ namespace ValheimFortress
                     foreach (String recipe_entry in RawRecipeEntries)
                     {
                         String[] recipe_segments = recipe_entry.Split(',');
-                        if (VFConfig.EnableDebugMode.Value == true)
+                        if(VFConfig.EnableDebugMode.Value == true)
                         {
                             String split_segments = "";
                             foreach (String segment in recipe_segments)
@@ -312,14 +344,19 @@ namespace ValheimFortress
                             }
                             Logger.LogInfo($"recipe segments: {split_segments} from {recipe_entry}");
                         }
-                        if(VFConfig.EnableDebugMode.Value) { Logger.LogInfo($"Setting recipe requirement: {recipe_segments[0]}={recipe_segments[1]}"); }
+                        bool recovery = true;
+                        if (recipe_segments.Length > 2) { recovery = bool.Parse(recipe_segments[2]); }
+                        if (VFConfig.EnableDebugMode.Value) { Logger.LogInfo($"Setting recipe requirement: {recipe_segments[0]}={recipe_segments[1]} recover={recovery}"); }
                         // Add a sanity check to ensure the prefab we are trying to use exists
-                        updated_recipe.Add(recipe_segments[0], (Int32.Parse(recipe_segments[1])));
+                        // This is likely going to need to be late-loaded configuration where we always use the default on modload and then switch the configuration values defined by the user
+                        // closer the game init, this will allow setting prefabs/crafting stations that are outside of the scope of thsi mod. Will need more sanity checks.
+
+                        updated_recipe.Add(recipe_segments[0], Tuple.Create(Int32.Parse(recipe_segments[1]), recovery));
                     }
                     recipedata.Clear();
-                    foreach (KeyValuePair<string, int> entry in updated_recipe)
+                    foreach (KeyValuePair<string, Tuple<int, bool>> entry in updated_recipe)
                     {
-                        if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"Updated recipe: resouce: {entry.Key} build: {entry.Value}"); }
+                        if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"Updated recipe: resouce: {entry.Key} build: {entry.Value.Item1} recovery: {entry.Value.Item2}"); }
                         recipedata.Add(entry.Key, entry.Value);
                     }
                 }

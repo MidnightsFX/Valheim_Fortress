@@ -30,20 +30,19 @@ namespace ValheimFortress.Challenge
 
         public static Dictionary<String, RewardEntry> resourceRewards = new Dictionary<string, RewardEntry>
         {
-            { "Coin", new RewardEntry(resource_prefab: "Coins", resouce_cost: 5, required_boss: "None", enabled: true)},
-            { "Wood", new RewardEntry(resource_prefab: "Wood", resouce_cost: 8, required_boss: "Eikythr", enabled: true)},
-            { "CoreWood", new RewardEntry(resource_prefab: "RoundLog", resouce_cost: 15, required_boss: "BoneMass", enabled: true)},
-            { "FineWood", new RewardEntry(resource_prefab: "FineWood", resouce_cost: 18, required_boss: "Moder", enabled: true)},
-            { "Copper", new RewardEntry(resource_prefab: "CopperOre", resouce_cost: 30, required_boss: "TheElder", enabled: true)},
-            { "Tin", new RewardEntry(resource_prefab: "TinOre", resouce_cost: 30, required_boss: "TheElder", enabled: true)},
-            { "Iron", new RewardEntry(resource_prefab: "IronScrap", resouce_cost: 40, required_boss: "BoneMass", enabled: true)},
-            { "Silver", new RewardEntry(resource_prefab: "SilverOre", resouce_cost: 50, required_boss: "Moder", enabled: true)},
-            { "Darkmetal", new RewardEntry(resource_prefab: "BlackMetalScrap", resouce_cost: 60, required_boss: "Yagluth", enabled: true)},
-            { "Tar", new RewardEntry(resource_prefab: "Tar", resouce_cost: 20, required_boss: "Yagluth", enabled: true)},
-            { "Guck", new RewardEntry(resource_prefab: "Guck", resouce_cost: 20, required_boss: "BoneMass", enabled: false)},
-            { "Sap", new RewardEntry(resource_prefab: "Sap", resouce_cost: 25, required_boss: "TheQueen", enabled: true)},
-            { "SoftTissue", new RewardEntry(resource_prefab: "Softtissue", resouce_cost: 70, required_boss: "TheQueen", enabled: true)},
-
+            { ValheimFortress.LocalizeOrDefault("$reward_coin", "Coin"), new RewardEntry(resource_prefab: "Coins", resouce_cost: 5, required_boss: "None", enabled: true)},
+            { ValheimFortress.LocalizeOrDefault("$reward_wood", "Wood"), new RewardEntry(resource_prefab: "Wood", resouce_cost: 8, required_boss: "Eikythr", enabled: true)},
+            { ValheimFortress.LocalizeOrDefault("$reward_corewood", "CoreWood"), new RewardEntry(resource_prefab: "RoundLog", resouce_cost: 15, required_boss: "BoneMass", enabled: true)},
+            { ValheimFortress.LocalizeOrDefault("$reward_finewood", "FineWood"), new RewardEntry(resource_prefab: "FineWood", resouce_cost: 18, required_boss: "Moder", enabled: true)},
+            { ValheimFortress.LocalizeOrDefault("$reward_copper", "Copper"), new RewardEntry(resource_prefab: "CopperOre", resouce_cost: 30, required_boss: "TheElder", enabled: true)},
+            { ValheimFortress.LocalizeOrDefault("$reward_tin", "Tin"), new RewardEntry(resource_prefab: "TinOre", resouce_cost: 30, required_boss: "TheElder", enabled: true)},
+            { ValheimFortress.LocalizeOrDefault("$reward_iron", "Iron"), new RewardEntry(resource_prefab: "IronScrap", resouce_cost: 40, required_boss: "BoneMass", enabled: true)},
+            { ValheimFortress.LocalizeOrDefault("$reward_silver", "Silver"), new RewardEntry(resource_prefab: "SilverOre", resouce_cost: 50, required_boss: "Moder", enabled: true)},
+            { ValheimFortress.LocalizeOrDefault("$reward_darkmetal", "Darkmetal"), new RewardEntry(resource_prefab: "BlackMetalScrap", resouce_cost: 60, required_boss: "Yagluth", enabled: true)},
+            { ValheimFortress.LocalizeOrDefault("$reward_tar", "Tar"), new RewardEntry(resource_prefab: "Tar", resouce_cost: 20, required_boss: "Yagluth", enabled: true)},
+            { ValheimFortress.LocalizeOrDefault("$reward_guck", "Guck"), new RewardEntry(resource_prefab: "Guck", resouce_cost: 20, required_boss: "BoneMass", enabled: false)},
+            { ValheimFortress.LocalizeOrDefault("$reward_sap", "Sap"), new RewardEntry(resource_prefab: "Sap", resouce_cost: 25, required_boss: "TheQueen", enabled: true)},
+            { ValheimFortress.LocalizeOrDefault("$reward_softtissue", "SoftTissue"), new RewardEntry(resource_prefab: "Softtissue", resouce_cost: 70, required_boss: "TheQueen", enabled: true)},
         };
 
         public static Dictionary<String, RewardEntry> GetResouceRewards()

@@ -69,12 +69,10 @@ These pieces likely need better color balancing, and might have other oddities a
 There are a number of things that are not yet complete and these are the things I plan on working towards.
 
 * Shrine of Challenge
-	* Overhaul the level system, making it dynamic and removing level restrictions, meaning there will be a relatively massive number of potential levels
+	* (maybe) Overhaul the level system, making it dynamic and removing level restrictions, meaning there will be a relatively massive number of potential levels
 	* Adding challenge modifiers, get extra loot for 2x enemies, stronger enemies, multiple bosses etc
-	* Add a Hugin tutorial for the player upon building the Shrine
-	* Change the boss level gating to require hanging up a boss head, like the power alters
+	* (maybe) Change the boss level gating to require hanging up a boss head, like the power alters
 	* Add ward support checking to ensure that the player interacting with the shrine is allowed
-	* Localization support for all text from the Shrine of challenge
 
 * Defensive structures
 	* Potentially a new ballista that is much more expensive, does not require refeuling but shoots slower
@@ -97,15 +95,26 @@ If you like this mod maybe you'll like my other work
 	- The continued blogposts about upcoming Valheim content, which got my gears grinding to make this mod
 
 ## Known issues
-- Localization for rewards is not finished
-	- Many languages do not have a localization yet
-- Shrine of challenge placement collision is not restrictive
-- No Hugin tutorial for the Shrine of Challenge
 - Sanity checking pieces recipes does not happen
 - Building pieces sometimes don't have destructable bits
 - Building pieces don't have wear and tear
 
 ## Changelog
+**0.6.0**
+```
+- Updated recipe parsing to support recovery of crafting componets for structures
+- Fix monster types fighting each other, all spawned enemies are now 'boss' type, and will not be fought by anything else
+- Localization of the rewards selector
+- Hugin tutorial for the shrine of challenge
+- Shrine of challenge now has more collision with the world around it
+- Added stone stakes! Filling the gap between Corewood & Dverger stakes, they are lower damage, but take longer to destroy
+```
+
+**0.5.2**
+```
+- Localization works in almost every spot now (rewards selector text being the exception)
+- Added a small example of what its like using this mod
+```
 
 **0.5.1**
 ```

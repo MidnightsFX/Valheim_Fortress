@@ -321,9 +321,9 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(120f, 6f),
+                position: new Vector2(100f, 6f),
                 fontSize: 16,
-                width: 150f,
+                width: 200f,
                 height: 30f);
             rewardSelector.GetComponent<Dropdown>().AddOptions(availableRewards);
             // Rewards text
@@ -332,7 +332,7 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(-35f, 10f),
+                position: new Vector2(-60f, 10f),
                 font: GUIManager.Instance.AveriaSerifBold,
                 fontSize: 16,
                 color: GUIManager.Instance.ValheimBeige,
@@ -347,9 +347,9 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(120f, -64f),
+                position: new Vector2(100f, -64f),
                 fontSize: 16,
-                width: 150f,
+                width: 200f,
                 height: 30f);
             levelSelector.GetComponent<Dropdown>().AddOptions(currentLevels);
             // Level selector text
@@ -358,7 +358,7 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(-35f, -65f),
+                position: new Vector2(-60f, -65f),
                 font: GUIManager.Instance.AveriaSerifBold,
                 fontSize: 16,
                 color: GUIManager.Instance.ValheimBeige,

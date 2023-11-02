@@ -64,8 +64,8 @@ namespace ValheimFortress.Challenge
                 if (should_pause_during_horde && i == hoard_frac || i == (hoard_frac * 2))
                 {
                     Jotunn.Logger.LogInfo($"Pausing {hoard.creature} spawning for wave-delay of {wave_spawn_delay} seconds.");
-                    yield return new WaitForSeconds(wave_spawn_delay);
                     Chat.instance.SendPing(spawn_position);
+                    yield return new WaitForSeconds(wave_spawn_delay);
                 }
                 // This is really verbose
                 // if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Spawning {hoard.creature}"); }
@@ -75,7 +75,7 @@ namespace ValheimFortress.Challenge
                 shrine.GetComponent<Shrine>().IncrementSpawned();
 
                 // TODO: set to the same faction so they won't fight other spawns?
-                // creature.GetComponent<Humanoid>().m_faction = "Undead";
+                creature.GetComponent<Humanoid>().m_faction = Character.Faction.Boss;
                 // Set the Itemdrop script to be disabled for these creatures, otherwise these hoards are likely to be more rewarding than the reward
                 if (!VFConfig.EnableHordeDrops.Value)
                 {

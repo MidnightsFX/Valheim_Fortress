@@ -76,6 +76,19 @@ namespace ValheimFortress
             }
         }
 
+        public static string LocalizeOrDefault(string str_to_localize,string default_string)
+        {
+            string localized = Localization.instance.Localize(str_to_localize);
+            if(localized == str_to_localize.Replace("$", ""))
+            {
+                Jotunn.Logger.LogInfo($"{str_to_localize} was not localized, returning the default: {default_string}");
+                return default_string;
+            } else
+            {
+                return localized;
+            }
+        }
+
 
         // This reads an embedded file resouce name, these are all resouces packed into the DLL
         // they all have a format following this:

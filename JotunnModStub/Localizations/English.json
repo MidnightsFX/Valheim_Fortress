@@ -10,6 +10,8 @@
   "piece_vf_crystalwall_green": "Green Crystal Wall",
   "piece_vf_crystalwall_red": "Red Crystal Wall",
   "piece_vf_crystalwall_yellow": "Yellow Crystal Wall",
+  // Defensive items
+  "piece_stone_spikes": "Stone Stakes",
   // Localizations for the shrine of challenge UI
   "shrine_warning_meadows": "The Meadow is no longer calm.",
   "shrine_warning_meadows_boss": "Eikthyr is angry.",
@@ -35,19 +37,19 @@
   "shrine_menu_ashland": "Ashlands",
   "shrine_menu_boss": "Boss",
   // Shrine rewards
-  "reward_coin": "coins",
-  "reward_wood": "wood",
-  "reward_copper": "copper",
-  "reward_tin": "tin",
-  "reward_iron": "iron",
-  "reward_silver": "silver",
-  "reward_darkmetal": "darkmetal",
-  "reward_corewood": "corewood",
-  "reward_finewood": "finewood",
-  "reward_guck": "guck",
-  "reward_tar": "tar",
-  "reward_etir": "etir",
-  "reward_tissue": "tissue",
+  "reward_coin": "Coin",
+  "reward_wood": "Wood",
+  "reward_copper": "Copper",
+  "reward_tin": "Tin",
+  "reward_iron": "Iron",
+  "reward_silver": "Silver",
+  "reward_darkmetal": "Darkmetal",
+  "reward_corewood": "CoreWood",
+  "reward_finewood": "FineWood",
+  "reward_guck": "Guck",
+  "reward_tar": "Tar",
+  "reward_sap": "Sap",
+  "reward_softtissue": "SoftTissue",
   // Shrine static text
   "shrine_header": "Face Odins Enemies",
   "shrine_description": "Face an overwhelming challenge in return for a desired reward.\nMore rewards can be unlocked by defeating the world bosses.\nHigher levels give larger rewards.",
@@ -55,5 +57,9 @@
   "shrine_reward_label": "Desired Reward",
   "shrine_level_label": "Wave Strength",
   "shrine_confirm": "To Valhalla!",
-  "shrine_cancel": "x"
+  "shrine_cancel": "x",
+  // Raven tutorial
+  "tutorial_shrine_of_challenge_text": "Hark warrior! You can summon hordes of Odins enemies to fight here, he will reward you generously.\n\nBe careful as Odins enemies are numerous, you could be overwhelmed fighting them all yourself. It would be best to prepare some traps and fortifications.",
+  "tutorial_shrine_of_challenge_topic": "Hugin: Shrine of Challenge",
+  "tutorial_shrine_of_challenge_label": "Hugin: Shrine of Challenge"
 }
