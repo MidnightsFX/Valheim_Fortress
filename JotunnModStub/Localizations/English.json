@@ -12,6 +12,8 @@
   "piece_vf_crystalwall_yellow": "Yellow Crystal Wall",
   // Defensive items
   "piece_stone_spikes": "Stone Stakes",
+  "piece_vfturret": "Automated Turret",
+  "piece_vfturret_description": "A modified turret which uses excessive amounts of magic to materialize ammo, it never needs to be rearmed. Also a bit smarter at targeting, but can't accept a target filter.'",
   // Localizations for the shrine of challenge UI
   "shrine_warning_meadows": "The Meadow is no longer calm.",
   "shrine_warning_meadows_boss": "Eikthyr is angry.",

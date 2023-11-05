@@ -105,9 +105,6 @@ namespace ValheimFortress.Challenge
             }
 
             shrine.GetComponent<Shrine>().WaveSpawned();
-            //shrine.GetComponent<Shrine>().StartChallengeMode();
-            //shrine.GetComponent<Shrine>().Disableportal();
-            // Jotunn.Logger.LogDebug("Spawned: " + hoard.creature);
             yield break;
         }
 

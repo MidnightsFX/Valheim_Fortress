@@ -14,9 +14,9 @@ namespace ValheimFortress.Challenge
     {
         // TODO once these values are someone defined in a sane way and have a reasonable tuning scale, lets make them configurable
         static private Double challenge_slope = 0.2; // TODO make configurable
-        static private Int16 base_challenge_points = 100; // TODO make configurable
-        static private Int16 base_challenge_points_increase = 10; // TODO make configurable
-        static private Int16 max_challenge_points = 3000; // TODO make configurable
+        static private short base_challenge_points = 100;
+        static private short base_challenge_points_increase = 10;
+        static private short max_challenge_points = 3000; // TODO make configurable
         static private String[] bosses = { "Eikythr", "TheElder", "BoneMass", "Moder", "Yagluth", "TheQueen" };
         static private String[] spawnTypes = { "common", "rare", "unique" };
 
@@ -180,8 +180,34 @@ namespace ValheimFortress.Challenge
                     entry.Value.maxStars,
                     $"the max number of stars for {entry.Key}. in vanilla above 2 is meaningless & bosses do not have multistar varients.",
                     true).Value;
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Config {entry.Key}_maxstars Added."); }
             }
+        }
+
+        public static void UpdateLevelValues(VFConfig cfg)
+        {
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Config Level base_challenge_points updated."); }
+            base_challenge_points = cfg.BindServerConfig(
+                "shine of challenge - levels",
+                "level_base_challenge_points",
+                (short)100,
+                "The base number of points that all waves add and multiply from. Lowering this will make all waves easier, increasing it will make all waves harder.",
+                true).Value;
+
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Config Level base_challenge_points_increase updated."); }
+            base_challenge_points_increase = cfg.BindServerConfig(
+                "shine of challenge - levels",
+                "base_challenge_points_increase",
+                (short)10,
+                "The base number of points that are added to the base value each wave (level x this value) + base_points. This is the linear difficulty modifier.",
+                true).Value;
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Config Level max_challenge_points updated."); }
+            max_challenge_points = cfg.BindServerConfig(
+                "shine of challenge - levels",
+                "max_challenge_points",
+                (short)3000,
+                "The absolute max number of points a wave can generate with, higher values will be clamped down to this value.",
+                true).Value;
+            
         }
 
 

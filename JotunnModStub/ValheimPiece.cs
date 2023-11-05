@@ -10,6 +10,7 @@ using Jotunn.Utils;
 using BepInEx.Configuration;
 using Jotunn.Configs;
 using ValheimFortress.Challenge;
+using ValheimFortress.Defenses;
 
 namespace ValheimFortress
 {
@@ -181,7 +182,7 @@ namespace ValheimFortress
                     { "Ruby", Tuple.Create(4, true) },
                     { "Coins", Tuple.Create(100, false) },
                 },
-                true
+                shrinescript: true
             );
         }
 
@@ -205,6 +206,28 @@ namespace ValheimFortress
                     { "Silver", Tuple.Create(2, true) },
                 }
             );
+
+            // Modified Turret
+            new ValheimPiece(
+                EmbeddedResourceBundle,
+                cfg,
+                new Dictionary<string, string>() {
+                    { "name", "Magic Turret" },
+                    { "catagory", "Misc" },
+                    { "prefab", "VFpiece_turret" },
+                    { "sprite", "modified_turret" },
+                    { "requiredBench", "piece_artisanstation" }
+                },
+                new Dictionary<string, bool>() { },
+                new Dictionary<string, Tuple<int, bool>>()
+                {
+                    { "BlackMetal", Tuple.Create(20, false) },
+                    { "YggdrasilWood", Tuple.Create(20, false) },
+                    { "MechanicalSpring", Tuple.Create(5, true) },
+                    { "DragonTear", Tuple.Create(2, true) },
+                },
+                turretscript: true
+            );
         }
 
         class ValheimPiece
@@ -226,7 +249,8 @@ namespace ValheimFortress
                 Dictionary<String, String> metadata,
                 Dictionary<String, bool> piecetoggle,
                 Dictionary<String, Tuple<int, bool>> recipedata,
-                bool prefabscript = false
+                bool shrinescript = false,
+                bool turretscript = false
                 )
             {
                 // Validate inputs are valid
@@ -253,12 +277,10 @@ namespace ValheimFortress
                     GameObject prefab = EmbeddedResourceBundle.LoadAsset<GameObject>($"Assets/Custom/Pieces/{metadata["catagory"]}/{metadata["prefab"]}.prefab");
                     Sprite sprite = EmbeddedResourceBundle.LoadAsset<Sprite>($"Assets/Custom/Icons/piece_icons/{metadata["sprite"]}.png");
 
-                    // This is the interaction script for the shrine of challenge.
-                    // this is lazy and if I ever need to add more custom at-creation componets I'll be refactoring it
-                    if(prefabscript)
-                    {
-                        prefab.AddComponent<Shrine>();
-                    }
+                    // These are custom unity componet scripts which have never seen the light of unity. So they arn't baked into the assets
+                    // and must be added later. This allows these scripts to do things like be modified by config values, or reference Jotunn
+                    if(shrinescript) { prefab.AddComponent<Shrine>(); }
+                    if(turretscript) { prefab.AddComponent<VFTurret>(); }
 
                     // Add the recipe with helper
                     if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"Loading {metadata["name"]} updated Recipe."); }

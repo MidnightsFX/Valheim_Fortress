@@ -43,25 +43,27 @@ The secondary goal of this mod is to help in providing cosmetics and functional 
 These pieces likely need better color balancing, and might have other oddities at this point. I've got a slew of cosmetics that I would like to add. It will take time though.
 
 <details>
-<summary>Rugs</summary>
+<summary>Cosmetics</summary>
 
 |Name|Icon|
 |--|--|
 |Green Circle Rug| ![Green circle rug](https://i.imgur.com/59WStBA.png)|
 |Red Circle Rug| ![Red circle rug](https://i.imgur.com/lpGMbPz.png)|
 |Yellow Circle Rug| ![Yellow circle rug](https://i.imgur.com/BDuAfcO.png)|
-
-</details>
-
-<details>
-<summary>Crystal Walls</summary>
-
-|Name|Icon|
-|--|--|
 |Green Crystal wall| ![Green crystal wall](https://i.imgur.com/7uC5Td1.png)|
 |Blue Crystal wall| ![Blue crystal wall](https://i.imgur.com/2XjuTHZ.png)|
 |Red Crystal wall| ![Red crystal wall](https://i.imgur.com/ESTRoai.png)|
 |Yellow Crystal wall| ![Yellow crystal wall](https://i.imgur.com/28FaMnE.png)|
+
+</details>
+
+<details>
+<summary>Defensive Structures</summary>
+
+|Name|Icon|
+|--|--|
+|Stone Stakes| ![Stone Stakes](https://i.imgur.com/SsCC36a.png)|
+|Automated Ballista| ![Automated Ballista](https://i.imgur.com/y3GGKOf.png)|
 
 </details>
 
@@ -73,10 +75,6 @@ There are a number of things that are not yet complete and these are the things 
 	* Adding challenge modifiers, get extra loot for 2x enemies, stronger enemies, multiple bosses etc
 	* (maybe) Change the boss level gating to require hanging up a boss head, like the power alters
 	* Add ward support checking to ensure that the player interacting with the shrine is allowed
-
-* Defensive structures
-	* Potentially a new ballista that is much more expensive, does not require refeuling but shoots slower
-	* A stake variant that is more expensive but does not get completely destroyed (stops doing damage before it gets destroyed, allows creatures to walk over it)
 
 * cosmetics
 	* Whitemarble cosmetic variant of blackmarble
@@ -95,11 +93,17 @@ If you like this mod maybe you'll like my other work
 	- The continued blogposts about upcoming Valheim content, which got my gears grinding to make this mod
 
 ## Known issues
-- Sanity checking pieces recipes does not happen
 - Building pieces sometimes don't have destructable bits
 - Building pieces don't have wear and tear
 
 ## Changelog
+**0.6.1**
+```
+- Fixed Shrine of Challenge interaction with custom hammer mods
+- Added a custom ballista that is more expensive and does not require ammo (and does not shoot at friendlies!)
+- Added configuration values for Shrine base difficulty, ramp per level, difficulty slope and the maximum points that any wave can have
+```
+
 **0.6.0**
 ```
 - Updated recipe parsing to support recovery of crafting componets for structures
