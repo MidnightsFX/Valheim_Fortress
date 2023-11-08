@@ -157,6 +157,7 @@ namespace ValheimFortress.Challenge
                 // Start the coroutine that sends the warning text
                 PreparePhase(selected_level, boss_mode);
                 Shrine.GetComponent<Shrine>().EnablePortal();
+                Shrine.GetComponent<Shrine>().StartChallengeMode();
                 Shrine.GetComponent<Shrine>().SetLevel(selected_level);
                 Shrine.GetComponent<Shrine>().SetReward(selected_reward);
                 if (hard_mode) { Shrine.GetComponent<Shrine>().SetHardMode(); }

@@ -11,7 +11,7 @@ namespace ValheimFortress.Challenge
     static class Rewards
     {
         static private String[] requiredBosses = { "None", "Eikythr", "TheElder", "BoneMass", "Moder", "Yagluth", "TheQueen" };
-        static private float rewardsMultiplier = 2;
+        static private float rewardsMultiplier = 1;
         public class RewardEntry
         {
             public short resouce_cost;
@@ -52,6 +52,14 @@ namespace ValheimFortress.Challenge
 
         public static void UpdateResouceRewards(VFConfig cfg)
         {
+            rewardsMultiplier = cfg.BindServerConfig(
+                "shine of challenge - rewards",
+                "rewardsMultiplier",
+                1.0f,
+                "Multiplier to all rewards (less than 1 will reduce rewards) higher values will increase rewards.",
+                false, 0.001f, 5).Value;
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Config rewardsMultiplier updated."); }
+
             foreach (KeyValuePair<string, RewardEntry> entry in resourceRewards)
             {
 

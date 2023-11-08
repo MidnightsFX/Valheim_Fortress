@@ -135,7 +135,7 @@ namespace ValheimFortress.Challenge
                     Destroy(this.GetComponent<Spawner>()); // remove the spawner since its completed its work and will be recreated for the next challenge.
                 }
             } else {
-                // challenge mode is not active yet
+                // challenge mode is not active yet, this is a fallback to ensure we activate the challenge if its already got metadata
                 if (spawned_creatures > 0 && spawned_waves <= 0)
                 {
                     StartChallengeMode();
