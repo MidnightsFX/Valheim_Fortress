@@ -92,6 +92,7 @@ The Shrine of challenge provides a number of key configuration values which can 
 
 <details>
 <summary>Summary of the difficulty equation</summary>
+
 And now you want to know how these values are actually used to compute the challenge points right?
 look at this summary below
 ```
@@ -105,6 +106,7 @@ allocated_challenge_points = total_increase_points + base_challenge_points
 
 if (allocated_challenge_points > max_challenge_points) { allocated_challenge_points = max_challenge_points; }
 ```
+
 </details>
 
 
