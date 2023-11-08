@@ -12,12 +12,28 @@ namespace ValheimFortress.Challenge
     public class Shrine : MonoBehaviour, Hoverable, Interactable
     {
         public Int32 spawned_creatures = 0;
+        public static bool hard_mode = false;
+        public static bool boss_mode = false;
+        public static bool siege_mode = false;
         private static bool challenge_active = false;
         private static string selected_reward = "";
         private static Int16 selected_level = 0;
         private ZNetView zNetView;
         public static bool shrine_ui_active = false;
         public static Int16 spawned_waves = 0;
+
+        public void SetHardMode()
+        {
+            hard_mode = true;
+        }
+        public void SetBossMode()
+        {
+            boss_mode = true;
+        }
+        public void SetSiegeMode()
+        {
+            siege_mode = true;
+        }
 
         public bool IsChallengeActive()
         {
@@ -110,8 +126,11 @@ namespace ValheimFortress.Challenge
                     spawned_waves = 0;
                     Jotunn.Logger.LogInfo("Challenge complete! Spawning reward.");
                     Player.m_localPlayer.Message(MessageHud.MessageType.Center, "Challenge Complete!");
-                    Rewards.SpawnReward(selected_reward, selected_level, gameObject);
+                    Rewards.SpawnReward(selected_reward, selected_level, gameObject, hard_mode, boss_mode, siege_mode);
                     challenge_active = false;
+                    boss_mode = false;
+                    hard_mode = false;
+                    siege_mode = false;
                     Disableportal();
                     Destroy(this.GetComponent<Spawner>()); // remove the spawner since its completed its work and will be recreated for the next challenge.
                 }

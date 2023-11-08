@@ -90,9 +90,21 @@ namespace ValheimFortress.Challenge
             }
         }
 
-        public static void SpawnReward(String reward_resource, Int16 level, GameObject shrine)
+        public static void SpawnReward(String reward_resource, Int16 level, GameObject shrine, bool hard_mode, bool boss_mode, bool siege_mode)
         {
             float total_reward_points = rewardsMultiplier * (float)Levels.ComputeChallengePoints(level);
+            if (boss_mode) {
+                Jotunn.Logger.LogInfo("Boss Mode was enabled, reward multiplied by x1.25");
+                total_reward_points = total_reward_points * 1.25f;
+            }
+            if (hard_mode) {
+                Jotunn.Logger.LogInfo("Hard Mode was enabled, reward multiplied by x1.5");
+                total_reward_points = total_reward_points * 1.5f;
+            }
+            if (siege_mode) {
+                Jotunn.Logger.LogInfo("Siege Mode was enabled, reward multiplied by x1.5");
+                total_reward_points = total_reward_points * 1.5f; 
+            }
             Jotunn.Logger.LogInfo($"Points available {total_reward_points}, reward selected: {reward_resource} cost: {resourceRewards[reward_resource].resouce_cost} = {(total_reward_points/ resourceRewards[reward_resource].resouce_cost)}");
             float number_of_rewards = total_reward_points / resourceRewards[reward_resource].resouce_cost;
 

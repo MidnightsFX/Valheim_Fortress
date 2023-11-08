@@ -109,10 +109,32 @@ namespace ValheimFortress
         /// <param name="description"></param>
         /// <param name="advanced"></param>
         /// <returns></returns>
-        public ConfigEntry<short> BindServerConfig(string catagory, string key, short value, string description, bool advanced = false)
+        public ConfigEntry<short> BindServerConfig(string catagory, string key, short value, string description, bool advanced = false, short valmin = 0, short valmax = 150)
         {
             return file.Bind(catagory, key, value,
-                new ConfigDescription(description, null,
+                new ConfigDescription(description,
+                new AcceptableValueRange<short>(valmin, valmax),
+                new ConfigurationManagerAttributes { IsAdminOnly = true, IsAdvanced = advanced })
+                );
+        }
+
+        /// <summary>
+        /// Helper to bind configs for float types
+        /// </summary>
+        /// <param name="config_file"></param>
+        /// <param name="catagory"></param>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <param name="description"></param>
+        /// <param name="advanced"></param>
+        /// <param name="valmin"></param>
+        /// <param name="valmax"></param>
+        /// <returns></returns>
+        public ConfigEntry<float> BindServerConfig(string catagory, string key, float value, string description, bool advanced = false, float valmin = 0, float valmax = 150)
+        {
+            return file.Bind(catagory, key, value,
+                new ConfigDescription(description,
+                new AcceptableValueRange<float>(valmin, valmax),
                 new ConfigurationManagerAttributes { IsAdminOnly = true, IsAdvanced = advanced })
                 );
         }

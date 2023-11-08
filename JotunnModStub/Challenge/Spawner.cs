@@ -11,10 +11,9 @@ namespace ValheimFortress.Challenge
 {
     class Spawner : MonoBehaviour
     {
-        static private float wave_spawn_delay = 5f;
         static private List<String> bosses = new List<String>(new string[] { "Eikythr", "TheElder", "BoneMass", "Moder", "Yagluth", "TheQueen" });
 
-        public void TrySpawningHoard(List<Levels.HoardConfig> hoards, GameObject shrine)
+        public void TrySpawningHoard(List<Levels.HoardConfig> hoards, bool siege_mode, GameObject shrine)
         {
             // Should check if you are the runtime owner of this chunk
             Jotunn.Logger.LogInfo($"Trying to spawn {hoards.Count} hoards.");
@@ -23,14 +22,16 @@ namespace ValheimFortress.Challenge
             foreach (Levels.HoardConfig hoard in hoards)
             {
                 Jotunn.Logger.LogInfo($"Starting spawn for {hoard.amount} {hoard.creature}");
-                StartCoroutine(Spawn(hoard, shrine, remote_spawn_locations));
+                StartCoroutine(Spawn(hoard, shrine, siege_mode, remote_spawn_locations));
             }
         }
 
-        IEnumerator Spawn(Levels.HoardConfig hoard, GameObject shrine, Vector3[] remote_spawn_locations)
+        IEnumerator Spawn(Levels.HoardConfig hoard, GameObject shrine, bool siege_mode, Vector3[] remote_spawn_locations)
         {
+            float wave_spawn_delay = 5f;
             float initial_wait = 0.0f;
-            if(VFConfig.EnableGladiatorMode.Value == false) { initial_wait = 5.0f; }
+            if(VFConfig.EnableGladiatorMode.Value == false) { initial_wait = 5.0f; } else { wave_spawn_delay = wave_spawn_delay * 2; }
+            if (siege_mode) { wave_spawn_delay = wave_spawn_delay * 5; } // Increase delay between waves significantly
             yield return new WaitForSeconds(initial_wait);
 
             GameObject gameObject = PrefabManager.Instance.GetPrefab(hoard.prefab);
@@ -63,9 +64,9 @@ namespace ValheimFortress.Challenge
 
                 if (should_pause_during_horde && i == hoard_frac || i == (hoard_frac * 2))
                 {
-                    Jotunn.Logger.LogInfo($"Pausing {hoard.creature} spawning for wave-delay of {wave_spawn_delay} seconds.");
-                    Chat.instance.SendPing(spawn_position);
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Pausing {hoard.creature} spawning for wave-delay of {wave_spawn_delay} seconds."); }
                     yield return new WaitForSeconds(wave_spawn_delay);
+                    Chat.instance.SendPing(spawn_position);
                 }
                 // This is really verbose
                 // if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Spawning {hoard.creature}"); }
@@ -74,7 +75,12 @@ namespace ValheimFortress.Challenge
                 // creature.GetComponent<ZNetView>(); // but why
                 shrine.GetComponent<Shrine>().IncrementSpawned();
 
-                // TODO: set to the same faction so they won't fight other spawns?
+                if (hoard.stars > 0)
+                {
+                    Jotunn.Logger.LogInfo($"Upgrading {hoard.creature} to {hoard.stars} stars.");
+                    Character creature_character = creature.GetComponent<Character>();
+                    if ((bool)creature_character) { creature_character.m_level = hoard.stars; }
+                }
                 creature.GetComponent<Humanoid>().m_faction = Character.Faction.Boss;
                 // Set the Itemdrop script to be disabled for these creatures, otherwise these hoards are likely to be more rewarding than the reward
                 if (!VFConfig.EnableHordeDrops.Value)
@@ -88,19 +94,11 @@ namespace ValheimFortress.Challenge
                 // Add the rewards tracker, and set the reference shrine
                 creature.AddComponent<CreatureTracker>();
                 creature.GetComponent<CreatureTracker>().SetShrine(shrine);
-                // Add the tracker script & set the shrine gameobject
+                // Set the AI to hunt the nearby player
                 BaseAI ai = creature.GetComponent<BaseAI>();
                 if (ai != null)
                 {
                     ai.SetHuntPlayer(true);
-                }
-                if (hoard.stars > 0)
-                {
-                    Character character = creature.GetComponent<Character>();
-                    if ((bool)character)
-                    {
-                        character.SetLevel(hoard.stars);
-                    }
                 }
             }
 

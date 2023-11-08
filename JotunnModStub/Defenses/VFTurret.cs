@@ -12,16 +12,16 @@ namespace ValheimFortress.Defenses
 	public class VFTurret : MonoBehaviour, Hoverable, IPieceMarker
 	{
 		private static float m_turnRate = 80f;
-		private static float m_horizontalAngle = 90f;
-		private static float m_viewDistance = 15f;
-		private static float m_noTargetScanRate = 40f;
+		private static float m_horizontalAngle = 180f;
+		private static float m_viewDistance = 25f;
+		private static float m_noTargetScanRate = 12f;
 		private static float m_attackCooldown = 2f;
 		private static float m_hitNoise = 10f;
-		private static float m_shootWhenAimDiff = 0.05f;
-		private static float m_ammo_accuracy = 0.05f;
+		private static float m_shootWhenAimDiff = 0.99f; // 1 is perfect accuracy, we want to shoot when we are very close to dead center, leaving room for errors
+		private static float m_ammo_accuracy = 0.05f; // Ammo will be perfectly accurate minus this percent, right now 95% accuracy
 		private static float m_predictionModifier = 1f;
-		private static float m_updateTargetIntervalNear = 1f;
-		private static float m_updateTargetIntervalFar = 10f;
+		private static float m_updateTargetIntervalNear = 2f;
+		private static float m_updateTargetIntervalFar = 8f;
 		// private CircleProjector areaMarker;
 		public static float m_markerHideTime = 0.5f;
 		// These are all set later in time
@@ -39,16 +39,17 @@ namespace ValheimFortress.Defenses
 		private GameObject turretBody;
 		private GameObject turretNeck;
 		private GameObject eye;
+		private CircleProjector areaMarker;
 		Quaternion m_baseBodyRotation;
 		Quaternion m_baseNeckRotation;
 		private static bool m_haveTarget = false;
-		private static float m_aimDiffToTarget = 1f; // This needs to start out as a greater than zero value otherwise the turret will always immediately fire when it locks its first target
+		private static float m_aimDiffToTarget = -1f; // This needs to start out as a greater than zero value otherwise the turret will always immediately fire when it locks its first target
 		private static float m_updateTargetTimer = 0f;
 		private static float m_scan = 0f;
 
 		protected void Awake()
 		{
-			Jotunn.Logger.LogInfo("Setting ZNetView");
+			// Jotunn.Logger.LogInfo("Setting ZNetView");
 			m_nview = GetComponent<ZNetView>();
 			if ((bool)m_nview)
 			{
@@ -85,7 +86,7 @@ namespace ValheimFortress.Defenses
 				m_Ammo = m_Projectile.GetComponent<ItemDrop>().m_itemData;
 				//Jotunn.Logger.LogInfo($"Set projectile to {m_Projectile.name}");
 				//Jotunn.Logger.LogInfo($"Set projectile to {m_Ammo}");
-				
+				areaMarker = transform.Find("AreaMarker").gameObject.GetComponent<CircleProjector>();
 
 				//Jotunn.Logger.LogInfo("Setting Effect Prefabs");
 				m_shootEffect = PrefabManager.Instance.GetPrefab("fx_turret_fire");
@@ -99,8 +100,7 @@ namespace ValheimFortress.Defenses
 		{
 			//Jotunn.Logger.LogInfo("Starting turret fixed update");
 			float fixedDeltaTime = Time.fixedDeltaTime;
-			// This never does anything because its never enabled as it stands
-			// UpdateMarker(fixedDeltaTime);
+			UpdateMarker(fixedDeltaTime);
 			if (m_nview.IsValid())
 			{
 				UpdateTurretRotation();
@@ -176,7 +176,8 @@ namespace ValheimFortress.Defenses
 			turretBody.transform.rotation = m_baseBodyRotation * quaternion2;
 			//Jotunn.Logger.LogInfo($"Turret Rotation {turretBody.transform.rotation}.");
 			turretNeck.transform.rotation = m_baseNeckRotation * Quaternion.Euler(0f, turretBody.transform.rotation.eulerAngles.y, turretBody.transform.rotation.eulerAngles.z);
-			m_aimDiffToTarget = (has_target ? Quaternion.Dot(quaternion2, quaternion) : (-1f));
+			//Jotunn.Logger.LogInfo($"has_target:{has_target} {Quaternion.Dot(quaternion2, quaternion)} or 2f");
+			m_aimDiffToTarget = (has_target ? Math.Abs(Quaternion.Dot(quaternion2, quaternion)) : -1f);
 		}
 
 		private void UpdateTarget(float dt)
@@ -205,7 +206,7 @@ namespace ValheimFortress.Defenses
 			}
 			if (m_haveTarget && (!m_target || m_target.IsDead()))
 			{
-				Jotunn.Logger.LogInfo("Target is dead, clearing target.");
+				// Jotunn.Logger.LogInfo("Target is dead, clearing target.");
 				m_nview.InvokeRPC(ZNetView.Everybody, "RPC_SetTarget", ZDOID.None);
 				UnityEngine.Object.Instantiate(m_lostTargetEffect, base.transform.position, base.transform.rotation);
 			}
@@ -248,12 +249,13 @@ namespace ValheimFortress.Defenses
 		public void ShootProjectile(float dt)
 		{
 			// We only fire a shot if we are ready to do so, aka has target, can aim at it, and is ready to fire
-			if (!m_target || (m_aimDiffToTarget < m_shootWhenAimDiff) || IsCoolingDown())
+			// Jotunn.Logger.LogInfo($"m_aimDiffToTarget {m_aimDiffToTarget} > m_shootWhenAimDiff {m_shootWhenAimDiff} ({!(m_aimDiffToTarget > m_shootWhenAimDiff)})");
+			if (!m_target || !(m_aimDiffToTarget > m_shootWhenAimDiff) || IsCoolingDown())
 			{
 				return;
 			}
-			//Jotunn.Logger.LogInfo($"Turret target status:{!(bool)m_target} aimdiff:{(m_aimDiffToTarget < m_shootWhenAimDiff)} cooldown:{IsCoolingDown()}");
-			UnityEngine.Object.Instantiate(m_shootEffect, turretBodyArmed.transform.position, turretBodyArmed.transform.rotation);
+			if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Turret target status:{!(bool)m_target} aimdiff:{m_aimDiffToTarget} > {m_shootWhenAimDiff} ({!(m_aimDiffToTarget > m_shootWhenAimDiff)}) cooldown:{IsCoolingDown()}"); }
+			UnityEngine.Object.Instantiate(m_shootEffect, turretBodyArmed.transform.position, eye.transform.rotation);
 			m_nview.GetZDO().Set("lastAttack", (float)ZNet.instance.GetTimeSeconds());
 			{
 				Vector3 forward = eye.transform.forward;
@@ -336,8 +338,6 @@ namespace ValheimFortress.Defenses
 
 		public void ShowBuildMarker()
 		{
-			Jotunn.Logger.LogInfo("Setting AreaMarker");
-			CircleProjector areaMarker = transform.Find("AreaMarker").gameObject.GetComponent<CircleProjector>();
 			if (!(bool)areaMarker)
 			{
 				areaMarker.m_radius = m_viewDistance;
@@ -353,8 +353,6 @@ namespace ValheimFortress.Defenses
 
 		private void UpdateMarker(float dt)
 		{
-			Jotunn.Logger.LogInfo("Setting AreaMarker");
-			CircleProjector areaMarker = transform.Find("AreaMarker").gameObject.GetComponent<CircleProjector>();
 			if ((bool)areaMarker && areaMarker.isActiveAndEnabled)
 			{
 				areaMarker.m_start = base.transform.rotation.eulerAngles.y - m_horizontalAngle;
@@ -364,8 +362,6 @@ namespace ValheimFortress.Defenses
 
 		private void HideMarker()
 		{
-			Jotunn.Logger.LogInfo("Setting AreaMarker");
-			CircleProjector areaMarker = transform.Find("AreaMarker").gameObject.GetComponent<CircleProjector>();
 			if ((bool)areaMarker)
 			{
 				areaMarker.gameObject.SetActive(false);

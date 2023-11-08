@@ -8,6 +8,8 @@ using System.Text.RegularExpressions;
 using System.IO;
 using ValheimFortress.Challenge;
 using BepInEx.Configuration;
+using System.Collections.Generic;
+using System;
 
 namespace ValheimFortress
 {
@@ -18,9 +20,7 @@ namespace ValheimFortress
     {
         public const string PluginGUID = "com.midnightsfx.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.6.1";
-
-        internal static ValheimFortress Instance { get; private set; }
+        public const string PluginVersion = "0.7.0";
 
         AssetBundle EmbeddedResourceBundle;
         public VFConfig cfg;
@@ -36,6 +36,7 @@ namespace ValheimFortress
 
             // Generate/update/set config values.
             Levels.UpdateCreatureConfigValues(cfg);
+            Levels.UpdateLevelValues(cfg);
             Rewards.UpdateResouceRewards(cfg);
 
             // GUIManager.OnCustomGUIAvailable += () => UI.Init(EmbeddedResourceBundle);
@@ -103,6 +104,33 @@ namespace ValheimFortress
                 }
             }
         }
+
+        /// <summary>
+        /// Fisher-Yates style list sort for string lists.
+        /// </summary>
+        /// <param name="inputList"></param>
+        /// <returns></returns>
+        public static List<String> shuffleList(List<String> inputList)
+        {    //take any list of GameObjects and return it with Fischer-Yates shuffle
+            int i = 0;
+            int t = inputList.Count;
+            int r = 0;
+            String p = null;
+            List<String> tempList = new List<String>();
+            tempList.AddRange(inputList);
+
+            while (i < t)
+            {
+                r = UnityEngine.Random.Range(i, tempList.Count);
+                p = tempList[i];
+                tempList[i] = tempList[r];
+                tempList[r] = p;
+                i++;
+            }
+
+            return tempList;
+        }
+
 
     }
 }

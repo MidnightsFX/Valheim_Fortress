@@ -18,6 +18,9 @@ namespace ValheimFortress.Challenge
         static List<String> availableRewards = new List<String> {};
         public static GameObject levelSelector;
         public static GameObject rewardSelector;
+        public static GameObject hardModeToggle;
+        public static GameObject bossModeToggle;
+        public static GameObject siegeModeToggle;
         public static Int16 maxChallengeLevel = 30; // TODO: Make this configurable? make level generation dynamic?
         // Right now maxlevel needs to correlate to: defined levels & level warning messages
 
@@ -122,13 +125,12 @@ namespace ValheimFortress.Challenge
             String biome_or_boss = "";
             for (int i = 1; i <= max_level; i++)
             {
-                if (i == 5 || i == 10 || i == 15 || i == 20 || i == 25 || i == 30) { biome_or_boss = Localization.instance.Localize("$shrine_menu_boss"); }
-                if (i > 0 && i < 5) { biome_or_boss = Localization.instance.Localize("$shrine_menu_meadow"); }
-                if (i > 5 && i < 10) { biome_or_boss = Localization.instance.Localize("$shrine_menu_forest"); }
-                if (i > 10 && i < 15) { biome_or_boss = Localization.instance.Localize("$shrine_menu_swamp"); }
-                if (i > 15 && i < 20) { biome_or_boss = Localization.instance.Localize("$shrine_menu_mountain"); }
-                if (i > 20 && i < 25) { biome_or_boss = Localization.instance.Localize("$shrine_menu_plains"); }
-                if (i > 25 && i < 30) { biome_or_boss = Localization.instance.Localize("$shrine_menu_mistland"); }
+                if (i > 0 && i < 6) { biome_or_boss = Localization.instance.Localize("$shrine_menu_meadow"); }
+                if (i > 5 && i < 11) { biome_or_boss = Localization.instance.Localize("$shrine_menu_forest"); }
+                if (i > 10 && i < 16) { biome_or_boss = Localization.instance.Localize("$shrine_menu_swamp"); }
+                if (i > 15 && i < 21) { biome_or_boss = Localization.instance.Localize("$shrine_menu_mountain"); }
+                if (i > 20 && i < 26) { biome_or_boss = Localization.instance.Localize("$shrine_menu_plains"); }
+                if (i > 25 && i < 31) { biome_or_boss = Localization.instance.Localize("$shrine_menu_mistland"); }
                 currentLevels.Add($"{i} - {biome_or_boss}");
             }
             Jotunn.Logger.LogInfo("Levels and rewards updated.");
@@ -143,6 +145,9 @@ namespace ValheimFortress.Challenge
             // Int16 selected_level = Int16.Parse(levelSelector.GetComponent<Dropdown>().options[levelSelector.GetComponent<Dropdown>().value].text);
             // This takes the dropdowns index (+1 since its zero indexd), which means we always need the full number of levels populated, but that we can rename the levels however
             Int16 selected_level = (Int16)(levelSelector.GetComponent<Dropdown>().value + 1);
+            bool hard_mode = hardModeToggle.GetComponent<Toggle>().isOn;
+            bool boss_mode = bossModeToggle.GetComponent<Toggle>().isOn;
+            bool siege_mode = siegeModeToggle.GetComponent<Toggle>().isOn;
             Jotunn.Logger.LogInfo($"Shrine challenge. Selected reward: {selected_reward}, selected level: {selected_level}");
             if (Shrine.GetComponent<Shrine>().IsChallengeActive())
             {
@@ -150,75 +155,44 @@ namespace ValheimFortress.Challenge
             } else
             {
                 // Start the coroutine that sends the warning text
-                PreparePhase(selected_level);
+                PreparePhase(selected_level, boss_mode);
                 Shrine.GetComponent<Shrine>().EnablePortal();
                 Shrine.GetComponent<Shrine>().SetLevel(selected_level);
                 Shrine.GetComponent<Shrine>().SetReward(selected_reward);
-                Levels.generateRandomWaveWithOptions(selected_level, Shrine);
+                if (hard_mode) { Shrine.GetComponent<Shrine>().SetHardMode(); }
+                if (boss_mode) { Shrine.GetComponent<Shrine>().SetBossMode(); }
+                if (siege_mode) { Shrine.GetComponent<Shrine>().SetSiegeMode(); }
+                Levels.generateRandomWaveWithOptions(selected_level, hard_mode, boss_mode, siege_mode, Shrine);
                 Jotunn.Logger.LogInfo($"Challenge started. Level: {selected_level} Reward: {selected_reward}");
             }
         }
 
-        private static void PreparePhase(Int16 selected_level)
+        private static void PreparePhase(Int16 selected_level, bool boss_mode)
         {
-            String challenge_warning = "";
-            switch (selected_level)
-            {
-                case 1:
-                case 2:
-                case 3:
-                case 4:
-                    
-                    challenge_warning = Localization.instance.Localize("$shrine_warning_meadows");
-                    break;
-                case 5:
-                    challenge_warning = Localization.instance.Localize("$shrine_warning_meadows_boss");
-                    break;
-                case 6:
-                case 7:
-                case 8:
-                case 9:
-                    challenge_warning = Localization.instance.Localize("$shrine_warning_forest");
-                    break;
-                case 10:
-                    challenge_warning = Localization.instance.Localize("$shrine_warning_forest_boss");
-                    break;
-                case 11:
-                case 12:
-                case 13:
-                case 14:
-                    challenge_warning = Localization.instance.Localize("$shrine_warning_swamp");
-                    break;
-                case 15:
-                    challenge_warning = Localization.instance.Localize("$shrine_warning_swamp_boss");
-                    break;
-                case 16:
-                case 17:
-                case 18:
-                case 19:
-                    challenge_warning = Localization.instance.Localize("$shrine_warning_mountain");
-                    break;
-                case 20:
-                    challenge_warning = Localization.instance.Localize("$shrine_warning_mountain_boss");
-                    break;
-                case 21:
-                case 22:
-                case 23:
-                case 24:
-                    challenge_warning = Localization.instance.Localize("$shrine_warning_plains");
-                    break;
-                case 25:
-                    challenge_warning = Localization.instance.Localize("$shrine_warning_plains_boss");
-                    break;
-                case 26:
-                case 27:
-                case 28:
-                case 29:
-                    challenge_warning = Localization.instance.Localize("$shrine_warning_mistlands");
-                    break;
-                case 30:
-                    challenge_warning = Localization.instance.Localize("$shrine_warning_mistlands_boss");
-                    break;
+            String challenge_warning = "This might hurt.";
+            if (selected_level < 6) {
+                challenge_warning = Localization.instance.Localize("$shrine_warning_meadows");
+                if (boss_mode) { challenge_warning = Localization.instance.Localize("$shrine_warning_meadows_boss"); }
+            }
+            if (selected_level > 5 && selected_level < 11) { 
+                challenge_warning = Localization.instance.Localize("$shrine_warning_forest");
+                if (boss_mode) { challenge_warning = Localization.instance.Localize("$shrine_warning_forest_boss"); }
+            }
+            if (selected_level > 10 && selected_level < 16) { 
+                challenge_warning = Localization.instance.Localize("$shrine_warning_swamp");
+                if (boss_mode) { challenge_warning = Localization.instance.Localize("$shrine_warning_swamp_boss"); }
+            }
+            if (selected_level > 15 && selected_level < 21) { 
+                challenge_warning = Localization.instance.Localize("$shrine_warning_mountain");
+                if (boss_mode) { challenge_warning = Localization.instance.Localize("$shrine_warning_mountain_boss"); }
+            }
+            if (selected_level > 20 && selected_level < 26) { 
+                challenge_warning = Localization.instance.Localize("$shrine_warning_plains");
+                if (boss_mode) { challenge_warning = Localization.instance.Localize("$shrine_warning_plains_boss"); }
+            }
+            if (selected_level > 25 && selected_level < 31) {
+                challenge_warning = Localization.instance.Localize("$shrine_warning_mistlands");
+                if (boss_mode) { challenge_warning = Localization.instance.Localize("$shrine_warning_mistlands_boss"); }
             }
 
             Player.m_localPlayer.Message(MessageHud.MessageType.Center, challenge_warning);
@@ -265,9 +239,9 @@ namespace ValheimFortress.Challenge
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
                 position: new Vector2(0, 0),
-                width: 450,
-                height: 450,
-                draggable: false);
+                width: 550,
+                height: 550,
+                draggable: true);
             // This hides the panel immediately
             ChallengePanel.SetActive(false);
 
@@ -277,7 +251,7 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(50f, 175f),
+                position: new Vector2(60f, 230f),
                 font: GUIManager.Instance.AveriaSerifBold,
                 fontSize: 30,
                 color: GUIManager.Instance.ValheimOrange,
@@ -292,13 +266,13 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(5f, 100f),
+                position: new Vector2(45f, 155f),
                 font: GUIManager.Instance.AveriaSerifBold,
                 fontSize: 14,
                 color: GUIManager.Instance.ValheimBeige,
                 outline: true,
                 outlineColor: Color.black,
-                width: 400f,
+                width: 500f,
                 height: 80f,
                 addContentSizeFitter: false);
             GUIManager.Instance.CreateText(
@@ -306,9 +280,9 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(85f, 40f),
+                position: new Vector2(85f, 95f),
                 font: GUIManager.Instance.AveriaSerifBold,
-                fontSize: 14,
+                fontSize: 18,
                 color: GUIManager.Instance.ValheimYellow,
                 outline: true,
                 outlineColor: Color.black,
@@ -321,7 +295,7 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(100f, 6f),
+                position: new Vector2(100f, 60f),
                 fontSize: 16,
                 width: 200f,
                 height: 30f);
@@ -332,22 +306,22 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(-60f, 10f),
+                position: new Vector2(-60f, 50f),
                 font: GUIManager.Instance.AveriaSerifBold,
                 fontSize: 16,
                 color: GUIManager.Instance.ValheimBeige,
                 outline: true,
                 outlineColor: Color.black,
-                width: 200f,
+                width: 300f,
                 height: 40f,
-                addContentSizeFitter: true);
+                addContentSizeFitter: false);
 
             // create the wave selector dropdown
             levelSelector = GUIManager.Instance.CreateDropDown(
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(100f, -64f),
+                position: new Vector2(100f, 5f),
                 fontSize: 16,
                 width: 200f,
                 height: 30f);
@@ -358,7 +332,36 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(-60f, -65f),
+                position: new Vector2(-60f, -5f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 16,
+                color: GUIManager.Instance.ValheimBeige,
+                outline: true,
+                outlineColor: Color.black,
+                width: 300f,
+                height: 40f,
+                addContentSizeFitter: false);
+
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_modifiers_label"),
+                parent: ChallengePanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(-138f, -48f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 16,
+                color: GUIManager.Instance.ValheimBeige,
+                outline: true,
+                outlineColor: Color.black,
+                width: 100f,
+                height: 40f,
+                addContentSizeFitter: false);
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_modifiers_rewards_label"),
+                parent: ChallengePanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(28f, -48f),
                 font: GUIManager.Instance.AveriaSerifBold,
                 fontSize: 16,
                 color: GUIManager.Instance.ValheimBeige,
@@ -366,7 +369,161 @@ namespace ValheimFortress.Challenge
                 outlineColor: Color.black,
                 width: 200f,
                 height: 40f,
-                addContentSizeFitter: true);
+                addContentSizeFitter: false);
+
+            // Hardmode toggle text
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_hard_mode_label"),
+                parent: ChallengePanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(-140f, -75f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 16,
+                color: GUIManager.Instance.ValheimBeige,
+                outline: true,
+                outlineColor: Color.black,
+                width: 200f,
+                height: 40f,
+                addContentSizeFitter: false);
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_hard_mode_description"),
+                parent: ChallengePanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(180f, -77f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 14,
+                color: GUIManager.Instance.ValheimBeige,
+                outline: true,
+                outlineColor: Color.black,
+                width: 350f,
+                height: 40f,
+                addContentSizeFitter: false);
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_hard_mode_reward"),
+                parent: ChallengePanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(105f, -78f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 14,
+                color: GUIManager.Instance.ValheimBeige,
+                outline: true,
+                outlineColor: Color.black,
+                width: 350f,
+                height: 40f,
+                addContentSizeFitter: false);
+            // Hardcore toggle, enables generation with stars
+            hardModeToggle = GUIManager.Instance.CreateToggle(
+                parent: ChallengePanel.transform,
+                width: 40f,
+                height: 40f);
+            // Default the hardcore toggle to off.
+            hardModeToggle.GetComponent<Toggle>().isOn = false;
+            hardModeToggle.transform.localPosition = new Vector2(-85f, -74f); //Manually position the toggle where we want it
+
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_boss_mode"),
+                parent: ChallengePanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(-140f, -122f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 16,
+                color: GUIManager.Instance.ValheimBeige,
+                outline: true,
+                outlineColor: Color.black,
+                width: 200f,
+                height: 40f,
+                addContentSizeFitter: false);
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_boss_mode_description"),
+                parent: ChallengePanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(160f, -124f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 14,
+                color: GUIManager.Instance.ValheimBeige,
+                outline: true,
+                outlineColor: Color.black,
+                width: 350f,
+                height: 40f,
+                addContentSizeFitter: false);
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_boss_mode_reward"),
+                parent: ChallengePanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(-20f, -125f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 14,
+                color: GUIManager.Instance.ValheimBeige,
+                outline: true,
+                outlineColor: Color.black,
+                width: 100f,
+                height: 40f,
+                addContentSizeFitter: false);
+            // Bossmode toggle
+            bossModeToggle = GUIManager.Instance.CreateToggle(
+                parent: ChallengePanel.transform,
+                width: 40f,
+                height: 40f);
+            // Default the Bossmode toggle to off.
+            bossModeToggle.GetComponent<Toggle>().isOn = false;
+            bossModeToggle.transform.localPosition = new Vector2(-85f, -120f); //Manually position the toggle where we want it
+
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_siege_mode"),
+                parent: ChallengePanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(-140f, -172f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 16,
+                color: GUIManager.Instance.ValheimBeige,
+                outline: true,
+                outlineColor: Color.black,
+                width: 200f,
+                height: 40f,
+                addContentSizeFitter: false);
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_siege_mode_description"),
+                parent: ChallengePanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(165f, -175f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 14,
+                color: GUIManager.Instance.ValheimBeige,
+                outline: true,
+                outlineColor: Color.black,
+                width: 350f,
+                height: 40f,
+                addContentSizeFitter: false);
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_siege_mode_reward"),
+                parent: ChallengePanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(105f, -175f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 14,
+                color: GUIManager.Instance.ValheimBeige,
+                outline: true,
+                outlineColor: Color.black,
+                width: 350f,
+                height: 40f,
+                addContentSizeFitter: false);
+            // Siegemode toggle
+            siegeModeToggle = GUIManager.Instance.CreateToggle(
+                parent: ChallengePanel.transform,
+                width: 40f,
+                height: 40f);
+            // Default the Siegemode toggle to off.
+            siegeModeToggle.GetComponent<Toggle>().isOn = false;
+            siegeModeToggle.transform.localPosition = new Vector2(-85f, -170f); //Manually position the toggle where we want it
 
 
             // Create the start button object
@@ -375,7 +532,7 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(0f, -160f),
+                position: new Vector2(0f, -224f),
                 width: 150f,
                 height: 60f);
             startButtonObj.SetActive(true);
@@ -386,7 +543,7 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(200f, 200f),
+                position: new Vector2(240f, 240f),
                 width: 40f,
                 height: 40f);
             cancelButtonObj.SetActive(true);
