@@ -15,6 +15,10 @@ Got a bug to report or just want to chat about the mod? Drop by the discord or g
 | Discord | [![discord logo](https://i.imgur.com/uE6umQE.png)](https://discord.gg/Dmr9PQTy9m) | Github | [![github logo](https://i.imgur.com/lvbP5OF.png)](https://github.com/MidnightsFX/Valheim_Fortress) |
 
 
+### Localizations - Translations
+I accept community translations! Existing localizations can be found [here](https://github.com/MidnightsFX/Valheim_Fortress/tree/master/JotunnModStub/Localizations). 
+I will keep the English translation up to date, if you would like to provide a translation feel free to reach out to me on discord or open up a github issue.
+
 ## Features
 Wave survival through the Shrine of Challenge. Cosmetic building variants, and functional building variants.
 
@@ -92,6 +96,7 @@ The Shrine of challenge provides a number of key configuration values which can 
 
 <details>
 <summary>Summary of the difficulty equation</summary>
+
 And now you want to know how these values are actually used to compute the challenge points right?
 look at this summary below
 ```
@@ -105,6 +110,7 @@ allocated_challenge_points = total_increase_points + base_challenge_points
 
 if (allocated_challenge_points > max_challenge_points) { allocated_challenge_points = max_challenge_points; }
 ```
+
 </details>
 
 
@@ -139,6 +145,12 @@ If you like this mod maybe you'll like my other work
 - Automated turret likes to fire off into space instead of hitting its target occassionally (its aim isn't perfect, this is intentional)
 
 ## Changelog
+**0.7.1**
+```
+- Added spawn portals at the remote locations where enemies will spawn
+- Fixed the readme formatting :)
+```
+
 **0.7.0**
 ```
 - Overhauled the spawning system for the shrine of challenge

@@ -20,10 +20,11 @@ namespace ValheimFortress
     {
         public const string PluginGUID = "com.midnightsfx.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.7.0";
+        public const string PluginVersion = "0.7.1";
 
         AssetBundle EmbeddedResourceBundle;
         public VFConfig cfg;
+        public static GameObject spawnPortal;
 
         private void Awake()
         {
@@ -33,6 +34,7 @@ namespace ValheimFortress
             // Logger.LogInfo($"Embedded resources: {string.Join(",", typeof(ValheimFortress).Assembly.GetManifestResourceNames())}");
             AddLocalizations();
             ValheimFortressPieces vfpieces = new ValheimFortressPieces(EmbeddedResourceBundle, cfg);
+            spawnPortal = EmbeddedResourceBundle.LoadAsset<GameObject>($"Assets/Custom/Pieces/VFortress/VF_portal.prefab");
 
             // Generate/update/set config values.
             Levels.UpdateCreatureConfigValues(cfg);
@@ -75,6 +77,11 @@ namespace ValheimFortress
                 //Localization.AddTranslation(localization_name[2], localization);
                 Localization.AddJsonFile(localization_name[2], cleaned_localization);
             }
+        }
+
+        internal static GameObject getPortal()
+        {
+            return spawnPortal;
         }
 
         public static string LocalizeOrDefault(string str_to_localize,string default_string)

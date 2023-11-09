@@ -1,4 +1,5 @@
-﻿using Jotunn.Managers;
+﻿using Jotunn;
+using Jotunn.Managers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using static Jotunn.Managers.MinimapManager;
 
 namespace ValheimFortress.Challenge
 {
@@ -19,6 +21,12 @@ namespace ValheimFortress.Challenge
             Jotunn.Logger.LogInfo($"Trying to spawn {hoards.Count} hoards.");
             Vector3[] remote_spawn_locations = DetermineRemoteSpawnLocations(shrine);
             shrine.GetComponent<Shrine>().setSpawnedWaveTarget((Int16)hoards.Count);
+
+            if (VFConfig.EnableGladiatorMode.Value == false)
+            {
+                DrawMapOverlayAndPortals(remote_spawn_locations);
+            }
+
             foreach (Levels.HoardConfig hoard in hoards)
             {
                 Jotunn.Logger.LogInfo($"Starting spawn for {hoard.amount} {hoard.creature}");
@@ -53,7 +61,9 @@ namespace ValheimFortress.Challenge
             {
                 // Update the spawnpoint based on which pausepoint we are at, doesn't matter if we actually pause.
                 // We don't change the spawn if there are no pausepoints for this horde (boss horde)
-                if(i == pause_point_1 && pause_point_1 > 0)
+                Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
+                
+                if (i == pause_point_1 && pause_point_1 > 0)
                 {
                     spawn_position = remote_spawn_locations[1];
                 }
@@ -61,16 +71,15 @@ namespace ValheimFortress.Challenge
                 {
                     spawn_position = remote_spawn_locations[2];
                 }
-
+                
+                // This is the fractional pause section. This area is useful because it is only triggered once for each spawn position
                 if (should_pause_during_horde && i == hoard_frac || i == (hoard_frac * 2))
                 {
                     if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Pausing {hoard.creature} spawning for wave-delay of {wave_spawn_delay} seconds."); }
                     yield return new WaitForSeconds(wave_spawn_delay);
-                    Chat.instance.SendPing(spawn_position);
                 }
                 // This is really verbose
                 // if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Spawning {hoard.creature}"); }
-                Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
                 GameObject creature = UnityEngine.Object.Instantiate(gameObject, spawn_position, rotation);
                 // creature.GetComponent<ZNetView>(); // but why
                 shrine.GetComponent<Shrine>().IncrementSpawned();
@@ -100,9 +109,47 @@ namespace ValheimFortress.Challenge
                 {
                     ai.SetHuntPlayer(true);
                 }
+                
             }
 
             shrine.GetComponent<Shrine>().WaveSpawned();
+            yield break;
+        }
+
+        public void DrawMapOverlayAndPortals(Vector3[] remote_spawns)
+        {
+            Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
+            List<GameObject> portals = new List<GameObject> { };
+
+            int circle_radius = 32;
+            MapDrawing attackOverlay = MinimapManager.Instance.GetMapDrawing("AttackOverlay");
+            // Color color = Color.magenta;
+            Color[] colorPixels = new Color[circle_radius * circle_radius].Populate(Color.magenta);
+
+            Jotunn.Logger.LogInfo("Spawn portals started");
+            foreach (Vector3 spawn_location in remote_spawns)
+            {
+                var tempportal = UnityEngine.Object.Instantiate(ValheimFortress.getPortal(), spawn_location, rotation);
+                portals.Add(tempportal);
+                Chat.instance.SendPing(spawn_location);
+                attackOverlay.ForestFilter.SetPixels((int)spawn_location.x, (int)spawn_location.y, circle_radius, circle_radius, colorPixels);
+            }
+            // Apply the overlay and start the coroutine for deleting it in the future
+            attackOverlay.ForestFilter.Apply();
+            StartCoroutine(CleanUpSpawnNotifiers(attackOverlay, portals));
+        }
+
+        IEnumerator CleanUpSpawnNotifiers(MapDrawing mapdrawing, List<GameObject> portals)
+        {
+            // This delay should be ~about the same
+            yield return new WaitForSeconds(20f);
+            Jotunn.Logger.LogInfo("Removing map drawing and creature spawn portals.");
+            foreach (GameObject portal in portals)
+            {
+                Destroy(portal);
+            }
+            mapdrawing.Enabled = false;
+            MinimapManager.Instance.RemoveMapDrawing(mapdrawing.Name);
             yield break;
         }
 
