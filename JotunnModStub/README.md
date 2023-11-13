@@ -145,6 +145,14 @@ If you like this mod maybe you'll like my other work
 - Automated turret likes to fire off into space instead of hitting its target occassionally (its aim isn't perfect, this is intentional)
 
 ## Changelog
+** 0.7.2**
+```
+- Disable map drawing overlay due to potential errors
+- Enable max level configuration
+	- Max level is currently set to 30, 5 levels for each biome
+- Made all of the shrine modifiers enable/disable-able
+```
+
 **0.7.1**
 ```
 - Added spawn portals at the remote locations where enemies will spawn

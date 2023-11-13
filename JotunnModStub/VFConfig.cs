@@ -13,8 +13,11 @@ namespace ValheimFortress
         public static ConfigEntry<bool> EnableHordeDrops;
         public static ConfigEntry<bool> EnableBossDrops;
         public static ConfigEntry<bool> EnableGladiatorMode;
-        public static ConfigEntry<int> MaxChallengeLevel;
+        public static ConfigEntry<short> MaxChallengeLevel;
         public static ConfigEntry<int> MaxSpawnRange;
+        public static ConfigEntry<bool> EnableBossModifier;
+        public static ConfigEntry<bool> EnableHardModifier;
+        public static ConfigEntry<bool> EnableSiegeModifer;
         public ConfigFile file;
 
         public VFConfig(ConfigFile Config)
@@ -35,10 +38,10 @@ namespace ValheimFortress
                 null,
                 new ConfigurationManagerAttributes { IsAdvanced = false }));
 
-            MaxChallengeLevel = Config.Bind("Shrine of Challenge", "MaxLevel", 100,
-                new ConfigDescription("The Maximum level the shrine can be set to, you must still beat bosses to increase your allowed level.",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true }));
+            MaxChallengeLevel = Config.Bind("Shrine of Challenge", "MaxLevel", (short)30,
+                new ConfigDescription("The Maximum level the shrine can be set to, you must still beat bosses to increase your allowed level. 5 Levels per biome. Setting to 10 will cap challenges out at meadows(1-5) + blackforest(6-10).",
+                new AcceptableValueRange<short>(1, 30),
+                new ConfigurationManagerAttributes { IsAdvanced = false }));
 
             EnableGladiatorMode = Config.Bind("Shrine of Challenge", "EnableGladiatorMode", false,
                 new ConfigDescription("Whether the shrine of challenge should default to spawning mobs on itself (gladiator arena), or remotely (fortress siege).",
@@ -60,6 +63,23 @@ namespace ValheimFortress
                 new ConfigDescription("Enables Debug logging for Valheim Fortress.",
                 null,
                 new ConfigurationManagerAttributes { IsAdvanced = true }));
+
+
+            EnableHardModifier = Config.Bind("Shrine of Challenge", "EnableHardModifier", true,
+                new ConfigDescription("Whether or not the hard mode modifier is available (100% bigger wave size for 50% more rewards)",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true }));
+
+            EnableBossModifier = Config.Bind("Shrine of Challenge", "EnableBossModifier", true,
+                new ConfigDescription("Whether or not boss mod is available as a level modifier (more rewards & spawns the biome specific boss)",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true }));
+
+            EnableSiegeModifer = Config.Bind("Shrine of Challenge", "EnableSiegeModifer", true,
+                new ConfigDescription("Whether or not siege mode is available as a modifier. Siege mode gives much larger pauses between waves, and 100% larger waves for 50% more reward.",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true }));
+
         }
 
         /// <summary>

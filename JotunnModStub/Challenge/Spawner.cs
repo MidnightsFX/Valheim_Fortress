@@ -122,7 +122,7 @@ namespace ValheimFortress.Challenge
             List<GameObject> portals = new List<GameObject> { };
 
             int circle_radius = 32;
-            MapDrawing attackOverlay = MinimapManager.Instance.GetMapDrawing("AttackOverlay");
+            // MapDrawing attackOverlay = MinimapManager.Instance.GetMapDrawing("AttackOverlay");
             // Color color = Color.magenta;
             Color[] colorPixels = new Color[circle_radius * circle_radius].Populate(Color.magenta);
 
@@ -132,14 +132,14 @@ namespace ValheimFortress.Challenge
                 var tempportal = UnityEngine.Object.Instantiate(ValheimFortress.getPortal(), spawn_location, rotation);
                 portals.Add(tempportal);
                 Chat.instance.SendPing(spawn_location);
-                attackOverlay.ForestFilter.SetPixels((int)spawn_location.x, (int)spawn_location.y, circle_radius, circle_radius, colorPixels);
+                // attackOverlay.ForestFilter.SetPixels((int)spawn_location.x, (int)spawn_location.y, circle_radius, circle_radius, colorPixels);
             }
             // Apply the overlay and start the coroutine for deleting it in the future
-            attackOverlay.ForestFilter.Apply();
-            StartCoroutine(CleanUpSpawnNotifiers(attackOverlay, portals));
+            // attackOverlay.ForestFilter.Apply();
+            StartCoroutine(CleanUpSpawnNotifiers(portals));
         }
 
-        IEnumerator CleanUpSpawnNotifiers(MapDrawing mapdrawing, List<GameObject> portals)
+        IEnumerator CleanUpSpawnNotifiers(List<GameObject> portals)
         {
             // This delay should be ~about the same
             yield return new WaitForSeconds(20f);
@@ -148,8 +148,8 @@ namespace ValheimFortress.Challenge
             {
                 Destroy(portal);
             }
-            mapdrawing.Enabled = false;
-            MinimapManager.Instance.RemoveMapDrawing(mapdrawing.Name);
+            // mapdrawing.Enabled = false;
+            // MinimapManager.Instance.RemoveMapDrawing(mapdrawing.Name);
             yield break;
         }
 

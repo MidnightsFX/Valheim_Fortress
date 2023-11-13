@@ -21,7 +21,6 @@ namespace ValheimFortress.Challenge
         public static GameObject hardModeToggle;
         public static GameObject bossModeToggle;
         public static GameObject siegeModeToggle;
-        public static Int16 maxChallengeLevel = 30; // TODO: Make this configurable? make level generation dynamic?
         // Right now maxlevel needs to correlate to: defined levels & level warning messages
 
 
@@ -117,7 +116,7 @@ namespace ValheimFortress.Challenge
             // if (max_level == 35) { max_level = 50; }
 
             // If the max challenge level is bigger than the level we determined we lower it to that
-            if (max_level > maxChallengeLevel) { max_level = maxChallengeLevel; }
+            if (max_level > (short)VFConfig.MaxChallengeLevel.Value) { max_level = (short)VFConfig.MaxChallengeLevel.Value; }
 
             // Empty out the current levels if it exists so we don't get duplicates
             currentLevels = new List<String> { };
@@ -145,9 +144,12 @@ namespace ValheimFortress.Challenge
             // Int16 selected_level = Int16.Parse(levelSelector.GetComponent<Dropdown>().options[levelSelector.GetComponent<Dropdown>().value].text);
             // This takes the dropdowns index (+1 since its zero indexd), which means we always need the full number of levels populated, but that we can rename the levels however
             Int16 selected_level = (Int16)(levelSelector.GetComponent<Dropdown>().value + 1);
-            bool hard_mode = hardModeToggle.GetComponent<Toggle>().isOn;
-            bool boss_mode = bossModeToggle.GetComponent<Toggle>().isOn;
-            bool siege_mode = siegeModeToggle.GetComponent<Toggle>().isOn;
+            bool hard_mode = false;
+            if (VFConfig.EnableHardModifier.Value) { hard_mode = hardModeToggle.GetComponent<Toggle>().isOn; }
+            bool boss_mode = false;
+            if (VFConfig.EnableBossModifier.Value) { boss_mode = bossModeToggle.GetComponent<Toggle>().isOn; }
+            bool siege_mode = false;
+            if (VFConfig.EnableSiegeModifer.Value) { siege_mode = siegeModeToggle.GetComponent<Toggle>().isOn; }
             Jotunn.Logger.LogInfo($"Shrine challenge. Selected reward: {selected_reward}, selected level: {selected_level}");
             if (Shrine.GetComponent<Shrine>().IsChallengeActive())
             {
@@ -372,160 +374,168 @@ namespace ValheimFortress.Challenge
                 height: 40f,
                 addContentSizeFitter: false);
 
-            // Hardmode toggle text
-            GUIManager.Instance.CreateText(
-                text: Localization.instance.Localize("$shrine_hard_mode_label"),
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(-140f, -75f),
-                font: GUIManager.Instance.AveriaSerifBold,
-                fontSize: 16,
-                color: GUIManager.Instance.ValheimBeige,
-                outline: true,
-                outlineColor: Color.black,
-                width: 200f,
-                height: 40f,
-                addContentSizeFitter: false);
-            GUIManager.Instance.CreateText(
-                text: Localization.instance.Localize("$shrine_hard_mode_description"),
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(180f, -77f),
-                font: GUIManager.Instance.AveriaSerifBold,
-                fontSize: 14,
-                color: GUIManager.Instance.ValheimBeige,
-                outline: true,
-                outlineColor: Color.black,
-                width: 350f,
-                height: 40f,
-                addContentSizeFitter: false);
-            GUIManager.Instance.CreateText(
-                text: Localization.instance.Localize("$shrine_hard_mode_reward"),
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(105f, -78f),
-                font: GUIManager.Instance.AveriaSerifBold,
-                fontSize: 14,
-                color: GUIManager.Instance.ValheimBeige,
-                outline: true,
-                outlineColor: Color.black,
-                width: 350f,
-                height: 40f,
-                addContentSizeFitter: false);
-            // Hardcore toggle, enables generation with stars
-            hardModeToggle = GUIManager.Instance.CreateToggle(
-                parent: ChallengePanel.transform,
-                width: 40f,
-                height: 40f);
-            // Default the hardcore toggle to off.
-            hardModeToggle.GetComponent<Toggle>().isOn = false;
-            hardModeToggle.transform.localPosition = new Vector2(-85f, -74f); //Manually position the toggle where we want it
+            if (VFConfig.EnableHardModifier.Value)
+            {
+                // Hardmode toggle text
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_hard_mode_label"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(-140f, -75f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 16,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 200f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_hard_mode_description"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(180f, -77f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 14,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 350f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_hard_mode_reward"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(105f, -78f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 14,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 350f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+                // Hardcore toggle, enables generation with stars
+                hardModeToggle = GUIManager.Instance.CreateToggle(
+                    parent: ChallengePanel.transform,
+                    width: 40f,
+                    height: 40f);
+                // Default the hardcore toggle to off.
+                hardModeToggle.GetComponent<Toggle>().isOn = false;
+                hardModeToggle.transform.localPosition = new Vector2(-85f, -74f); //Manually position the toggle where we want it
+            }
 
-            GUIManager.Instance.CreateText(
-                text: Localization.instance.Localize("$shrine_boss_mode"),
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(-140f, -122f),
-                font: GUIManager.Instance.AveriaSerifBold,
-                fontSize: 16,
-                color: GUIManager.Instance.ValheimBeige,
-                outline: true,
-                outlineColor: Color.black,
-                width: 200f,
-                height: 40f,
-                addContentSizeFitter: false);
-            GUIManager.Instance.CreateText(
-                text: Localization.instance.Localize("$shrine_boss_mode_description"),
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(160f, -124f),
-                font: GUIManager.Instance.AveriaSerifBold,
-                fontSize: 14,
-                color: GUIManager.Instance.ValheimBeige,
-                outline: true,
-                outlineColor: Color.black,
-                width: 350f,
-                height: 40f,
-                addContentSizeFitter: false);
-            GUIManager.Instance.CreateText(
-                text: Localization.instance.Localize("$shrine_boss_mode_reward"),
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(-20f, -125f),
-                font: GUIManager.Instance.AveriaSerifBold,
-                fontSize: 14,
-                color: GUIManager.Instance.ValheimBeige,
-                outline: true,
-                outlineColor: Color.black,
-                width: 100f,
-                height: 40f,
-                addContentSizeFitter: false);
-            // Bossmode toggle
-            bossModeToggle = GUIManager.Instance.CreateToggle(
-                parent: ChallengePanel.transform,
-                width: 40f,
-                height: 40f);
-            // Default the Bossmode toggle to off.
-            bossModeToggle.GetComponent<Toggle>().isOn = false;
-            bossModeToggle.transform.localPosition = new Vector2(-85f, -120f); //Manually position the toggle where we want it
+            if (VFConfig.EnableBossModifier.Value)
+            {
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_boss_mode"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(-140f, -122f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 16,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 200f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_boss_mode_description"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(160f, -124f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 14,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 350f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_boss_mode_reward"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(-20f, -125f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 14,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 100f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+                // Bossmode toggle
+                bossModeToggle = GUIManager.Instance.CreateToggle(
+                    parent: ChallengePanel.transform,
+                    width: 40f,
+                    height: 40f);
+                // Default the Bossmode toggle to off.
+                bossModeToggle.GetComponent<Toggle>().isOn = false;
+                bossModeToggle.transform.localPosition = new Vector2(-85f, -120f); //Manually position the toggle where we want it
+            }
 
-            GUIManager.Instance.CreateText(
-                text: Localization.instance.Localize("$shrine_siege_mode"),
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(-140f, -172f),
-                font: GUIManager.Instance.AveriaSerifBold,
-                fontSize: 16,
-                color: GUIManager.Instance.ValheimBeige,
-                outline: true,
-                outlineColor: Color.black,
-                width: 200f,
-                height: 40f,
-                addContentSizeFitter: false);
-            GUIManager.Instance.CreateText(
-                text: Localization.instance.Localize("$shrine_siege_mode_description"),
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(165f, -175f),
-                font: GUIManager.Instance.AveriaSerifBold,
-                fontSize: 14,
-                color: GUIManager.Instance.ValheimBeige,
-                outline: true,
-                outlineColor: Color.black,
-                width: 350f,
-                height: 40f,
-                addContentSizeFitter: false);
-            GUIManager.Instance.CreateText(
-                text: Localization.instance.Localize("$shrine_siege_mode_reward"),
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(105f, -175f),
-                font: GUIManager.Instance.AveriaSerifBold,
-                fontSize: 14,
-                color: GUIManager.Instance.ValheimBeige,
-                outline: true,
-                outlineColor: Color.black,
-                width: 350f,
-                height: 40f,
-                addContentSizeFitter: false);
-            // Siegemode toggle
-            siegeModeToggle = GUIManager.Instance.CreateToggle(
-                parent: ChallengePanel.transform,
-                width: 40f,
-                height: 40f);
-            // Default the Siegemode toggle to off.
-            siegeModeToggle.GetComponent<Toggle>().isOn = false;
-            siegeModeToggle.transform.localPosition = new Vector2(-85f, -170f); //Manually position the toggle where we want it
-
+            if (VFConfig.EnableSiegeModifer.Value)
+            {
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_siege_mode"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(-140f, -172f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 16,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 200f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_siege_mode_description"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(165f, -175f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 14,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 350f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_siege_mode_reward"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(105f, -175f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 14,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 350f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+                // Siegemode toggle
+                siegeModeToggle = GUIManager.Instance.CreateToggle(
+                    parent: ChallengePanel.transform,
+                    width: 40f,
+                    height: 40f);
+                // Default the Siegemode toggle to off.
+                siegeModeToggle.GetComponent<Toggle>().isOn = false;
+                siegeModeToggle.transform.localPosition = new Vector2(-85f, -170f); //Manually position the toggle where we want it
+            }
 
             // Create the start button object
             GameObject startButtonObj = GUIManager.Instance.CreateButton(
