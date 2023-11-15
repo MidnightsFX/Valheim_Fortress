@@ -71,7 +71,6 @@
     <None Include="app.config" />
     <EmbeddedResource Include="AssetsEmbedded\vfbundle" />
     <EmbeddedResource Include="Localizations\English.json" />
-    <None Include="ILRepack.targets" />
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>

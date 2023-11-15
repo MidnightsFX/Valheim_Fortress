@@ -203,6 +203,11 @@ If you like this mod maybe you'll like my other work
 - Automated turret likes to fire off into space instead of hitting its target occassionally (its aim isn't perfect, this is intentional)
 
 ## Changelog
+**0.8.1**
+```
+- Optimized download size, removed potential duplicate embedded libraries
+```
+
 **0.8.0**
 ```
 - Added Dynamic yaml configuration for Rewards and available creature spawns

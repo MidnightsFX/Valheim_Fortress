@@ -21,7 +21,7 @@ namespace ValheimFortress
     {
         public const string PluginGUID = "com.midnightsfx.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.8.0";
+        public const string PluginVersion = "0.8.1";
 
         AssetBundle EmbeddedResourceBundle;
         public VFConfig cfg;
