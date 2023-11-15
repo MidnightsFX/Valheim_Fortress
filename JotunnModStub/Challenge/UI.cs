@@ -53,7 +53,7 @@ namespace ValheimFortress.Challenge
             var zs = ZoneSystem.instance;
             foreach (KeyValuePair<string, Rewards.RewardEntry> entry in possible_rewards)
             {
-                if(entry.Value.required_boss == "None") { 
+                if(entry.Value.requiredBoss == "None") { 
                     availableRewards.Add(entry.Key);
                     continue;
                 }
@@ -63,36 +63,36 @@ namespace ValheimFortress.Challenge
                     // We can only add items that do not require a global key check if there is no zone system.
                     continue; 
                 }
-                if(entry.Value.required_boss == "Eikythr" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledEikthyr)) {
+                if(entry.Value.requiredBoss == "Eikythr" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledEikthyr)) {
                     availableRewards.Add(entry.Key);
                     Jotunn.Logger.LogInfo($"Killed Eikythr, enabling reward {entry.Key}.");
                     continue;
                 }
-                if (entry.Value.required_boss == "TheElder" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledElder))
+                if (entry.Value.requiredBoss == "TheElder" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledElder))
                 {
                     availableRewards.Add(entry.Key);
                     Jotunn.Logger.LogInfo($"Killed TheElder, enabling rewards {entry.Key}.");
                     continue;
                 }
-                if (entry.Value.required_boss == "BoneMass" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledBonemass))
+                if (entry.Value.requiredBoss == "BoneMass" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledBonemass))
                 {
                     availableRewards.Add(entry.Key);
                     Jotunn.Logger.LogInfo($"Killed BoneMass, enabling rewards {entry.Key}.");
                     continue;
                 }
-                if (entry.Value.required_boss == "Moder" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledModer))
+                if (entry.Value.requiredBoss == "Moder" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledModer))
                 {
                     availableRewards.Add(entry.Key);
                     Jotunn.Logger.LogInfo($"Killed Moder, enabling rewards {entry.Key}.");
                     continue;
                 }
-                if (entry.Value.required_boss == "Yagluth" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledYagluth))
+                if (entry.Value.requiredBoss == "Yagluth" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledYagluth))
                 {
                     availableRewards.Add(entry.Key);
                     Jotunn.Logger.LogInfo($"Killed Yagluth, enabling rewards {entry.Key}.");
                     continue;
                 }
-                if (entry.Value.required_boss == "TheQueen" && zs.GetGlobalKey("defeated_queen"))
+                if (entry.Value.requiredBoss == "TheQueen" && zs.GetGlobalKey("defeated_queen"))
                 {
                     availableRewards.Add(entry.Key);
                     Jotunn.Logger.LogInfo($"Killed TheQueen, enabling rewards {entry.Key}.");

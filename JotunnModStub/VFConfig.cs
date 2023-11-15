@@ -1,9 +1,17 @@
-﻿using BepInEx.Configuration;
+﻿using BepInEx;
+using BepInEx.Configuration;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ValheimFortress.Challenge;
+using Mono.Cecil.Cil;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
+using static ValheimFortress.Challenge.Levels;
+using System.Runtime.Remoting.Messaging;
 
 namespace ValheimFortress
 {
@@ -80,6 +88,97 @@ namespace ValheimFortress
                 null,
                 new ConfigurationManagerAttributes { IsAdvanced = true }));
 
+        }
+
+        public static string GetSecondaryConfigDirectoryPath()
+        {
+            var patchesFolderPath = Path.Combine(Paths.ConfigPath, "VFortress");
+            var dirInfo = Directory.CreateDirectory(patchesFolderPath);
+
+            return dirInfo.FullName;
+        }
+
+        public static void GetYamlConfigFiles()
+        {
+            string externalConfigFolder = VFConfig.GetSecondaryConfigDirectoryPath();
+            bool hasRewardsConfig = false;
+            bool hasCreatureConfig = false;
+            
+            string rewardFilePath = $"{externalConfigFolder}\\Rewards.yaml";
+            string spawnableCreaturesPath = $"{externalConfigFolder}\\SpawnableCreatures.yaml";
+
+            string[] presentFiles = Directory.GetFiles(externalConfigFolder);
+
+            foreach (string configFile in presentFiles)
+            {
+                Jotunn.Logger.LogInfo($"Config file found: {configFile}");
+                if (configFile.Contains("Rewards.yaml"))
+                {
+                    Jotunn.Logger.LogInfo($"Found rewards configuration: {configFile}");
+                    rewardFilePath = configFile;
+                    hasRewardsConfig = true;
+                }
+                if (configFile.Contains("SpawnableCreatures.yaml"))
+                {
+                    Jotunn.Logger.LogInfo($"Found Creature configuration: {configFile}");
+                    spawnableCreaturesPath = configFile;
+                    hasCreatureConfig = true;
+                }
+            }
+
+            if (hasRewardsConfig == false)
+            {
+                Jotunn.Logger.LogInfo("Rewards file missing, recreating.");
+                using (StreamWriter writetext = new StreamWriter(rewardFilePath))
+                {
+                    // writetext.WriteLine(ValheimFortress.ReadEmbeddedResourceFile("Rewards.yaml"));
+                    String header = @"#################################################
+# Shrine of Challenge Rewards Configuration
+#################################################
+# The below configuration values are loaded at the start of the game, and they are not actively watched for changes beyond that. You must restart your game for any changes to take effect.
+#
+# Rewards configurations have a number of key values
+#  Coin:                                 |- The name of the reward, this will be the diplayed name if there is no localization for this reward, which is likely the case for any custom entries.
+#    enabled: true                       |- Whether or not the reward is enabled, you can use this to disable any vanilla rewards you do not want. At least 1 reward must be available at ALL times.
+#    resouce_cost: 5                     |- This is the cost to gain 1 of the particular reward. Points are generated based on how many monsters are spawned.
+#    resource_prefab: ""Coins""            |- This is the unity prefab name for a resource, you will often see mods list the prefabs they have added. Prefabs are also listed on the valheim wiki.
+#    required_boss: ""None""               |- This must be one of the following values: ""None"" ""Eikythr"" ""TheElder"" ""BoneMass"" ""Moder"" ""Yagluth"" ""TheQueen""";
+                    writetext.WriteLine(header);
+                    writetext.WriteLine(Rewards.YamlRewardsDefinition());
+                }
+            }
+            if (hasCreatureConfig == false)
+            {
+                Jotunn.Logger.LogInfo("CreatureConfig file missing, recreating.");
+                using (StreamWriter writetext = new StreamWriter(spawnableCreaturesPath))
+                {
+                    // ValheimFortress.ReadEmbeddedResourceFile("SpawnableCreatures.yaml")
+                    String header = @"#################################################
+# Shrine of Challenge Creature Configuration
+#################################################
+# The below configuration values are loaded at the start of the game, and they are not actively watched for changes beyond that. You must restart your game for any changes to take effect.
+#
+# Creature configurations have a number of key values
+# Neck:                    |- This is the name of the creature being added, it is primarily used for display purposes and lookups
+#  spawnCost: 5            |- This is how many points from the wave pool it costs to spawn one creature, smaller values allow many more spawns.
+#  prefab: ""Neck""          |- This is the creatures prefab, which will be used to spawn it.
+#  spawnType: ""common""     |- This can either be: ""common"" or ""rare"" or ""unique"", uniques are ""bosses"", most of the wave will be made up of common spawns, with a few rare spawns per wave.
+#  biome: ""Meadows""        |- This must be one of the following values: ""Meadows"", ""BlackForest"", ""Swamp"", ""Mountain"", ""Plains"", ""Mistlands"". The biome determines the levels that will recieve this spawn, and how the spawn might be adjusted to
+#                             fit higher difficulty waves. eg: a greydwarf spawning into a swamp level wave will recieve 1 bonus star, since it is from the black forest, which is 1 biome behind the swamp.";
+                    writetext.WriteLine(header);
+                    writetext.WriteLine(YamlCreatureDefinition());
+                }
+            }
+            // now that we have ensured the files exist lets read them
+            string spawnableCreatureConfigs = File.ReadAllText(spawnableCreaturesPath);
+            string rewardConfigs = File.ReadAllText(rewardFilePath);
+
+            var deserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
+            var creatureValues = deserializer.Deserialize<SpawnableCreatureCollection>(spawnableCreatureConfigs);
+            UpdateSpawnableCreatures(creatureValues);
+            //Jotunn.Logger.LogInfo($"deserialized creatures: {creatureValues}");
+            var rewardsValues = deserializer.Deserialize<Rewards.RewardEntryCollection>(rewardConfigs);
+            Rewards.UpdateRewardsEntries(rewardsValues);
         }
 
         /// <summary>

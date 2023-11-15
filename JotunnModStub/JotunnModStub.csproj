@@ -46,6 +46,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -70,9 +71,15 @@
     <None Include="app.config" />
     <EmbeddedResource Include="AssetsEmbedded\vfbundle" />
     <EmbeddedResource Include="Localizations\English.json" />
+    <None Include="ILRepack.targets" />
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Costura.Fody">
+      <Version>5.7.0</Version>
+      <!-- <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets> -->
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="HarmonyX">
       <Version>2.10.2</Version>
     </PackageReference>
@@ -82,10 +89,16 @@
     <PackageReference Include="Mono.Cecil">
       <Version>0.11.5</Version>
     </PackageReference>
+    <PackageReference Include="YamlDotNet">
+      <Version>13.7.1</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="DoPrebuild.props" />
     <None Include="Environment.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="FodyWeavers.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="JotunnPostBuildTaskWin" Condition="'$(OS)' == 'Windows_NT'">

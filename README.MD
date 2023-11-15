@@ -66,22 +66,6 @@ These pieces likely need better color balancing, and might have other oddities a
 
 </details>
 
-## Configuration
-This mod is HIGHLY configurable. All buildings have configurable crafting recipes and many aspects about the shrine of challenge can be configured to your liking.
-
-This mod uses almost exclusively server sided configuration. Which means that these values will not be updated while the game is playing. 
-This helps me reduce complexity, in the future I will consider server-synched configs, but right now that is not included in this mod.
-
-This mod does support [BepinEx in-game Configuration](https://valheim.thunderstore.io/package/Azumatt/Official_BepInEx_ConfigurationManager/)
-Configurations can also be edited in the config file within your Bepinex folder `BepinEx\Config\com.midnightsfx.ValheimFortress.cfg`
-
-<details>
-<summary>Example in-game configuration</summary>
-
-Basic configuration view in-game.
-![basic configs](https://i.imgur.com/6zebaBk.png)
-
-</details>
 
 ### How to adjust the difficulty
 The Shrine of challenge provides a number of key configuration values which can be used to adjust the difficulty level in many different ways.
@@ -113,12 +97,86 @@ if (allocated_challenge_points > max_challenge_points) { allocated_challenge_poi
 
 </details>
 
+## Configuration
+This mod is HIGHLY configurable. All buildings have configurable crafting recipes and many aspects about the shrine of challenge can be configured to your liking.
+
+This mod uses almost exclusively server sided configuration. Which means that these values will not be updated while the game is playing. 
+This helps me reduce complexity, in the future I will consider server-synched configs, but right now that is not included in this mod.
+
+This mod does support [BepinEx in-game Configuration](https://valheim.thunderstore.io/package/Azumatt/Official_BepInEx_ConfigurationManager/)
+Configurations can also be edited in the config file within your Bepinex folder `BepinEx\Config\com.midnightsfx.ValheimFortress.cfg`
+
+Finally Creature & Rewards configurations are handled seperatly through yaml, which is defined below.
+
+<details>
+<summary>Example in-game configuration</summary>
+
+Basic configuration view in-game.
+![basic configs](https://i.imgur.com/6zebaBk.png)
+
+</details>
+
+### Adding Rewards
+Rewards can be added through yaml definitions. You can add anything, but invalid prefabs will cause errors when spawning your reward, and you will recieve nothing.
+Many mods list their resouces prefabs, if you desire to have rewards from the shrine be from another mod.
+[The Valheim Wiki](https://valheim.fandom.com/wiki/Valheim_Wiki) is a great resource to find prefabs of vanilla componets.
+
+The yaml configuration can be found within your mods configuration folder, under `VFortress` eg: `BepInEx\config\VFortress`
+
+Rewards have the following structure, which is also listed inside the configuration file itself.
+
+```yaml
+#################################################
+# Shrine of Challenge Rewards Configuration
+#################################################
+# The below configuration values are loaded at the start of the game, and they are not actively watched for changes beyond that. You must restart your game for any changes to take effect.
+#
+# Rewards configurations have a number of key values
+#  Coin:                               |- The name of the reward, this will be the diplayed name if there is no localization for this reward, which is likely the case for any custom entries.
+#    enabled: true                     |- Whether or not the reward is enabled, you can use this to disable any vanilla rewards you do not want. At least 1 reward must be available at ALL times.
+#    resouce_cost: 5                   |- This is the cost to gain 1 of the particular reward. Points are generated based on how many monsters are spawned.
+#    resource_prefab: "Coins"          |- This is the unity prefab name for a resource, you will often see mods list the prefabs they have added. Prefabs are also listed on the valheim wiki.
+#    required_boss: "None"             |- This must be one of the following values: "None" "Eikythr" "TheElder" "BoneMass" "Moder" "Yagluth" "TheQueen"
+```
+
+
+### Adding Monsters
+Monsters can be added through yaml definitions. You can add any monster you want, but some custom creatures might have issues with the spawn modifications, its advised to test custom creature additions
+in singleplayer before adding them to a server.
+
+Almost all vanilla creatures are already included in the available spawn pool. But their definitions can also be tuned through these configuration files. Don't want to face golemns? Disable them.
+The configuration for spawnable creatures can be found under your mods configuration folder under `VFortress` eg: `BepInEx\config\VFortress`
+
+Creatures have the following definition structure, which is also listed inside the configuration file itself.
+
+```yaml
+#################################################
+# Shrine of Challenge Creature Configuration
+#################################################
+# The below configuration values are loaded at the start of the game, and they are not actively watched for changes beyond that. You must restart your game for any changes to take effect.
+#
+# Creature configurations have a number of key values
+# Neck:                    |- This is the name of the creature being added, it is primarily used for display purposes and lookups
+#  spawnCost: 5            |- This is how many points from the wave pool it costs to spawn one creature, smaller values allow many more spawns.
+#  prefab: "Neck"          |- This is the creatures prefab, which will be used to spawn it.
+#  spawnType: "common"     |- This can either be: "common" or "rare" or "unique", uniques are "bosses", most of the wave will be made up of common spawns, with a few rare spawns per wave.
+#  biome: "Meadows"        |- This must be one of the following values: "Meadows", "BlackForest", "Swamp", "Mountain", "Plains", "Mistlands". The biome determines the levels that will recieve this spawn, and how the spawn might be adjusted to
+#                             fit higher difficulty waves. eg: a greydwarf spawning into a swamp level wave will recieve 1 bonus star, since it is from the black forest, which is 1 biome behind the swamp.
+```
+
+## FAQ
+
+Q. I broke my configuration files and want to try again.
+	A. You can delete any/all yaml configuration (or the primary config file) from this mod and it will be automatically generated again for you on startup.
+
+
 
 ## Future Features / Incomplete things
 There are a number of things that I plan on adding in the future. Here is the current list.
 
 * Shrine of Challenge
 	* Add ward support checking to ensure that the player interacting with the shrine is allowed
+	* Add a failsafe for waves to despawn after a long period of time (if the player is unable to kill them etc)
 
 * cosmetics
 	* Whitemarble cosmetic variant of blackmarble
@@ -145,6 +203,18 @@ If you like this mod maybe you'll like my other work
 - Automated turret likes to fire off into space instead of hitting its target occassionally (its aim isn't perfect, this is intentional)
 
 ## Changelog
+**0.8.0**
+```
+- Added Dynamic yaml configuration for Rewards and available creature spawns
+	- Additional rewards can be added through new entries, existing rewards can be modified and disabled in the same way
+	- Monsters can be added as possible spawns, configured for which biome they spawn from and how much their spawncosts are, or disabled entirely.
+```
+
+** 0.7.3**
+```
+- Fixed level 5 having an infinite loading loop crash to using the wrong level data
+```
+
 ** 0.7.2**
 ```
 - Disable map drawing overlay due to potential errors

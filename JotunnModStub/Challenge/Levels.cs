@@ -3,10 +3,16 @@ using Jotunn.Managers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using YamlDotNet.Serialization.NamingConventions;
+using YamlDotNet.Serialization;
+using static Heightmap;
+using System.Net;
+using System.Runtime.Serialization;
 
 namespace ValheimFortress.Challenge
 {
@@ -30,6 +36,7 @@ namespace ValheimFortress.Challenge
         const String MISTLANDS = "Mistlands";
         const String ASHLANDS = "Ashlands";
         static readonly private String[] biomes = { MEADOWS, BLACKFOREST, SWAMP, MOUNTAIN, PLAINS, MISTLANDS, ASHLANDS };
+        static readonly private String[] spawntypes = { COMMON, RARE, UNIQUE };
 
 
         public class HoardConfig
@@ -188,27 +195,21 @@ namespace ValheimFortress.Challenge
             }
         }
 
-        class CreatureValues
+        [DataContract]
+        public class CreatureValues
         {
-            public short spawnCost;
-            public String prefabName;
-            public String spawnType;
-            public String biomeFrom;
+            public short spawnCost { get; set; }
+            public String prefabName { get; set; }
+            public String spawnType { get; set; }
+            public String biome { get; set; }
 
-            /// <summary>
-            /// Defines a summonable creature
-            /// </summary>
-            /// <param name="spawnCost"></param>
-            /// <param name="prefabName"></param>
-            /// <param name="spawnType"></param>
-            /// <param name="biome"></param>
-            public CreatureValues(short spawnCost, String prefabName, String spawnType, String biome)
-            {
-                this.spawnCost = spawnCost;
-                this.prefabName = prefabName;
-                this.spawnType = spawnType;
-                this.biomeFrom = biome;
-            }
+            // Needed only for Serialization
+            public CreatureValues() { }
+        }
+
+        public class SpawnableCreatureCollection
+        {
+            public Dictionary<string, CreatureValues> Creatures { get; set; }
         }
 
         static Dictionary<String, WaveGenerationFormat> WaveStyles = new Dictionary<string, WaveGenerationFormat>
@@ -226,64 +227,85 @@ namespace ValheimFortress.Challenge
         };
         
 
-        static Dictionary<String, CreatureValues> SpawnableCreatures = new Dictionary<string, CreatureValues>
+        public static Dictionary<String, CreatureValues> SpawnableCreatures = new Dictionary<string, CreatureValues>
         {
             // Meadow Creatures
-            {"Neck", new CreatureValues(spawnCost: 2, "Neck", spawnType: COMMON, biome: MEADOWS) },
-            {"Boar", new CreatureValues(spawnCost: 2, "Boar", spawnType: COMMON, biome: MEADOWS) },
-            {"Greyling", new CreatureValues(spawnCost: 3, "Greyling", spawnType: COMMON, biome: MEADOWS) },
+            {"Neck", new CreatureValues { spawnCost = 2, prefabName = "Neck", spawnType = COMMON, biome = MEADOWS } },
+            {"Boar", new CreatureValues {spawnCost = 2, prefabName = "Boar", spawnType = COMMON, biome = MEADOWS } },
+            {"Greyling", new CreatureValues {spawnCost = 3, prefabName = "Greyling", spawnType = COMMON, biome = MEADOWS } },
             // Black Forest Creatures
-            {"GreyDwarf", new CreatureValues(spawnCost: 4, "Greydwarf", spawnType: COMMON, biome: BLACKFOREST) },
-            {"GreyDwarfBrute", new CreatureValues(spawnCost: 8, "Greydwarf_Elite", spawnType: RARE, biome: BLACKFOREST) },
-            {"GreyDwarfShaman", new CreatureValues(spawnCost: 8, "Greydwarf_Shaman", spawnType: RARE, biome: BLACKFOREST) },
-            {"Skeleton", new CreatureValues(spawnCost: 4, "Skeleton_NoArcher", spawnType: COMMON, biome: BLACKFOREST) },
-            {"SkeletonArcher", new CreatureValues(spawnCost: 5, "Skeleton", spawnType: COMMON, biome: BLACKFOREST) },
-            {"RancidSkeleton", new CreatureValues(spawnCost: 9, "Skeleton_Poison", spawnType: RARE, biome: BLACKFOREST) },
-            {"Ghost", new CreatureValues(spawnCost: 7, "Greyling", spawnType: RARE, biome: BLACKFOREST) },
-            {"Troll", new CreatureValues(spawnCost: 20, "Troll", spawnType: RARE, biome: BLACKFOREST) },
+            {"GreyDwarf", new CreatureValues {spawnCost = 4, prefabName = "Greydwarf", spawnType = COMMON, biome = BLACKFOREST } },
+            {"GreyDwarfBrute", new CreatureValues {spawnCost = 8, prefabName = "Greydwarf_Elite", spawnType = RARE, biome = BLACKFOREST } },
+            {"GreyDwarfShaman", new CreatureValues {spawnCost = 8, prefabName = "Greydwarf_Shaman", spawnType = RARE, biome = BLACKFOREST } },
+            {"Skeleton", new CreatureValues {spawnCost = 4, prefabName = "Skeleton_NoArcher", spawnType = COMMON, biome = BLACKFOREST } },
+            {"SkeletonArcher", new CreatureValues {spawnCost = 5, prefabName = "Skeleton", spawnType = COMMON, biome = BLACKFOREST } },
+            {"RancidSkeleton", new CreatureValues {spawnCost = 9, prefabName = "Skeleton_Poison", spawnType = RARE, biome = BLACKFOREST } },
+            {"Ghost", new CreatureValues {spawnCost = 7, prefabName = "Ghost", spawnType = RARE, biome = BLACKFOREST } },
+            {"Troll", new CreatureValues {spawnCost = 20, prefabName = "Troll", spawnType = RARE, biome = BLACKFOREST } },
             // Swamp Creatures
-            {"Surtling", new CreatureValues(spawnCost: 6, "Surtling", spawnType: COMMON, biome: SWAMP) },
-            {"Wraith", new CreatureValues(spawnCost: 10, "Wraith", spawnType: RARE, biome: SWAMP) },
-            {"Abomination", new CreatureValues(spawnCost: 30, "Abomination", spawnType: RARE, biome: SWAMP) },
-            {"Draugr", new CreatureValues(spawnCost: 10, "Draugr", spawnType: COMMON, biome: SWAMP) },
-            {"DraugrArcher", new CreatureValues(spawnCost: 12, "Draugr_Ranged", spawnType: COMMON, biome: SWAMP) },
-            {"DraugrElite", new CreatureValues(spawnCost: 15, "Draugr_Elite", spawnType: RARE, biome: SWAMP) },
-            {"Blob", new CreatureValues(spawnCost: 7, "Blob", spawnType: COMMON, biome: SWAMP) },
-            {"BlobElite", new CreatureValues(spawnCost: 15, "BlobElite", spawnType: RARE, biome: SWAMP) },
+            {"Surtling", new CreatureValues {spawnCost = 6, prefabName = "Surtling", spawnType = COMMON, biome = SWAMP} },
+            {"Wraith", new CreatureValues {spawnCost = 10, prefabName = "Wraith", spawnType = RARE, biome = SWAMP} },
+            {"Abomination", new CreatureValues {spawnCost = 30, prefabName = "Abomination", spawnType = RARE, biome = SWAMP} },
+            {"Draugr", new CreatureValues {spawnCost = 10, prefabName = "Draugr", spawnType = COMMON, biome = SWAMP} },
+            {"DraugrArcher", new CreatureValues {spawnCost = 12, prefabName = "Draugr_Ranged", spawnType = COMMON, biome = SWAMP} },
+            {"DraugrElite", new CreatureValues {spawnCost = 15, prefabName = "Draugr_Elite", spawnType = RARE, biome = SWAMP} },
+            {"Blob", new CreatureValues {spawnCost = 7, prefabName = "Blob", spawnType = COMMON, biome = SWAMP} },
+            {"BlobElite", new CreatureValues {spawnCost = 15, prefabName = "BlobElite", spawnType = RARE, biome = SWAMP} },
             // Mountain Creatures
-            {"Bat", new CreatureValues(spawnCost: 3, "Bat", spawnType: COMMON, biome: MOUNTAIN) },
-            {"IceDrake", new CreatureValues(spawnCost: 12, "Hatchling", spawnType: RARE, biome: MOUNTAIN) },
-            {"Wolf", new CreatureValues(spawnCost: 15, "Wolf", spawnType: COMMON, biome: MOUNTAIN) },
-            {"Fenring", new CreatureValues(spawnCost: 18, "Fenring", spawnType: COMMON, biome: MOUNTAIN) },
-            {"Ulv", new CreatureValues(spawnCost: 12, "Ulv", spawnType: COMMON, biome: MOUNTAIN) },
-            {"Cultist", new CreatureValues(spawnCost: 18, "Fenring_Cultist", spawnType: RARE, biome: MOUNTAIN) },
-            {"StoneGolemn", new CreatureValues(spawnCost: 40, "StoneGolem", spawnType: RARE, biome: MOUNTAIN) },
+            {"Bat", new CreatureValues {spawnCost = 3, prefabName = "Bat", spawnType = COMMON, biome = MOUNTAIN} },
+            {"IceDrake", new CreatureValues {spawnCost = 12, prefabName = "Hatchling", spawnType = RARE, biome = MOUNTAIN} },
+            {"Wolf", new CreatureValues {spawnCost = 15, prefabName = "Wolf", spawnType = COMMON, biome = MOUNTAIN} },
+            {"Fenring", new CreatureValues {spawnCost = 18, prefabName = "Fenring", spawnType = COMMON, biome = MOUNTAIN} },
+            {"Ulv", new CreatureValues {spawnCost = 12, prefabName = "Ulv", spawnType = COMMON, biome = MOUNTAIN} },
+            {"Cultist", new CreatureValues {spawnCost = 18, prefabName = "Fenring_Cultist", spawnType = RARE, biome = MOUNTAIN} },
+            {"StoneGolem", new CreatureValues {spawnCost = 40, prefabName = "StoneGolem", spawnType = RARE, biome = MOUNTAIN} },
             // Plains Creatures
-            {"Deathsquito", new CreatureValues(spawnCost: 20, "Deathsquito", spawnType: COMMON, biome: PLAINS) },
-            {"Fuling", new CreatureValues(spawnCost: 15, "Goblin", spawnType: COMMON, biome: PLAINS) },
-            {"FulingArcher", new CreatureValues(spawnCost: 17, "GoblinArcher", spawnType: COMMON, biome: PLAINS) },
-            {"FulingBerserker", new CreatureValues(spawnCost: 35, "GoblinBrute", spawnType: RARE, biome: PLAINS) },
-            {"FulingShaman", new CreatureValues(spawnCost: 25, "GoblinShaman", spawnType: RARE, biome: PLAINS) },
-            {"Growth", new CreatureValues(spawnCost: 25, "BlobTar", spawnType: COMMON, biome: PLAINS) },
+            {"Deathsquito", new CreatureValues {spawnCost = 20, prefabName = "Deathsquito", spawnType = COMMON, biome = PLAINS} },
+            {"Fuling", new CreatureValues {spawnCost = 15, prefabName = "Goblin", spawnType = COMMON, biome = PLAINS} },
+            {"FulingArcher", new CreatureValues {spawnCost = 17, prefabName = "GoblinArcher", spawnType = COMMON, biome = PLAINS} },
+            {"FulingBerserker", new CreatureValues {spawnCost = 35, prefabName = "GoblinBrute", spawnType = RARE, biome = PLAINS} },
+            {"FulingShaman", new CreatureValues {spawnCost = 25, prefabName = "GoblinShaman", spawnType = RARE, biome = PLAINS} },
+            {"Growth", new CreatureValues {spawnCost = 25, prefabName = "BlobTar", spawnType = COMMON, biome = PLAINS} },
             // Mistland Creatures
-            {"Seeker", new CreatureValues(spawnCost: 30, "Seeker", spawnType: COMMON, biome: MISTLANDS) },
-            {"SeekerSoldier", new CreatureValues(spawnCost: 50, "SeekerBrute", spawnType: RARE, biome: MISTLANDS) },
-            {"SeekerBrood", new CreatureValues(spawnCost: 10, "SeekerBrood", spawnType: COMMON, biome: MISTLANDS) },
-            {"Gjall", new CreatureValues(spawnCost: 50, "Gjall", spawnType: RARE, biome: MISTLANDS) },
-            {"Tick", new CreatureValues(spawnCost: 15, "Tick", spawnType: COMMON, biome: MISTLANDS) },
-            {"DvergerRouge", new CreatureValues(spawnCost: 25, "Dverger", spawnType: RARE, biome: MISTLANDS) },
-            {"DvergerMage", new CreatureValues(spawnCost: 45, "DvergerMage", spawnType: RARE, biome: MISTLANDS) },
-            {"DvergerMageFire", new CreatureValues(spawnCost: 45, "DvergerMageFire", spawnType: RARE, biome: MISTLANDS) },
-            {"DvergerMageIce", new CreatureValues(spawnCost: 45, "DvergerMageIce", spawnType: RARE, biome: MISTLANDS) },
-            {"DvergerMageSupport", new CreatureValues(spawnCost: 45, "DvergerMageSupport", spawnType: RARE, biome: MISTLANDS) },
+            {"Seeker", new CreatureValues {spawnCost = 30, prefabName = "Seeker", spawnType = COMMON, biome = MISTLANDS} },
+            {"SeekerSoldier", new CreatureValues {spawnCost = 50, prefabName = "SeekerBrute", spawnType = RARE, biome = MISTLANDS} },
+            {"SeekerBrood", new CreatureValues {spawnCost = 10, prefabName = "SeekerBrood", spawnType = COMMON, biome = MISTLANDS} },
+            {"Gjall", new CreatureValues {spawnCost = 50, prefabName = "Gjall", spawnType = RARE, biome = MISTLANDS} },
+            {"Tick", new CreatureValues {spawnCost = 15, prefabName = "Tick", spawnType = COMMON, biome = MISTLANDS} },
+            {"DvergerRouge", new CreatureValues {spawnCost = 25, prefabName = "Dverger", spawnType = RARE, biome = MISTLANDS} },
+            {"DvergerMage", new CreatureValues {spawnCost = 45, prefabName = "DvergerMage", spawnType = RARE, biome = MISTLANDS} },
+            {"DvergerMageFire", new CreatureValues {spawnCost = 45, prefabName = "DvergerMageFire", spawnType = RARE, biome = MISTLANDS} },
+            {"DvergerMageIce", new CreatureValues {spawnCost = 45, prefabName = "DvergerMageIce", spawnType = RARE, biome = MISTLANDS} },
+            {"DvergerMageSupport", new CreatureValues {spawnCost = 45, prefabName = "DvergerMageSupport", spawnType = RARE, biome = MISTLANDS} },
             // Boss Creatures
-            {"Eikthyr", new CreatureValues(spawnCost: 40, "Eikthyr", spawnType: UNIQUE, biome: MEADOWS) },
-            {"TheElder", new CreatureValues(spawnCost: 180, "gd_king", spawnType: UNIQUE, biome: BLACKFOREST) },
-            {"Bonemass", new CreatureValues(spawnCost: 250, "Bonemass", spawnType: UNIQUE, biome: SWAMP) },
-            {"Moder", new CreatureValues(spawnCost: 320, "Dragon", spawnType: UNIQUE, biome: MOUNTAIN) },
-            {"Yagluth", new CreatureValues(spawnCost: 450, "GoblinKing", spawnType: UNIQUE, biome: PLAINS) },
-            {"TheQueen", new CreatureValues(spawnCost: 600, "SeekerQueen", spawnType: UNIQUE, biome: MISTLANDS) },
+            {"Eikthyr", new CreatureValues {spawnCost = 40, prefabName = "Eikthyr", spawnType = UNIQUE, biome = MEADOWS} },
+            {"TheElder", new CreatureValues {spawnCost = 180, prefabName = "gd_king", spawnType = UNIQUE, biome = BLACKFOREST} },
+            {"Bonemass", new CreatureValues {spawnCost = 250, prefabName = "Bonemass", spawnType = UNIQUE, biome = SWAMP} },
+            {"Moder", new CreatureValues {spawnCost = 320, prefabName = "Dragon", spawnType = UNIQUE, biome = MOUNTAIN} },
+            {"Yagluth", new CreatureValues {spawnCost = 450, prefabName = "GoblinKing", spawnType = UNIQUE, biome = PLAINS} },
+            {"TheQueen", new CreatureValues {spawnCost = 600, prefabName = "SeekerQueen", spawnType = UNIQUE, biome = MISTLANDS} },
         };
+
+        public static void UpdateSpawnableCreatures(SpawnableCreatureCollection spawnables)
+        {
+            SpawnableCreatures.Clear();
+            foreach (KeyValuePair<string, CreatureValues> entry in spawnables.Creatures)
+            {
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Updating Creature Entry {entry.Key} Prefab:{entry.Value.prefabName} SpawnCost:{entry.Value.spawnCost} Biome:{entry.Value.biome} SpawnType:{entry.Value.spawnType}"); } 
+                SpawnableCreatures.Add(entry.Key, entry.Value);
+            }
+        }
+
+        public static string YamlCreatureDefinition()
+        {
+            var creatureCollection = new SpawnableCreatureCollection();
+            creatureCollection.Creatures = SpawnableCreatures;
+            var serializer = new SerializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
+            var yaml = serializer.Serialize(creatureCollection);
+            return yaml;
+        }
+
+        static Dictionary<String, CreatureValues> ConfigSpawnableCreatures = new Dictionary<string, CreatureValues> { };
 
         public static void UpdateCreatureConfigValues(VFConfig cfg)
         {
@@ -414,11 +436,11 @@ namespace ValheimFortress.Challenge
             // Once the user reaches lvl 16 every wave is fully fleshed out dynamically
             WaveGenerationFormat waveFormat = WaveStyles["Dynamic"];
             if (level == 1) { waveFormat = WaveStyles["Tutorial"]; }
-            if (level == 2 || level == 3 || level == 4) { waveFormat = WaveStyles["Starter"]; }
+            if (level == 2 || level == 3 || level == 4 || level == 5) { waveFormat = WaveStyles["Starter"]; }
             if (level == 6 || level == 7) { waveFormat = WaveStyles["Easy"]; }
-            if (level == 8 || level == 9) { waveFormat = WaveStyles["Normal"]; }
+            if (level == 8 || level == 9 || level == 10) { waveFormat = WaveStyles["Normal"]; }
             if (level == 11 || level == 12) { waveFormat = WaveStyles["Hard"]; }
-            if (level == 13 || level == 14) { waveFormat = WaveStyles["Expert"]; }
+            if (level == 13 || level == 14 || level == 15) { waveFormat = WaveStyles["Expert"]; }
             if (level < 6 && boss_mode) { waveFormat = WaveStyles["TutorialBoss"]; }
             if (level > 6 && boss_mode) { waveFormat = WaveStyles["Boss"]; }
             if (level > 16 && boss_mode) { waveFormat = WaveStyles["DynamicBoss"]; }
@@ -465,7 +487,13 @@ namespace ValheimFortress.Challenge
                     // Add more search targets in every round if the first few rounds couldn't fill the roster.
                     max_creatures_from_previous_biomes += 1;
                     Jotunn.Logger.LogInfo("Not enough creatures added, expanding search.");
-                } 
+                }
+                if (selection_iterations > 6)
+                {
+                    // Add more search targets in every round if the first few rounds couldn't fill the roster.
+                    Jotunn.Logger.LogWarning($"Not enough creatures were found to support this wave, wave will use reduced spawns and rewards. Built wave: {completeWaveOutline}");
+                    break;
+                }
                 foreach (String skey in this_iteration_key_order)
                 {
 
@@ -475,12 +503,12 @@ namespace ValheimFortress.Challenge
                         if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"{skey} creature already added, skipping iteration."); }
                         continue; 
                     } // we only want to add a key once, besides the entries are split later
-                    short current_creature_biome_level = BiomeStringToInt(SpawnableCreatures[skey].biomeFrom);
+                    short current_creature_biome_level = BiomeStringToInt(SpawnableCreatures[skey].biome);
                     // Skip this entry if the creature does not match the selected biome and we don't need anymore creatures from previous biomes
-                    if (SpawnableCreatures[skey].biomeFrom != selected_biome && max_creatures_from_previous_biomes > creatures_selected_from_previous_biome)
+                    if (SpawnableCreatures[skey].biome != selected_biome && max_creatures_from_previous_biomes > creatures_selected_from_previous_biome)
                     {
                         if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Creature is from a different biome."); }
-                        if (SpawnableCreatures[skey].biomeFrom != selected_biome && current_creature_biome_level < targeted_wave_biome_level && (current_creature_biome_level + 2) >= targeted_wave_biome_level)
+                        if (SpawnableCreatures[skey].biome != selected_biome && current_creature_biome_level < targeted_wave_biome_level && (current_creature_biome_level + 2) >= targeted_wave_biome_level)
                         {
                             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Creature biome is within -2 of current."); }
                             // The creature is from a different biome than the target AND we still need creatures from other biomes
@@ -519,7 +547,7 @@ namespace ValheimFortress.Challenge
                     }
 
                     // we only want to add creatures from the current biome below here.
-                    if(SpawnableCreatures[skey].biomeFrom != selected_biome) { continue; }
+                    if(SpawnableCreatures[skey].biome != selected_biome) { continue; }
                     // Creature is from this biome
                     if (SpawnableCreatures[skey].spawnType == COMMON && commons_selected < commons_to_pick)
                     {

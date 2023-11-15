@@ -10,6 +10,7 @@ using ValheimFortress.Challenge;
 using BepInEx.Configuration;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 namespace ValheimFortress
 {
@@ -20,7 +21,7 @@ namespace ValheimFortress
     {
         public const string PluginGUID = "com.midnightsfx.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.7.2";
+        public const string PluginVersion = "0.8.0";
 
         AssetBundle EmbeddedResourceBundle;
         public VFConfig cfg;
@@ -36,10 +37,13 @@ namespace ValheimFortress
             ValheimFortressPieces vfpieces = new ValheimFortressPieces(EmbeddedResourceBundle, cfg);
             spawnPortal = EmbeddedResourceBundle.LoadAsset<GameObject>($"Assets/Custom/Pieces/VFortress/VF_portal.prefab");
 
+            // Yaml configs
+            VFConfig.GetYamlConfigFiles();
+
             // Generate/update/set config values.
-            Levels.UpdateCreatureConfigValues(cfg);
+            // Levels.UpdateCreatureConfigValues(cfg);
             Levels.UpdateLevelValues(cfg);
-            Rewards.UpdateResouceRewards(cfg);
+            // Rewards.UpdateResouceRewards(cfg);
 
             // GUIManager.OnCustomGUIAvailable += () => UI.Init(EmbeddedResourceBundle);
 
@@ -98,10 +102,12 @@ namespace ValheimFortress
         }
 
 
-        // This reads an embedded file resouce name, these are all resouces packed into the DLL
-        // they all have a format following this:
-        // ValheimArmory.localizations.English.json
-        private string ReadEmbeddedResourceFile(string filename)
+        /// <summary>
+        /// This reads an embedded file resouce name, these are all resouces packed into the DLL
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        internal static string ReadEmbeddedResourceFile(string filename)
         {
             using (var stream = typeof(ValheimFortress).Assembly.GetManifestResourceStream(filename))
             {
@@ -136,6 +142,36 @@ namespace ValheimFortress
             }
 
             return tempList;
+        }
+
+
+        /// <summary>
+        /// Json pretty printer https://stackoverflow.com/questions/4580397/json-formatter-in-c
+        /// </summary>
+        /// <param name="json"></param>
+        /// <param name="indent"></param>
+        /// <returns></returns>
+        public static string FormatJson(string json, string indent = "  ")
+        {
+            var indentation = 0;
+            var quoteCount = 0;
+            var escapeCount = 0;
+
+            var result =
+                from ch in json ?? string.Empty
+                let escaped = (ch == '\\' ? escapeCount++ : escapeCount > 0 ? escapeCount-- : escapeCount) > 0
+                let quotes = ch == '"' && !escaped ? quoteCount++ : quoteCount
+                let unquoted = quotes % 2 == 0
+                let colon = ch == ':' && unquoted ? ": " : null
+                let nospace = char.IsWhiteSpace(ch) && unquoted ? string.Empty : null
+                let lineBreak = ch == ',' && unquoted ? ch + Environment.NewLine + string.Concat(Enumerable.Repeat(indent, indentation)) : null
+                let openChar = (ch == '{' || ch == '[') && unquoted ? ch + Environment.NewLine + string.Concat(Enumerable.Repeat(indent, ++indentation)) : ch.ToString()
+                let closeChar = (ch == '}' || ch == ']') && unquoted ? Environment.NewLine + string.Concat(Enumerable.Repeat(indent, --indentation)) + ch : ch.ToString()
+                select colon ?? nospace ?? lineBreak ?? (
+                    openChar.Length > 1 ? openChar : closeChar
+                );
+
+            return string.Concat(result);
         }
 
 
