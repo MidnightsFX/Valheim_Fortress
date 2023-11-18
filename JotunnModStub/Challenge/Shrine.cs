@@ -21,6 +21,7 @@ namespace ValheimFortress.Challenge
         private ZNetView zNetView;
         public static bool shrine_ui_active = false;
         public static Int16 spawned_waves = 0;
+        public List<GameObject> portals = new List<GameObject>();
 
         public void SetHardMode()
         {
@@ -63,6 +64,21 @@ namespace ValheimFortress.Challenge
         public void setSpawnedWaveTarget(Int16 target)
         {
             spawned_waves = target;
+        }
+
+        public void setPortals(List<GameObject> portal_list)
+        {
+            portals.Clear();
+            portals = portal_list;
+        }
+
+        public void destroyPortals()
+        {
+            foreach(GameObject portal in portals)
+            {
+                Destroy(portal, UnityEngine.Random.Range(1, 10));
+            }
+            portals.Clear();
         }
 
         public void EnablePortal()
@@ -132,6 +148,11 @@ namespace ValheimFortress.Challenge
                     hard_mode = false;
                     siege_mode = false;
                     Disableportal();
+                    if (portals.Count > 0)
+                    {
+                        if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Destroying wave portals"); }
+                        destroyPortals();
+                    }
                     Destroy(this.GetComponent<Spawner>()); // remove the spawner since its completed its work and will be recreated for the next challenge.
                 }
             } else {

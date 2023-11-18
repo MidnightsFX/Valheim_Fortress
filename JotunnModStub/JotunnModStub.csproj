@@ -120,4 +120,9 @@ xcopy "$(TargetDir)\$(TargetFileName)" "$(ProjectDir)\Package\$(TargetFileName)"
 
 </PostBuildEvent>
   </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>xcopy "C:\Users\carls\Documents\projects\Valheim_Stuff\Unity_Valheim_mod_data\JotunnModUnity\AssetBundles\StandaloneWindows\vfbundle" "$(ProjectDir)\AssetsEmbedded\vfbundle" /q /y /i
+
+</PreBuildEvent>
+  </PropertyGroup>
 </Project>

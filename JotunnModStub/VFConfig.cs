@@ -26,6 +26,7 @@ namespace ValheimFortress
         public static ConfigEntry<bool> EnableBossModifier;
         public static ConfigEntry<bool> EnableHardModifier;
         public static ConfigEntry<bool> EnableSiegeModifer;
+        public static ConfigEntry<bool> EnableMapPings;
         public ConfigFile file;
 
         public VFConfig(ConfigFile Config)
@@ -85,6 +86,11 @@ namespace ValheimFortress
 
             EnableSiegeModifer = Config.Bind("Shrine of Challenge", "EnableSiegeModifer", true,
                 new ConfigDescription("Whether or not siege mode is available as a modifier. Siege mode gives much larger pauses between waves, and 100% larger waves for 50% more reward.",
+                null,
+                new ConfigurationManagerAttributes { IsAdvanced = true }));
+
+            EnableMapPings = Config.Bind("Shrine of Challenge", "EnableMapPings", false,
+                new ConfigDescription("Whether or not waves spawning from the shrine of challenge should ping the map when they spawn.",
                 null,
                 new ConfigurationManagerAttributes { IsAdvanced = true }));
 
@@ -162,7 +168,7 @@ namespace ValheimFortress
 # Neck:                    |- This is the name of the creature being added, it is primarily used for display purposes and lookups
 #  spawnCost: 5            |- This is how many points from the wave pool it costs to spawn one creature, smaller values allow many more spawns.
 #  prefab: ""Neck""          |- This is the creatures prefab, which will be used to spawn it.
-#  spawnType: ""common""     |- This can either be: ""common"" or ""rare"" or ""unique"", uniques are ""bosses"", most of the wave will be made up of common spawns, with a few rare spawns per wave.
+#  spawnType: ""common""     |- This can either be: ""common"" or ""rare"" or ""elite"" or ""unique"", uniques are ""bosses"", most of the wave will be made up of more common enemies
 #  biome: ""Meadows""        |- This must be one of the following values: ""Meadows"", ""BlackForest"", ""Swamp"", ""Mountain"", ""Plains"", ""Mistlands"". The biome determines the levels that will recieve this spawn, and how the spawn might be adjusted to
 #                             fit higher difficulty waves. eg: a greydwarf spawning into a swamp level wave will recieve 1 bonus star, since it is from the black forest, which is 1 biome behind the swamp.";
                     writetext.WriteLine(header);

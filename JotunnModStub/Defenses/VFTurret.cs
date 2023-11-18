@@ -12,7 +12,7 @@ namespace ValheimFortress.Defenses
 	public class VFTurret : MonoBehaviour, Hoverable, IPieceMarker
 	{
 		private static float m_turnRate = 80f;
-		private static float m_horizontalAngle = 180f;
+		private static float m_horizontalAngle = 90f;
 		private static float m_viewDistance = 25f;
 		private static float m_noTargetScanRate = 12f;
 		private static float m_attackCooldown = 2f;

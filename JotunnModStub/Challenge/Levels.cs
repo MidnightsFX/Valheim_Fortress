@@ -27,6 +27,7 @@ namespace ValheimFortress.Challenge
         static private float star_chance = 0.15f;
         const String COMMON = "common";
         const String RARE = "rare";
+        const String ELITE = "elite";
         const String UNIQUE = "unique";
         const String MEADOWS = "Meadows";
         const String BLACKFOREST = "BlackForest";
@@ -36,7 +37,7 @@ namespace ValheimFortress.Challenge
         const String MISTLANDS = "Mistlands";
         const String ASHLANDS = "Ashlands";
         static readonly private String[] biomes = { MEADOWS, BLACKFOREST, SWAMP, MOUNTAIN, PLAINS, MISTLANDS, ASHLANDS };
-        static readonly private String[] spawntypes = { COMMON, RARE, UNIQUE };
+        static readonly private String[] spawntypes = { COMMON, RARE, ELITE, UNIQUE };
 
 
         public class HoardConfig
@@ -176,6 +177,28 @@ namespace ValheimFortress.Challenge
                 }
                 return count;
             }
+
+            public Int16 CountEliteSpawns()
+            {
+                Int16 count = 0;
+                foreach (Tuple<String, int> entry in waveFormat)
+                {
+                    if (entry.Item1 == ELITE) { count += 1; }
+
+                }
+                return count;
+            }
+
+            public List<Int16> GetEliteSpawnFormations()
+            {
+                List<Int16> rareSpawnPercents = new List<Int16>();
+                foreach (Tuple<String, int> entry in waveFormat)
+                {
+                    if (entry.Item1 == ELITE) { rareSpawnPercents.Add((Int16)entry.Item2); }
+
+                }
+                return rareSpawnPercents;
+            }
         }
 
         // Little helper object to contain built out waves
@@ -212,18 +235,36 @@ namespace ValheimFortress.Challenge
             public Dictionary<string, CreatureValues> Creatures { get; set; }
         }
 
+
+        // These should all stay as close as possible to 100% totals
+        // There is no rule they can't go over/under, but going over will spawn more enemies than the waves points would normally allocate
+        // This is normally only the case for challenge levels and bosses etc
+        // Tutorial 60%
+        // Starter 65%
+        // Easy 70%
+        // Normal 75%
+        // Hard 80%
+        // VeryHard 85%
+        // Expert 90%
+        // Extreme 95%
+        // Dynamic 100%
         static Dictionary<String, WaveGenerationFormat> WaveStyles = new Dictionary<string, WaveGenerationFormat>
         {
-            { "Tutorial", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(COMMON, 50), Tuple.Create(COMMON, 50)}) },
-            { "Starter", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(COMMON, 50), Tuple.Create(COMMON, 30), Tuple.Create(COMMON, 20)}) },
-            { "Easy", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(RARE, 15), Tuple.Create(COMMON, 30), Tuple.Create(COMMON, 20), Tuple.Create(COMMON, 50)}) },
-            { "Normal", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(RARE, 15), Tuple.Create(RARE, 15), Tuple.Create(COMMON, 30), Tuple.Create(COMMON, 20), Tuple.Create(COMMON, 50)}) },
-            { "Hard", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(RARE, 10), Tuple.Create(RARE, 10), Tuple.Create(RARE, 10), Tuple.Create(COMMON, 30), Tuple.Create(COMMON, 20), Tuple.Create(COMMON, 50)}) },
-            { "Expert", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(RARE, 15), Tuple.Create(RARE, 15), Tuple.Create(RARE, 15), Tuple.Create(COMMON, 30), Tuple.Create(COMMON, 20), Tuple.Create(COMMON, 50)}) },
-            { "Boss", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(UNIQUE, 100), Tuple.Create(RARE, 25), Tuple.Create(COMMON, 30), Tuple.Create(COMMON, 20), Tuple.Create(COMMON, 60)}) },
-            { "TutorialBoss", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(UNIQUE, 100), Tuple.Create(COMMON, 30), Tuple.Create(COMMON, 40), Tuple.Create(COMMON, 60)}) },
-            { "Dynamic", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(RARE, 15), Tuple.Create(RARE, 10), Tuple.Create(RARE, 5), Tuple.Create(COMMON, 30), Tuple.Create(COMMON, 30), Tuple.Create(COMMON, 20), Tuple.Create(COMMON, 20), Tuple.Create(COMMON, 10)}) },
-            { "DynamicBoss", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(UNIQUE, 100), Tuple.Create(RARE, 15), Tuple.Create(RARE, 10), Tuple.Create(RARE, 5), Tuple.Create(COMMON, 30), Tuple.Create(COMMON, 30), Tuple.Create(COMMON, 20), Tuple.Create(COMMON, 20), Tuple.Create(COMMON, 10)}) },
+            // Standard waves
+            { "Tutorial", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(COMMON, 30), Tuple.Create(COMMON, 30)}) },
+            { "Starter", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(COMMON, 25), Tuple.Create(COMMON, 25), Tuple.Create(COMMON, 15)}) },
+            { "Easy", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(RARE, 15), Tuple.Create(COMMON, 25), Tuple.Create(COMMON, 30)}) },
+            { "Normal", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(RARE, 15), Tuple.Create(RARE, 10), Tuple.Create(COMMON, 20), Tuple.Create(COMMON, 30)}) },
+            { "Hard", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(ELITE, 5), Tuple.Create(RARE, 20), Tuple.Create(COMMON, 20), Tuple.Create(COMMON, 30)}) },
+            { "VeryHard", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(ELITE, 10), Tuple.Create(RARE, 25), Tuple.Create(COMMON, 20), Tuple.Create(COMMON, 30)}) },
+            { "Expert", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(ELITE, 10), Tuple.Create(RARE, 15), Tuple.Create(RARE, 15), Tuple.Create(COMMON, 20), Tuple.Create(COMMON, 30)}) },
+            { "Extreme", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(ELITE, 15), Tuple.Create(RARE, 20), Tuple.Create(RARE, 15), Tuple.Create(COMMON, 20), Tuple.Create(COMMON, 25)}) },
+            { "Dynamic", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(ELITE, 15), Tuple.Create(RARE, 25), Tuple.Create(RARE, 15), Tuple.Create(COMMON, 20), Tuple.Create(COMMON, 25)}) },
+            // Boss waves
+            { "TutorialBoss", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(UNIQUE, 100), Tuple.Create(COMMON, 30), Tuple.Create(COMMON, 40)}) },
+            { "EasyBoss", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(UNIQUE, 100), Tuple.Create(RARE, 30), Tuple.Create(COMMON, 30)}) },
+            { "Boss", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(UNIQUE, 100), Tuple.Create(ELITE, 20), Tuple.Create(RARE, 30), Tuple.Create(COMMON, 25)}) },
+            { "DynamicBoss", new WaveGenerationFormat().AddMultiToWaveFormat(new Tuple<string, int>[]{Tuple.Create(UNIQUE, 100), Tuple.Create(ELITE, 20), Tuple.Create(RARE, 20), Tuple.Create(RARE, 20), Tuple.Create(COMMON, 20), Tuple.Create(COMMON, 20)}) },
         };
         
 
@@ -241,13 +282,13 @@ namespace ValheimFortress.Challenge
             {"SkeletonArcher", new CreatureValues {spawnCost = 5, prefabName = "Skeleton", spawnType = COMMON, biome = BLACKFOREST } },
             {"RancidSkeleton", new CreatureValues {spawnCost = 9, prefabName = "Skeleton_Poison", spawnType = RARE, biome = BLACKFOREST } },
             {"Ghost", new CreatureValues {spawnCost = 7, prefabName = "Ghost", spawnType = RARE, biome = BLACKFOREST } },
-            {"Troll", new CreatureValues {spawnCost = 20, prefabName = "Troll", spawnType = RARE, biome = BLACKFOREST } },
+            {"Troll", new CreatureValues {spawnCost = 20, prefabName = "Troll", spawnType = ELITE, biome = BLACKFOREST } },
             // Swamp Creatures
-            {"Surtling", new CreatureValues {spawnCost = 6, prefabName = "Surtling", spawnType = COMMON, biome = SWAMP} },
+            {"Surtling", new CreatureValues {spawnCost = 6, prefabName = "Surtling", spawnType = RARE, biome = SWAMP} },
             {"Wraith", new CreatureValues {spawnCost = 10, prefabName = "Wraith", spawnType = RARE, biome = SWAMP} },
-            {"Abomination", new CreatureValues {spawnCost = 30, prefabName = "Abomination", spawnType = RARE, biome = SWAMP} },
+            {"Abomination", new CreatureValues {spawnCost = 30, prefabName = "Abomination", spawnType = ELITE, biome = SWAMP} },
             {"Draugr", new CreatureValues {spawnCost = 10, prefabName = "Draugr", spawnType = COMMON, biome = SWAMP} },
-            {"DraugrArcher", new CreatureValues {spawnCost = 12, prefabName = "Draugr_Ranged", spawnType = COMMON, biome = SWAMP} },
+            {"DraugrArcher", new CreatureValues {spawnCost = 12, prefabName = "Draugr_Ranged", spawnType = RARE, biome = SWAMP} },
             {"DraugrElite", new CreatureValues {spawnCost = 15, prefabName = "Draugr_Elite", spawnType = RARE, biome = SWAMP} },
             {"Blob", new CreatureValues {spawnCost = 7, prefabName = "Blob", spawnType = COMMON, biome = SWAMP} },
             {"BlobElite", new CreatureValues {spawnCost = 15, prefabName = "BlobElite", spawnType = RARE, biome = SWAMP} },
@@ -258,25 +299,25 @@ namespace ValheimFortress.Challenge
             {"Fenring", new CreatureValues {spawnCost = 18, prefabName = "Fenring", spawnType = COMMON, biome = MOUNTAIN} },
             {"Ulv", new CreatureValues {spawnCost = 12, prefabName = "Ulv", spawnType = COMMON, biome = MOUNTAIN} },
             {"Cultist", new CreatureValues {spawnCost = 18, prefabName = "Fenring_Cultist", spawnType = RARE, biome = MOUNTAIN} },
-            {"StoneGolem", new CreatureValues {spawnCost = 40, prefabName = "StoneGolem", spawnType = RARE, biome = MOUNTAIN} },
+            {"StoneGolem", new CreatureValues {spawnCost = 40, prefabName = "StoneGolem", spawnType = ELITE, biome = MOUNTAIN} },
             // Plains Creatures
-            {"Deathsquito", new CreatureValues {spawnCost = 20, prefabName = "Deathsquito", spawnType = COMMON, biome = PLAINS} },
+            {"Deathsquito", new CreatureValues {spawnCost = 35, prefabName = "Deathsquito", spawnType = COMMON, biome = PLAINS} },
             {"Fuling", new CreatureValues {spawnCost = 15, prefabName = "Goblin", spawnType = COMMON, biome = PLAINS} },
             {"FulingArcher", new CreatureValues {spawnCost = 17, prefabName = "GoblinArcher", spawnType = COMMON, biome = PLAINS} },
-            {"FulingBerserker", new CreatureValues {spawnCost = 35, prefabName = "GoblinBrute", spawnType = RARE, biome = PLAINS} },
+            {"FulingBerserker", new CreatureValues {spawnCost = 35, prefabName = "GoblinBrute", spawnType = ELITE, biome = PLAINS} },
             {"FulingShaman", new CreatureValues {spawnCost = 25, prefabName = "GoblinShaman", spawnType = RARE, biome = PLAINS} },
             {"Growth", new CreatureValues {spawnCost = 25, prefabName = "BlobTar", spawnType = COMMON, biome = PLAINS} },
             // Mistland Creatures
-            {"Seeker", new CreatureValues {spawnCost = 30, prefabName = "Seeker", spawnType = COMMON, biome = MISTLANDS} },
-            {"SeekerSoldier", new CreatureValues {spawnCost = 50, prefabName = "SeekerBrute", spawnType = RARE, biome = MISTLANDS} },
+            {"Seeker", new CreatureValues {spawnCost = 50, prefabName = "Seeker", spawnType = COMMON, biome = MISTLANDS} },
+            {"SeekerSoldier", new CreatureValues {spawnCost = 75, prefabName = "SeekerBrute", spawnType = ELITE, biome = MISTLANDS} },
             {"SeekerBrood", new CreatureValues {spawnCost = 10, prefabName = "SeekerBrood", spawnType = COMMON, biome = MISTLANDS} },
-            {"Gjall", new CreatureValues {spawnCost = 50, prefabName = "Gjall", spawnType = RARE, biome = MISTLANDS} },
+            {"Gjall", new CreatureValues {spawnCost = 75, prefabName = "Gjall", spawnType = ELITE, biome = MISTLANDS} },
             {"Tick", new CreatureValues {spawnCost = 15, prefabName = "Tick", spawnType = COMMON, biome = MISTLANDS} },
-            {"DvergerRouge", new CreatureValues {spawnCost = 25, prefabName = "Dverger", spawnType = RARE, biome = MISTLANDS} },
-            {"DvergerMage", new CreatureValues {spawnCost = 45, prefabName = "DvergerMage", spawnType = RARE, biome = MISTLANDS} },
-            {"DvergerMageFire", new CreatureValues {spawnCost = 45, prefabName = "DvergerMageFire", spawnType = RARE, biome = MISTLANDS} },
-            {"DvergerMageIce", new CreatureValues {spawnCost = 45, prefabName = "DvergerMageIce", spawnType = RARE, biome = MISTLANDS} },
-            {"DvergerMageSupport", new CreatureValues {spawnCost = 45, prefabName = "DvergerMageSupport", spawnType = RARE, biome = MISTLANDS} },
+            {"DvergerRouge", new CreatureValues {spawnCost = 40, prefabName = "Dverger", spawnType = RARE, biome = MISTLANDS} },
+            {"DvergerMage", new CreatureValues {spawnCost = 65, prefabName = "DvergerMage", spawnType = RARE, biome = MISTLANDS} },
+            {"DvergerMageFire", new CreatureValues {spawnCost = 65, prefabName = "DvergerMageFire", spawnType = RARE, biome = MISTLANDS} },
+            {"DvergerMageIce", new CreatureValues {spawnCost = 65, prefabName = "DvergerMageIce", spawnType = RARE, biome = MISTLANDS} },
+            {"DvergerMageSupport", new CreatureValues {spawnCost = 65, prefabName = "DvergerMageSupport", spawnType = ELITE, biome = MISTLANDS} },
             // Boss Creatures
             {"Eikthyr", new CreatureValues {spawnCost = 40, prefabName = "Eikthyr", spawnType = UNIQUE, biome = MEADOWS} },
             {"TheElder", new CreatureValues {spawnCost = 180, prefabName = "gd_king", spawnType = UNIQUE, biome = BLACKFOREST} },
@@ -427,23 +468,38 @@ namespace ValheimFortress.Challenge
             // Add the component, and call it
             shrine.AddComponent<Spawner>();
             Spawner spawn_controller = shrine.GetComponent<Spawner>();
-            spawn_controller.TrySpawningHoard(wavedefinition.GetWaves(), siege_mode, shrine);
+            spawn_controller.TrySpawningHoard(wavedefinition.GetWaves(), siege_mode, shrine, level);
         }
 
         public static WaveGenerationFormat DecideWaveStyle(Int16 level, bool boss_mode)
         {
             // This provides a gradual ramp up in difficulty as the user progresses through the waves
-            // Once the user reaches lvl 16 every wave is fully fleshed out dynamically
-            WaveGenerationFormat waveFormat = WaveStyles["Dynamic"];
-            if (level == 1) { waveFormat = WaveStyles["Tutorial"]; }
-            if (level == 2 || level == 3 || level == 4 || level == 5) { waveFormat = WaveStyles["Starter"]; }
-            if (level == 6 || level == 7) { waveFormat = WaveStyles["Easy"]; }
-            if (level == 8 || level == 9 || level == 10) { waveFormat = WaveStyles["Normal"]; }
-            if (level == 11 || level == 12) { waveFormat = WaveStyles["Hard"]; }
-            if (level == 13 || level == 14 || level == 15) { waveFormat = WaveStyles["Expert"]; }
-            if (level < 6 && boss_mode) { waveFormat = WaveStyles["TutorialBoss"]; }
-            if (level > 6 && boss_mode) { waveFormat = WaveStyles["Boss"]; }
-            if (level > 16 && boss_mode) { waveFormat = WaveStyles["DynamicBoss"]; }
+            WaveGenerationFormat waveFormat = WaveStyles["Normal"]; // We set this as a default just incase I forgot something
+            // Level curve
+            if (!boss_mode)
+            {
+                // First level of every biome past meadows is Normal
+                if (level == 6 || level == 11 || level == 16 || level == 21 || level == 26) { waveFormat = WaveStyles["Normal"]; }
+                // Second level of every biome is Hard
+                if (level == 7 || level == 12 || level == 17 || level == 22 || level == 27) { waveFormat = WaveStyles["Hard"]; }
+                // Third level of every biome is VeryHard
+                if (level == 8 || level == 13 || level == 18 || level == 23 || level == 28) { waveFormat = WaveStyles["VeryHard"]; }
+                // fourth level of every biome is Expert
+                if (level == 9 || level == 14 || level == 19 || level == 24 || level == 29) { waveFormat = WaveStyles["Expert"]; }
+                // fifth level of every biome is Dynamic
+                if (level == 10 || level == 15 || level == 20 || level == 25 || level == 30) { waveFormat = WaveStyles["Dynamic"]; }
+
+                // Extra
+                if (level > 30) { waveFormat = WaveStyles["Dynamic"]; }
+            } else
+            {
+                // Boss curve
+                if (level <= 5) { waveFormat = WaveStyles["TutorialBoss"]; }
+                if (level >= 6 && level <= 9) { waveFormat = WaveStyles["EasyBoss"]; }
+                if (level > 9 && level <= 25) { waveFormat = WaveStyles["Boss"]; }
+                if (level > 25) { waveFormat = WaveStyles["DynamicBoss"]; }
+            }
+
             return waveFormat;
         }
 
@@ -457,29 +513,31 @@ namespace ValheimFortress.Challenge
 
             // haven't decided if this is worth it or how this should be broken out. Some kind of balance is needed between having only a few monsters from previous biomes
             // and supporting the fact that we can't do previous biome creatures before blackforest, and at each level the creatures need to be stronger to keep up with the current biome
-            if (level > 5 && level < 11) { selected_biome = BLACKFOREST; max_creatures_from_previous_biomes += 1; }
+            if (level > 5 && level < 11) { selected_biome = BLACKFOREST; max_creatures_from_previous_biomes += 0; }
             if (level > 10 && level < 16) { selected_biome = SWAMP; max_creatures_from_previous_biomes += 1; }
-            if (level > 15 && level < 21) { selected_biome = MOUNTAIN; max_creatures_from_previous_biomes += 2; }
-            if (level > 20 && level < 26) { selected_biome = PLAINS; max_creatures_from_previous_biomes += 2; }
-            if (level > 25 && level < 31) { selected_biome = MISTLANDS; max_creatures_from_previous_biomes += 3; }
+            if (level > 15 && level < 21) { selected_biome = MOUNTAIN; max_creatures_from_previous_biomes += 1; }
+            if (level > 20 && level < 26) { selected_biome = PLAINS; max_creatures_from_previous_biomes += 1; }
+            if (level > 25 && level < 31) { selected_biome = MISTLANDS; max_creatures_from_previous_biomes += 2; }
             // if (level > 30 && level < 35) { selected_biome = "Ashlands"; }
             short targeted_wave_biome_level = BiomeStringToInt(selected_biome);
             WaveGenerationFormat WaveGenerationFormat = DecideWaveStyle(level, boss_mode);
-            Int16 elites_to_pick = WaveGenerationFormat.CountRareSpawns();
+            Int16 rares_to_pick = WaveGenerationFormat.CountRareSpawns();
+            Int16 elites_to_pick = WaveGenerationFormat.CountEliteSpawns();
             Int16 commons_to_pick = WaveGenerationFormat.CountCommonSpawns();
             Int16 unqiues_to_pick = WaveGenerationFormat.CountUniqueSpawns();
             Int16 total_creatures_to_select = WaveGenerationFormat.Count();
 
             Int16 uniques_selected = 0;
             Int16 elites_selected = 0;
+            Int16 rares_selected = 0;
             Int16 commons_selected = 0;
             Int16 creatures_selected_from_previous_biome = 0;
             Int16 selection_iterations = 0;
 
-            while ((commons_selected + elites_selected + uniques_selected) < total_creatures_to_select)
+            while ((commons_selected + elites_selected + rares_selected + uniques_selected) < total_creatures_to_select)
             {
-                if ((commons_selected + elites_selected) >= total_creatures_to_select) { break; }
-                Jotunn.Logger.LogInfo($"Creatures Selected: C-{commons_selected} R-{elites_selected} to select: {total_creatures_to_select}");
+                if ((commons_selected + elites_selected + rares_selected + uniques_selected) >= total_creatures_to_select) { break; }
+                Jotunn.Logger.LogInfo($"Creatures Selected: C-{commons_selected} R-{rares_selected} E-{elites_selected} to select: {total_creatures_to_select}");
                 // we shuffle the monster keys so that we run through them in a different order each time
                 List<string> this_iteration_key_order = ValheimFortress.shuffleList(new List<string>(SpawnableCreatures.Keys));
                 selection_iterations += 1;
@@ -490,6 +548,7 @@ namespace ValheimFortress.Challenge
                 }
                 if (selection_iterations > 6)
                 {
+                    // Need a way to gapfill this better than just skipping it
                     // Add more search targets in every round if the first few rounds couldn't fill the roster.
                     Jotunn.Logger.LogWarning($"Not enough creatures were found to support this wave, wave will use reduced spawns and rewards. Built wave: {completeWaveOutline}");
                     break;
@@ -498,7 +557,7 @@ namespace ValheimFortress.Challenge
                 {
 
                     if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Evaluating {skey} eligibility."); }
-                    if ((commons_selected + elites_selected + uniques_selected) >= total_creatures_to_select) { break; } // break out early if we got what we came for     
+                    if ((commons_selected + rares_selected + elites_selected + uniques_selected) >= total_creatures_to_select) { break; } // break out early if we got what we came for     
                     if (completeWaveOutline.HasKey(skey)) {
                         if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"{skey} creature already added, skipping iteration."); }
                         continue; 
@@ -515,17 +574,6 @@ namespace ValheimFortress.Challenge
                             // The creature is also within -2 of the current targeted biome for generation
                             if (SpawnableCreatures[skey].spawnType == UNIQUE) { continue; } // We only add bosses for the current biome
                             // might want to support dynamic boss waves using bosses from a different biome
-                            if (SpawnableCreatures[skey].spawnType == RARE && elites_selected < elites_to_pick)
-                            {
-                                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Adding as prior biome rare type creature."); }
-                                // we only add previous biomes elites with 1 cohort, meaning they will all have the same level characteristics, which is innately boosted by their biome level difference.
-                                short creature_stars = (short)(targeted_wave_biome_level - current_creature_biome_level);
-                                short percent = WaveGenerationFormat.GetRareSpawnFormations()[elites_selected];
-                                completeWaveOutline.AddCreatureToWave(skey, percent, 1, min_stars: creature_stars, max_stars: max_creature_stars);
-                                elites_selected += 1;
-                                creatures_selected_from_previous_biome += 1;
-                                continue;
-                            }
                             if (SpawnableCreatures[skey].spawnType == COMMON && commons_selected < commons_to_pick)
                             {
                                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Adding as prior biome common type creature."); }
@@ -537,7 +585,29 @@ namespace ValheimFortress.Challenge
                                 creatures_selected_from_previous_biome += 1;
                                 continue;
                             }
-                            
+                            if (SpawnableCreatures[skey].spawnType == RARE && rares_selected < rares_to_pick)
+                            {
+                                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Adding as prior biome rare type creature."); }
+                                // boost the creatures star level relative to how far back the biome is it was from 1-2
+                                short creature_stars = (short)(targeted_wave_biome_level - current_creature_biome_level);
+                                short percent = WaveGenerationFormat.GetRareSpawnFormations()[rares_selected];
+                                completeWaveOutline.AddCreatureToWave(skey, percent, 1, min_stars: creature_stars, max_stars: max_creature_stars);
+                                rares_selected += 1;
+                                creatures_selected_from_previous_biome += 1;
+                                continue;
+                            }
+                            if (SpawnableCreatures[skey].spawnType == ELITE && elites_selected < elites_to_pick)
+                            {
+                                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Adding as prior biome elite type creature."); }
+                                // boost the creatures star level relative to how far back the biome is it was from 1-2
+                                short creature_stars = (short)(targeted_wave_biome_level - current_creature_biome_level);
+                                short percent = WaveGenerationFormat.GetEliteSpawnFormations()[elites_selected];
+                                completeWaveOutline.AddCreatureToWave(skey, percent, 1, min_stars: creature_stars, max_stars: max_creature_stars);
+                                elites_selected += 1;
+                                creatures_selected_from_previous_biome += 1;
+                                continue;
+                            }
+
                         }
                         else
                         {
@@ -551,25 +621,34 @@ namespace ValheimFortress.Challenge
                     // Creature is from this biome
                     if (SpawnableCreatures[skey].spawnType == COMMON && commons_selected < commons_to_pick)
                     {
-                        if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Adding as current biome common type creature."); }
+                        if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Adding as current biome common type creature {skey}."); }
                         // if this a common type enemy from the current biome we leave its max stars at 1, but generate it in 3 cohorts, each with a fractional chance to get stars.
                         short percent = WaveGenerationFormat.GetCommonSpawnFormations()[commons_selected];
                         completeWaveOutline.AddCreatureToWave(skey, (short)(percent / 3), 3, min_stars: 0, max_stars: 1);
                         commons_selected += 1;
                         continue;
                     }
-                    if (SpawnableCreatures[skey].spawnType == RARE && elites_selected < elites_to_pick)
+                    if (SpawnableCreatures[skey].spawnType == RARE && rares_selected < rares_to_pick)
                     {
-                        if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Adding as current biome rare type creature."); }
+                        if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Adding as current biome rare type creature {skey}."); }
                         // Rare type enemy from the current biome, generates in 1 cohort
-                        short percent = WaveGenerationFormat.GetRareSpawnFormations()[elites_selected];
+                        short percent = WaveGenerationFormat.GetRareSpawnFormations()[rares_selected];
+                        completeWaveOutline.AddCreatureToWave(skey, percent, 1, min_stars: 0, max_stars: max_creature_stars);
+                        rares_selected += 1;
+                        continue;
+                    }
+                    if (SpawnableCreatures[skey].spawnType == ELITE && elites_selected < elites_to_pick)
+                    {
+                        if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Adding as current biome elite type creature {skey}."); }
+                        // Rare type enemy from the current biome, generates in 1 cohort
+                        short percent = WaveGenerationFormat.GetEliteSpawnFormations()[elites_selected];
                         completeWaveOutline.AddCreatureToWave(skey, percent, 1, min_stars: 0, max_stars: max_creature_stars);
                         elites_selected += 1;
                         continue;
                     }
                     if (SpawnableCreatures[skey].spawnType == UNIQUE && uniques_selected < unqiues_to_pick)
                     {
-                        if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Adding as current biome unique type creature."); }
+                        if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Adding as current biome unique type creature. {skey}"); }
                         // Bosses always only generate one instance of themselves (for now)
                         // Bosses don't currently get stars
                         completeWaveOutline.AddCreatureToWave(skey, 100, 1, min_stars: 0, max_stars: 0);

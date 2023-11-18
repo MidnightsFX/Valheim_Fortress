@@ -169,7 +169,8 @@ Creatures have the following definition structure, which is also listed inside t
 Q. I broke my configuration files and want to try again.
 	A. You can delete any/all yaml configuration (or the primary config file) from this mod and it will be automatically generated again for you on startup.
 
-
+Q. I am getting an error about not being able to add enough creatures to the wave
+	A. You need to either delete your monster configuration or ensure that each biome after meadows has definitions for: 1+ unique, 1+ elite, 2+ rares, 3+ commons
 
 ## Future Features / Incomplete things
 There are a number of things that I plan on adding in the future. Here is the current list.
@@ -200,9 +201,23 @@ If you like this mod maybe you'll like my other work
 - Building pieces sometimes don't have destructable bits
 - Building pieces don't have wear and tear
 - Mobs can form a 'spawn tower' if they can't find someone to attack on spawn
-- Automated turret likes to fire off into space instead of hitting its target occassionally (its aim isn't perfect, this is intentional)
+- Automated turret likes to fire off into space instead of hitting its target occassionally (its aim isn't perfect)
+	- If you can reliably reproduce this issue please report it on the Github or Discord
 
 ## Changelog
+**0.8.2**
+```
+- Added an additional spawn type 'elite' which now includes especially challenging creatures like: trolls, abominations, golemns etc.
+- Added a configuration option to turn on/off the map ping on wave spawn (defaults to off)
+- Significant tuning to the way waves are spawned
+	- Each biome now increases in difficulty as you go up in level, and resets some of the difficulty upon starting a new biome
+	- Waves will no-longer scale non-linearly with the amount of points, this reduces the exponential creature explosions at high levels
+	- Waves now have fewer common enemies and slightly more rare/elite enemies
+- Fixed the way stars were being assigned to creatures, all creatures from previous biomes are now 1-3 stars
+- There is a configurable chance for a fraction of a spawn type to spawn as 1 stars, this is rolled for each spawn cohort
+- Made wave spawn portals only dissappear once the waves have been killed
+```
+
 **0.8.1**
 ```
 - Optimized download size, removed potential duplicate embedded libraries

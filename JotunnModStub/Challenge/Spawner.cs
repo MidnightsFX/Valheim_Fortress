@@ -15,31 +15,33 @@ namespace ValheimFortress.Challenge
     {
         static private List<String> bosses = new List<String>(new string[] { "Eikythr", "TheElder", "BoneMass", "Moder", "Yagluth", "TheQueen" });
 
-        public void TrySpawningHoard(List<Levels.HoardConfig> hoards, bool siege_mode, GameObject shrine)
+        public void TrySpawningHoard(List<Levels.HoardConfig> hoards, bool siege_mode, GameObject shrine, int level)
         {
             // Should check if you are the runtime owner of this chunk
             Jotunn.Logger.LogInfo($"Trying to spawn {hoards.Count} hoards.");
             Vector3[] remote_spawn_locations = DetermineRemoteSpawnLocations(shrine);
             shrine.GetComponent<Shrine>().setSpawnedWaveTarget((Int16)hoards.Count);
+            List<GameObject> portals = new List<GameObject> { };
 
             if (VFConfig.EnableGladiatorMode.Value == false)
             {
-                DrawMapOverlayAndPortals(remote_spawn_locations);
+                portals = DrawMapOverlayAndPortals(remote_spawn_locations);
+                shrine.GetComponent<Shrine>().setPortals(portals);
             }
 
             foreach (Levels.HoardConfig hoard in hoards)
             {
                 Jotunn.Logger.LogInfo($"Starting spawn for {hoard.amount} {hoard.creature}");
-                StartCoroutine(Spawn(hoard, shrine, siege_mode, remote_spawn_locations));
+                StartCoroutine(Spawn(hoard, shrine, siege_mode, remote_spawn_locations, level));
             }
         }
 
-        IEnumerator Spawn(Levels.HoardConfig hoard, GameObject shrine, bool siege_mode, Vector3[] remote_spawn_locations)
+        IEnumerator Spawn(Levels.HoardConfig hoard, GameObject shrine, bool siege_mode, Vector3[] remote_spawn_locations, int level)
         {
-            float wave_spawn_delay = 5f;
+            float wave_spawn_delay = 1.5f * level;
             float initial_wait = 0.0f;
             if(VFConfig.EnableGladiatorMode.Value == false) { initial_wait = 5.0f; } else { wave_spawn_delay = wave_spawn_delay * 2; }
-            if (siege_mode) { wave_spawn_delay = wave_spawn_delay * 5; } // Increase delay between waves significantly
+            if (siege_mode) { wave_spawn_delay = wave_spawn_delay * 2; } // Increase delay between waves significantly
             yield return new WaitForSeconds(initial_wait);
 
             GameObject gameObject = PrefabManager.Instance.GetPrefab(hoard.prefab);
@@ -53,12 +55,17 @@ namespace ValheimFortress.Challenge
                 Jotunn.Logger.LogInfo($"Hoard {hoard.creature} pausepoints {hoard_frac} {hoard_frac * 2}.");
             }
 
+            int spawn_failures = 0;
+
             int pause_point_1 = hoard_frac;
             int pause_point_2 = (hoard_frac * 2);
             Vector3 spawn_position = remote_spawn_locations[0];
             // Spawn our requested number of creatures, modify them as required.
             for (int i = 0; i < hoard.amount; i++)
             {
+                if (spawn_failures > 10) { 
+                    Jotunn.Logger.LogWarning($"Too many spawn failures when trying to spawn {hoard.creature} wave.");
+                }
                 // Update the spawnpoint based on which pausepoint we are at, doesn't matter if we actually pause.
                 // We don't change the spawn if there are no pausepoints for this horde (boss horde)
                 Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
@@ -82,13 +89,12 @@ namespace ValheimFortress.Challenge
                 // if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Spawning {hoard.creature}"); }
                 GameObject creature = UnityEngine.Object.Instantiate(gameObject, spawn_position, rotation);
                 // creature.GetComponent<ZNetView>(); // but why
-                shrine.GetComponent<Shrine>().IncrementSpawned();
 
                 if (hoard.stars > 0)
                 {
                     Jotunn.Logger.LogInfo($"Upgrading {hoard.creature} to {hoard.stars} stars.");
                     Character creature_character = creature.GetComponent<Character>();
-                    if ((bool)creature_character) { creature_character.m_level = hoard.stars; }
+                    if ((bool)creature_character) { creature_character.m_level = (hoard.stars + 1); }
                 }
                 creature.GetComponent<Humanoid>().m_faction = Character.Faction.Boss;
                 // Set the Itemdrop script to be disabled for these creatures, otherwise these hoards are likely to be more rewarding than the reward
@@ -100,23 +106,33 @@ namespace ValheimFortress.Challenge
                 {
                     Destroy(creature.GetComponent<CharacterDrop>());
                 }
-                // Add the rewards tracker, and set the reference shrine
-                creature.AddComponent<CreatureTracker>();
-                creature.GetComponent<CreatureTracker>().SetShrine(shrine);
+
                 // Set the AI to hunt the nearby player
                 BaseAI ai = creature.GetComponent<BaseAI>();
                 if (ai != null)
                 {
                     ai.SetHuntPlayer(true);
+                } else
+                {
+                    // This creatures AI isn't set to target the player, and it won't go on the attack
+                    Destroy(creature);
+                    i = i - 1;
+                    spawn_failures++;
+                    continue;
                 }
-                
+                shrine.GetComponent<Shrine>().IncrementSpawned();
+                // Add the rewards tracker, and set the reference shrine
+                creature.AddComponent<CreatureTracker>();
+                creature.GetComponent<CreatureTracker>().SetShrine(shrine);
+
             }
 
             shrine.GetComponent<Shrine>().WaveSpawned();
+
             yield break;
         }
 
-        public void DrawMapOverlayAndPortals(Vector3[] remote_spawns)
+        public List<GameObject> DrawMapOverlayAndPortals(Vector3[] remote_spawns)
         {
             Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
             List<GameObject> portals = new List<GameObject> { };
@@ -131,12 +147,13 @@ namespace ValheimFortress.Challenge
             {
                 var tempportal = UnityEngine.Object.Instantiate(ValheimFortress.getPortal(), spawn_location, rotation);
                 portals.Add(tempportal);
-                Chat.instance.SendPing(spawn_location);
+                if (VFConfig.EnableMapPings.Value) { Chat.instance.SendPing(spawn_location); }
                 // attackOverlay.ForestFilter.SetPixels((int)spawn_location.x, (int)spawn_location.y, circle_radius, circle_radius, colorPixels);
             }
             // Apply the overlay and start the coroutine for deleting it in the future
             // attackOverlay.ForestFilter.Apply();
-            StartCoroutine(CleanUpSpawnNotifiers(portals));
+            // StartCoroutine(CleanUpSpawnNotifiers(portals));
+            return portals;
         }
 
         IEnumerator CleanUpSpawnNotifiers(List<GameObject> portals)

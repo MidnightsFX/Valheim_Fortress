@@ -21,7 +21,7 @@ namespace ValheimFortress
     {
         public const string PluginGUID = "com.midnightsfx.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.8.1";
+        public const string PluginVersion = "0.8.2";
 
         AssetBundle EmbeddedResourceBundle;
         public VFConfig cfg;
@@ -91,7 +91,7 @@ namespace ValheimFortress
         public static string LocalizeOrDefault(string str_to_localize,string default_string)
         {
             string localized = Localization.instance.Localize(str_to_localize);
-            if(localized == str_to_localize.Replace("$", ""))
+            if(localized == $"[{str_to_localize.Replace("$", "")}]")
             {
                 Jotunn.Logger.LogInfo($"{str_to_localize} was not localized, returning the default: {default_string}");
                 return default_string;
