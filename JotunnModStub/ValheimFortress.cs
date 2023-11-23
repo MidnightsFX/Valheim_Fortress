@@ -19,9 +19,9 @@ namespace ValheimFortress
     [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Minor)]
     internal class ValheimFortress : BaseUnityPlugin
     {
-        public const string PluginGUID = "com.midnightsfx.ValheimFortress";
+        public const string PluginGUID = "MidnightsFX.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.8.2";
+        public const string PluginVersion = "0.9.0";
 
         AssetBundle EmbeddedResourceBundle;
         public VFConfig cfg;
@@ -30,6 +30,7 @@ namespace ValheimFortress
         private void Awake()
         {
             cfg = new VFConfig(Config);
+            cfg.SetupConfigRPCs();
             EmbeddedResourceBundle = AssetUtils.LoadAssetBundleFromResources("ValheimFortress.AssetsEmbedded.vfbundle", typeof(ValheimFortress).Assembly);
             // For debug logging, not working right now, again
             // Logger.LogInfo($"Embedded resources: {string.Join(",", typeof(ValheimFortress).Assembly.GetManifestResourceNames())}");

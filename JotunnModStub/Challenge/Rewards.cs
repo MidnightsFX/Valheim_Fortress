@@ -17,7 +17,7 @@ namespace ValheimFortress.Challenge
     static class Rewards
     {
         static private String[] requiredBosses = { "None", "Eikythr", "TheElder", "BoneMass", "Moder", "Yagluth", "TheQueen" };
-        static private float rewardsMultiplier = 1;
+        static private float rewardsMultiplier = 1.5f;
 
         [DataContract]
         public class RewardEntry
@@ -81,6 +81,11 @@ namespace ValheimFortress.Challenge
         public static void SpawnReward(String reward_resource, Int16 level, GameObject shrine, bool hard_mode, bool boss_mode, bool siege_mode)
         {
             float total_reward_points = rewardsMultiplier * (float)Levels.ComputeChallengePoints(level);
+            // We give a bonus for higher levels, so the rewards for higher level fights will outscale the cost
+            // eg: higher level fights are always worth more, in a linear fashion
+            float reward_bonus = 0.02f * level;
+            Jotunn.Logger.LogInfo($"Reward difficulty bonus {(1 + reward_bonus)}");
+            total_reward_points = total_reward_points * (1 + reward_bonus);
             if (boss_mode) {
                 Jotunn.Logger.LogInfo("Boss Mode was enabled, reward multiplied by x1.25");
                 total_reward_points = total_reward_points * 1.25f;

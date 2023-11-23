@@ -12,88 +12,44 @@ using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using static ValheimFortress.Challenge.Levels;
 using System.Runtime.Remoting.Messaging;
+using Jotunn.Managers;
+using Jotunn.Entities;
+using System.Collections;
+using Jotunn.Configs;
 
 namespace ValheimFortress
 {
     class VFConfig
     {
+        public ConfigFile cfg;
         public static ConfigEntry<bool> EnableDebugMode;
-        public static ConfigEntry<bool> EnableHordeDrops;
-        public static ConfigEntry<bool> EnableBossDrops;
+        public static ConfigEntry<bool> EnableTurretDebugMode;
         public static ConfigEntry<bool> EnableGladiatorMode;
         public static ConfigEntry<short> MaxChallengeLevel;
-        public static ConfigEntry<int> MaxSpawnRange;
+        public static ConfigEntry<short> MaxSpawnRange;
         public static ConfigEntry<bool> EnableBossModifier;
         public static ConfigEntry<bool> EnableHardModifier;
         public static ConfigEntry<bool> EnableSiegeModifer;
         public static ConfigEntry<bool> EnableMapPings;
-        public ConfigFile file;
+
+        private static CustomRPC monsterSyncRPC;
+        private static CustomRPC rewardSyncRPC;
 
         public VFConfig(ConfigFile Config)
         {
             // Init with the default plugin config file
+            cfg = Config;
+            Config.SaveOnConfigSet = true;
             CreateConfigValues(Config);
-            file = Config;
         }
 
-        // Create Configuration and load it.
-        private void CreateConfigValues(ConfigFile Config)
+
+        public void SetupConfigRPCs()
         {
-            Config.SaveOnConfigSet = true;
-
-            // Max Spawn Radius around the shrine
-            MaxSpawnRange = Config.Bind("Shrine of Challenge", "MaxSpawnRange", 400,
-                new ConfigDescription("The radius around the shrine that enemies can spawn in. When the shrine is not in gladiator mode.",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = false }));
-
-            MaxChallengeLevel = Config.Bind("Shrine of Challenge", "MaxLevel", (short)30,
-                new ConfigDescription("The Maximum level the shrine can be set to, you must still beat bosses to increase your allowed level. 5 Levels per biome. Setting to 10 will cap challenges out at meadows(1-5) + blackforest(6-10).",
-                new AcceptableValueRange<short>(1, 30),
-                new ConfigurationManagerAttributes { IsAdvanced = false }));
-
-            EnableGladiatorMode = Config.Bind("Shrine of Challenge", "EnableGladiatorMode", false,
-                new ConfigDescription("Whether the shrine of challenge should default to spawning mobs on itself (gladiator arena), or remotely (fortress siege).",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true }));
-
-            EnableHordeDrops = Config.Bind("Shrine of Challenge", "EnableHordeDrops", false,
-                new ConfigDescription("Whether or not creatures spawned from the shrine should drop their usual loot (this can be overwhelming overpowered).",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true }));
-
-            EnableBossDrops = Config.Bind("Shrine of Challenge", "EnableBossDrops", false,
-                new ConfigDescription("Whether or not bosses spawned from the shrine should drop their usual loot.",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true }));
-
-            // Debugmode
-            EnableDebugMode = Config.Bind("Client config", "EnableDebugMode", false,
-                new ConfigDescription("Enables Debug logging for Valheim Fortress.",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true }));
-
-
-            EnableHardModifier = Config.Bind("Shrine of Challenge", "EnableHardModifier", true,
-                new ConfigDescription("Whether or not the hard mode modifier is available (100% bigger wave size for 50% more rewards)",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true }));
-
-            EnableBossModifier = Config.Bind("Shrine of Challenge", "EnableBossModifier", true,
-                new ConfigDescription("Whether or not boss mod is available as a level modifier (more rewards & spawns the biome specific boss)",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true }));
-
-            EnableSiegeModifer = Config.Bind("Shrine of Challenge", "EnableSiegeModifer", true,
-                new ConfigDescription("Whether or not siege mode is available as a modifier. Siege mode gives much larger pauses between waves, and 100% larger waves for 50% more reward.",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true }));
-
-            EnableMapPings = Config.Bind("Shrine of Challenge", "EnableMapPings", false,
-                new ConfigDescription("Whether or not waves spawning from the shrine of challenge should ping the map when they spawn.",
-                null,
-                new ConfigurationManagerAttributes { IsAdvanced = true }));
-
+            monsterSyncRPC = NetworkManager.Instance.AddRPC("monsteryaml_rpc", null, OnClientReceiveCreatureConfigs);
+            rewardSyncRPC = NetworkManager.Instance.AddRPC("rewardsyaml_rpc", null, OnClientReceiveRewardsConfigs);
+            SynchronizationManager.Instance.AddInitialSynchronization(monsterSyncRPC, SendCreatureConfigs);
+            SynchronizationManager.Instance.AddInitialSynchronization(rewardSyncRPC, SendRewardsConfigs);
         }
 
         public static string GetSecondaryConfigDirectoryPath()
@@ -117,16 +73,16 @@ namespace ValheimFortress
 
             foreach (string configFile in presentFiles)
             {
-                Jotunn.Logger.LogInfo($"Config file found: {configFile}");
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Config file found: {configFile}"); }
                 if (configFile.Contains("Rewards.yaml"))
                 {
-                    Jotunn.Logger.LogInfo($"Found rewards configuration: {configFile}");
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Found rewards configuration: {configFile}"); }
                     rewardFilePath = configFile;
                     hasRewardsConfig = true;
                 }
                 if (configFile.Contains("SpawnableCreatures.yaml"))
                 {
-                    Jotunn.Logger.LogInfo($"Found Creature configuration: {configFile}");
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Found Creature configuration: {configFile}"); }
                     spawnableCreaturesPath = configFile;
                     hasCreatureConfig = true;
                 }
@@ -169,6 +125,8 @@ namespace ValheimFortress
 #  spawnCost: 5            |- This is how many points from the wave pool it costs to spawn one creature, smaller values allow many more spawns.
 #  prefab: ""Neck""          |- This is the creatures prefab, which will be used to spawn it.
 #  spawnType: ""common""     |- This can either be: ""common"" or ""rare"" or ""elite"" or ""unique"", uniques are ""bosses"", most of the wave will be made up of more common enemies
+#  enabled: true           |- This controls if this creature will be included in wave-generation.
+#  dropsEnabled: false     |- This controls if this particular monster should drop loot. Disabled by default for everything.
 #  biome: ""Meadows""        |- This must be one of the following values: ""Meadows"", ""BlackForest"", ""Swamp"", ""Mountain"", ""Plains"", ""Mistlands"". The biome determines the levels that will recieve this spawn, and how the spawn might be adjusted to
 #                             fit higher difficulty waves. eg: a greydwarf spawning into a swamp level wave will recieve 1 bonus star, since it is from the black forest, which is 1 biome behind the swamp.";
                     writetext.WriteLine(header);
@@ -178,13 +136,114 @@ namespace ValheimFortress
             // now that we have ensured the files exist lets read them
             string spawnableCreatureConfigs = File.ReadAllText(spawnableCreaturesPath);
             string rewardConfigs = File.ReadAllText(rewardFilePath);
-
             var deserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
-            var creatureValues = deserializer.Deserialize<SpawnableCreatureCollection>(spawnableCreatureConfigs);
-            UpdateSpawnableCreatures(creatureValues);
-            //Jotunn.Logger.LogInfo($"deserialized creatures: {creatureValues}");
-            var rewardsValues = deserializer.Deserialize<Rewards.RewardEntryCollection>(rewardConfigs);
-            Rewards.UpdateRewardsEntries(rewardsValues);
+            try
+            {
+                var creatureValues = deserializer.Deserialize<SpawnableCreatureCollection>(spawnableCreatureConfigs);
+                UpdateSpawnableCreatures(creatureValues);
+            } catch ( Exception ) { Jotunn.Logger.LogWarning("There was an error updating the creature values, defaults will be used."); }
+            
+            try
+            {
+                var rewardsValues = deserializer.Deserialize<Rewards.RewardEntryCollection>(rewardConfigs);
+                Rewards.UpdateRewardsEntries(rewardsValues);
+            } catch ( Exception ) { Jotunn.Logger.LogWarning("There was an error updating the rewards values, defaults will be used."); }
+
+            // File watcher for the creatures
+            FileSystemWatcher creatureFSWatcher = new FileSystemWatcher();
+            creatureFSWatcher.Path = externalConfigFolder;
+            creatureFSWatcher.NotifyFilter = NotifyFilters.LastWrite;
+            creatureFSWatcher.Filter = "SpawnableCreatures.yaml";
+            creatureFSWatcher.Changed += new FileSystemEventHandler(UpdateCreatureConfigFileOnChange);
+            creatureFSWatcher.EnableRaisingEvents = true;
+
+            // File watcher for the Rewards
+            FileSystemWatcher rewardsFSWatcher = new FileSystemWatcher();
+            rewardsFSWatcher.Path = externalConfigFolder;
+            rewardsFSWatcher.NotifyFilter = NotifyFilters.LastWrite;
+            rewardsFSWatcher.Filter = "Rewards.yaml";
+            rewardsFSWatcher.Changed += new FileSystemEventHandler(UpdateRewardsConfigFileOnChange);
+            rewardsFSWatcher.EnableRaisingEvents = true;
+        }
+
+        private static ZPackage SendCreatureConfigs()
+        {
+            string spawnableCreatureConfigs = File.ReadAllText($"{VFConfig.GetSecondaryConfigDirectoryPath()}\\SpawnableCreatures.yaml");
+            ZPackage package = new ZPackage();
+            package.Write(spawnableCreatureConfigs);
+            return package;
+        }
+
+        private static ZPackage SendRewardsConfigs()
+        {
+            string rewardsConfigs = File.ReadAllText($"{VFConfig.GetSecondaryConfigDirectoryPath()}\\Rewards.yaml");
+            ZPackage package = new ZPackage();
+            package.Write(rewardsConfigs);
+            return package;
+        }
+
+        private IEnumerator OnClientReceiveCreatureConfigs(long sender, ZPackage package)
+        {
+            var creatureyaml = package.ReadString();
+            // Just write the updated values to the client. This will trigger an update.
+            using (StreamWriter writetext = new StreamWriter($"{VFConfig.GetSecondaryConfigDirectoryPath()}\\SpawnableCreatures.yaml"))
+            {
+                writetext.WriteLine(creatureyaml);
+            }
+            yield return null;
+        }
+
+        private IEnumerator OnClientReceiveRewardsConfigs(long sender, ZPackage package)
+        {
+            var rewardsyaml = package.ReadString();
+            // Just write the updated values to the client. This will trigger an update.
+            using (StreamWriter writetext = new StreamWriter($"{VFConfig.GetSecondaryConfigDirectoryPath()}\\Rewards.yaml"))
+            {
+                writetext.WriteLine(rewardsyaml);
+            }
+            yield return null;
+        }
+
+        private static void UpdateCreatureConfigFileOnChange(object sender, FileSystemEventArgs e)
+        {
+            if (SynchronizationManager.Instance.PlayerIsAdmin)
+            {
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"{e} Creature filewatcher called, updating creature values."); }
+                string spawnableCreatureConfigs = File.ReadAllText($"{VFConfig.GetSecondaryConfigDirectoryPath()}\\SpawnableCreatures.yaml");
+                try
+                {
+                    var deserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
+                    var creatureValues = deserializer.Deserialize<SpawnableCreatureCollection>(spawnableCreatureConfigs);
+                    UpdateSpawnableCreatures(creatureValues);
+                    monsterSyncRPC.SendPackage(ZNet.instance.m_peers, SendCreatureConfigs());
+                }
+                catch (Exception) { Jotunn.Logger.LogWarning("Updating Creature Configs failed."); }
+            } else
+            {
+                Jotunn.Logger.LogInfo("Player is not an admin. Creature configurations will not be updated.");
+            }
+        }
+
+        private static void UpdateRewardsConfigFileOnChange(object sender, FileSystemEventArgs e)
+        {
+            if (SynchronizationManager.Instance.PlayerIsAdmin)
+            {
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Rewards filewatcher called, updating rewards values."); }
+                try
+                {
+                    string rewardConfigs = File.ReadAllText($"{VFConfig.GetSecondaryConfigDirectoryPath()}\\Rewards.yaml");
+                    var deserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
+                    var rewardsValues = deserializer.Deserialize<Rewards.RewardEntryCollection>(rewardConfigs);
+                    Rewards.UpdateRewardsEntries(rewardsValues);
+                    rewardSyncRPC.SendPackage(ZNet.instance.m_peers, SendRewardsConfigs());
+                }
+                catch (Exception) { Jotunn.Logger.LogWarning("Updating Creature Configs failed."); }
+                }
+            else
+            {
+                Jotunn.Logger.LogInfo("Player is not an admin. Rewards configurations will not be updated.");
+            }
+
         }
 
         /// <summary>
@@ -199,7 +258,7 @@ namespace ValheimFortress
         /// <returns></returns>
         public ConfigEntry<bool> BindServerConfig(string catagory, string key, bool value, string description, bool advanced = false)
         {
-            return file.Bind(catagory, key, value,
+            return cfg.Bind(catagory, key, value,
                 new ConfigDescription(description,
                 null,
                 new ConfigurationManagerAttributes { IsAdminOnly = true, IsAdvanced = advanced })
@@ -218,7 +277,7 @@ namespace ValheimFortress
         /// <returns></returns>
         public ConfigEntry<string> BindServerConfig(string catagory, string key, string value, string description, bool advanced = false)
         {
-            return file.Bind(catagory, key, value,
+            return cfg.Bind(catagory, key, value,
                 new ConfigDescription(description, null,
                 new ConfigurationManagerAttributes { IsAdminOnly = true, IsAdvanced = advanced })
                 );
@@ -236,7 +295,7 @@ namespace ValheimFortress
         /// <returns></returns>
         public ConfigEntry<short> BindServerConfig(string catagory, string key, short value, string description, bool advanced = false, short valmin = 0, short valmax = 150)
         {
-            return file.Bind(catagory, key, value,
+            return cfg.Bind(catagory, key, value,
                 new ConfigDescription(description,
                 new AcceptableValueRange<short>(valmin, valmax),
                 new ConfigurationManagerAttributes { IsAdminOnly = true, IsAdvanced = advanced })
@@ -257,11 +316,39 @@ namespace ValheimFortress
         /// <returns></returns>
         public ConfigEntry<float> BindServerConfig(string catagory, string key, float value, string description, bool advanced = false, float valmin = 0, float valmax = 150)
         {
-            return file.Bind(catagory, key, value,
+            return cfg.Bind(catagory, key, value,
                 new ConfigDescription(description,
                 new AcceptableValueRange<float>(valmin, valmax),
                 new ConfigurationManagerAttributes { IsAdminOnly = true, IsAdvanced = advanced })
                 );
+        }
+
+
+        // Create Configuration and load it.
+        private void CreateConfigValues(ConfigFile Config)
+        {
+            MaxSpawnRange = BindServerConfig("Shrine of Challenge", "MaxSpawnRange", 400, "The radius around the shrine that enemies can spawn in. When the shrine is not in gladiator mode.", false, 10, 800);
+            // Max level the shrine can be set to / min level it can be set to
+            MaxChallengeLevel = BindServerConfig("Shrine of Challenge", "MaxLevel", (short)30, "The Maximum level the shrine can be set to, you must still beat bosses to increase your allowed level. 5 Levels per biome. Setting to 10 will cap challenges out at meadows(1-5) + blackforest(6-10).", false, 1, 30);
+            EnableGladiatorMode = BindServerConfig("Shrine of Challenge", "EnableGladiatorMode", false, "Whether the shrine of challenge should default to spawning mobs on itself (gladiator arena), or remotely (fortress siege).", false);
+            EnableHardModifier = BindServerConfig("Shrine of Challenge", "EnableHardModifier", true, "Whether or not the hard mode modifier is available (100% bigger wave size for 50% more rewards)", true);
+            EnableBossModifier = BindServerConfig("Shrine of Challenge", "EnableBossModifier", true, "Whether or not boss mod is available as a level modifier (more rewards & spawns the biome specific boss)", true);
+            EnableSiegeModifer = BindServerConfig("Shrine of Challenge", "EnableSiegeModifer", true, "Whether or not siege mode is available as a modifier. Siege mode gives much larger pauses between waves, and 100% larger waves for 50% more reward.", true);
+            EnableMapPings = BindServerConfig("Shrine of Challenge", "EnableMapPings", false, "Whether or not waves spawning from the shrine of challenge should ping the map when they spawn.", true);
+
+            // Client side configurations
+
+            // Debugmode
+            EnableDebugMode = Config.Bind("Client config", "EnableDebugMode", false,
+                new ConfigDescription("Enables Debug logging for Valheim Fortress.",
+                null,
+                new ConfigurationManagerAttributes { IsAdminOnly = false, IsAdvanced = true }));
+
+            EnableTurretDebugMode = Config.Bind("Client config", "EnableTurretDebugMode", false,
+                new ConfigDescription("Enables debug mode for turrets, this can be noisy.",
+                null,
+                new ConfigurationManagerAttributes { IsAdminOnly = false, IsAdvanced = true }));
+
         }
     }
 }

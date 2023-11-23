@@ -22,7 +22,23 @@ namespace ValheimFortress.Challenge
         public static GameObject bossModeToggle;
         public static GameObject siegeModeToggle;
         // Right now maxlevel needs to correlate to: defined levels & level warning messages
-
+        private static List<String> shrine_phase_warnings = new List<String>
+                {
+                    Localization.instance.Localize("$shrine_phase_warning"),
+                    Localization.instance.Localize("$shrine_phase_warning2"),
+                    Localization.instance.Localize("$shrine_phase_warning3"),
+                    Localization.instance.Localize("$shrine_phase_warning4"),
+                    Localization.instance.Localize("$shrine_phase_warning5"),
+                    Localization.instance.Localize("$shrine_phase_warning6"),
+                    Localization.instance.Localize("$shrine_phase_warning7"),
+                    Localization.instance.Localize("$shrine_phase_warning8"),
+                    Localization.instance.Localize("$shrine_phase_warning9"),
+                    Localization.instance.Localize("$shrine_phase_warning10"),
+                    Localization.instance.Localize("$shrine_phase_warning11"),
+                    Localization.instance.Localize("$shrine_phase_warning12"),
+                    Localization.instance.Localize("$shrine_phase_warning13"),
+                    Localization.instance.Localize("$shrine_phase_warning14")
+                };
 
         public static bool IsPanelVisible()
         {
@@ -41,7 +57,7 @@ namespace ValheimFortress.Challenge
             // Built the challenge UI, since this is a static class
             // all of these values and UI componets will be used when instanciating the UI for the game below
             CreateChallengeUI();
-            Jotunn.Logger.LogInfo("Instanciated UI.");
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Instanciated UI."); }
         }
 
 
@@ -65,37 +81,37 @@ namespace ValheimFortress.Challenge
                 }
                 if(entry.Value.requiredBoss == "Eikythr" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledEikthyr)) {
                     availableRewards.Add(entry.Key);
-                    Jotunn.Logger.LogInfo($"Killed Eikythr, enabling reward {entry.Key}.");
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Killed Eikythr, enabling reward {entry.Key}."); }
                     continue;
                 }
                 if (entry.Value.requiredBoss == "TheElder" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledElder))
                 {
                     availableRewards.Add(entry.Key);
-                    Jotunn.Logger.LogInfo($"Killed TheElder, enabling rewards {entry.Key}.");
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Killed TheElder, enabling rewards {entry.Key}."); }
                     continue;
                 }
                 if (entry.Value.requiredBoss == "BoneMass" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledBonemass))
                 {
                     availableRewards.Add(entry.Key);
-                    Jotunn.Logger.LogInfo($"Killed BoneMass, enabling rewards {entry.Key}.");
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Killed BoneMass, enabling rewards {entry.Key}."); }
                     continue;
                 }
                 if (entry.Value.requiredBoss == "Moder" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledModer))
                 {
                     availableRewards.Add(entry.Key);
-                    Jotunn.Logger.LogInfo($"Killed Moder, enabling rewards {entry.Key}.");
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Killed Moder, enabling rewards {entry.Key}."); }
                     continue;
                 }
                 if (entry.Value.requiredBoss == "Yagluth" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledYagluth))
                 {
                     availableRewards.Add(entry.Key);
-                    Jotunn.Logger.LogInfo($"Killed Yagluth, enabling rewards {entry.Key}.");
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Killed Yagluth, enabling rewards {entry.Key}."); }
                     continue;
                 }
                 if (entry.Value.requiredBoss == "TheQueen" && zs.GetGlobalKey("defeated_queen"))
                 {
                     availableRewards.Add(entry.Key);
-                    Jotunn.Logger.LogInfo($"Killed TheQueen, enabling rewards {entry.Key}.");
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Killed TheQueen, enabling rewards {entry.Key}."); }
                     continue;
                 }
             }
@@ -132,7 +148,7 @@ namespace ValheimFortress.Challenge
                 if (i > 25 && i < 31) { biome_or_boss = Localization.instance.Localize("$shrine_menu_mistland"); }
                 currentLevels.Add($"{i} - {biome_or_boss}");
             }
-            Jotunn.Logger.LogInfo("Levels and rewards updated.");
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Levels and rewards updated."); }
         }
 
         private static void StartChallenge()
@@ -150,7 +166,7 @@ namespace ValheimFortress.Challenge
             if (VFConfig.EnableBossModifier.Value) { boss_mode = bossModeToggle.GetComponent<Toggle>().isOn; }
             bool siege_mode = false;
             if (VFConfig.EnableSiegeModifer.Value) { siege_mode = siegeModeToggle.GetComponent<Toggle>().isOn; }
-            Jotunn.Logger.LogInfo($"Shrine challenge. Selected reward: {selected_reward}, selected level: {selected_level}");
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Shrine challenge. Selected reward: {selected_reward}, selected level: {selected_level}"); }
             if (Shrine.GetComponent<Shrine>().IsChallengeActive())
             {
                 Jotunn.Logger.LogInfo("There is a challenge active, refusing to start another.");
@@ -159,7 +175,7 @@ namespace ValheimFortress.Challenge
                 // Start the coroutine that sends the warning text
                 PreparePhase(selected_level, boss_mode);
                 Shrine.GetComponent<Shrine>().EnablePortal();
-                Shrine.GetComponent<Shrine>().StartChallengeMode();
+                // Shrine.GetComponent<Shrine>().StartChallengeMode();
                 Shrine.GetComponent<Shrine>().SetLevel(selected_level);
                 Shrine.GetComponent<Shrine>().SetReward(selected_reward);
                 if (hard_mode) { Shrine.GetComponent<Shrine>().SetHardMode(); }
@@ -199,7 +215,14 @@ namespace ValheimFortress.Challenge
             }
 
             Player.m_localPlayer.Message(MessageHud.MessageType.Center, challenge_warning);
-            Jotunn.Logger.LogInfo("Activated Shrine portal & sent warning message");
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Activated Shrine portal & sent warning message"); }
+        }
+
+        public static void PhasePausePhrase()
+        {
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Picking and sending phase waiting text from {shrine_phase_warnings.Count} phrases."); }
+            string selected_message = shrine_phase_warnings[UnityEngine.Random.Range(0, (shrine_phase_warnings.Count -1))];
+            Player.m_localPlayer.Message(MessageHud.MessageType.Center, selected_message);
         }
 
 
@@ -209,7 +232,7 @@ namespace ValheimFortress.Challenge
             CreateChallengeUI();
             ChallengePanel.SetActive(true);
             GUIManager.BlockInput(true);
-            Jotunn.Logger.LogInfo("Enabled UI from Shrine object.");
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Enabled UI from Shrine object."); }
         }
 
         public static void HideUI()
@@ -301,7 +324,7 @@ namespace ValheimFortress.Challenge
                 position: new Vector2(100f, 60f),
                 fontSize: 16,
                 width: 200f,
-                height: 30f);
+                height: 40f);
             rewardSelector.GetComponent<Dropdown>().AddOptions(availableRewards);
             // Rewards text
             GUIManager.Instance.CreateText(
@@ -327,7 +350,7 @@ namespace ValheimFortress.Challenge
                 position: new Vector2(100f, 5f),
                 fontSize: 16,
                 width: 200f,
-                height: 30f);
+                height: 40f);
             levelSelector.GetComponent<Dropdown>().AddOptions(currentLevels);
             // Level selector text
             GUIManager.Instance.CreateText(
@@ -559,14 +582,14 @@ namespace ValheimFortress.Challenge
                 height: 40f);
             cancelButtonObj.SetActive(true);
 
-            Jotunn.Logger.LogInfo("Adding UI Listeners");
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Adding UI Listeners"); }
             // Add a listener to the button to close the panel again
             Button cancelButton = cancelButtonObj.GetComponent<Button>();
             cancelButton.onClick.AddListener(Shrine.GetComponent<Shrine>().DisableUI);
             // Add a listener to the button to close the panel and trigger the challenge scripts
             Button startButton = startButtonObj.GetComponent<Button>();
             startButton.onClick.AddListener(StartChallenge);
-            Jotunn.Logger.LogInfo("Shrine UI Created.");
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Shrine UI Created."); }
         }
     }
 }

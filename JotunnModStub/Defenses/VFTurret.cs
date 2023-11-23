@@ -242,7 +242,7 @@ namespace ValheimFortress.Defenses
 					break;
 				}
 			}
-			if(selectedTarget != null && VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Selected target: {selectedTarget}");  }
+			if(selectedTarget != null && VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Selected target: {selectedTarget}");  }
 			return selectedTarget;
 		}
 
@@ -254,7 +254,8 @@ namespace ValheimFortress.Defenses
 			{
 				return;
 			}
-			if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Turret target status:{!(bool)m_target} aimdiff:{m_aimDiffToTarget} > {m_shootWhenAimDiff} ({!(m_aimDiffToTarget > m_shootWhenAimDiff)}) cooldown:{IsCoolingDown()}"); }
+			// This is really noisy
+			if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Turret target status:{!(bool)m_target} aimdiff:{m_aimDiffToTarget} > {m_shootWhenAimDiff} ({!(m_aimDiffToTarget > m_shootWhenAimDiff)}) cooldown:{IsCoolingDown()}"); }
 			UnityEngine.Object.Instantiate(m_shootEffect, turretBodyArmed.transform.position, eye.transform.rotation);
 			m_nview.GetZDO().Set("lastAttack", (float)ZNet.instance.GetTimeSeconds());
 			{

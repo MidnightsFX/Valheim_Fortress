@@ -72,9 +72,8 @@ The Shrine of challenge provides a number of key configuration values which can 
 
 |Name|Default|What it Does|
 |--|--|--|
-|level_base_challenge_points | 100 | The base level of points all waves have, this primarily determines early level difficulty. |
-|base_challenge_points_increase | 10 | The number of points added each level eg: (level * 10) |
-|challenge_slope | 0.2 | The logarithmic slope adjustment, tuning this higher will result in quicker difficulty scale-ups, while lower will result in a slower difficulty curve |
+|level_base_challenge_points | 200 | The base level of points all waves have, this primarily determines early level difficulty. |
+|challenge_slope | 15.0 | Multiplier used against the slope, increasing will make everything slightly harder (larger impact on later waves) and lowering will make everything easier. |
 |max_challenge_points | 3000 | This is a cap on how many points a wave can generate with, it primarily limits the max wave sizes (its intentionally relatively low, feel free to tune it upwards. Who needs to keep their base in one piece anyways?) |
 |creature_star_chance | 0.15 | percentage 0.001-1.0, chance that a creature will spawn as a 1+ star variant, some creatures always spawn as multi-star, others always never spawn at a higher star rate. |
 
@@ -84,13 +83,7 @@ The Shrine of challenge provides a number of key configuration values which can 
 And now you want to know how these values are actually used to compute the challenge points right?
 look at this summary below
 ```
-slope = Log((10 + level) * (1 + challenge_slope)))
-
-base_challenge_points_increase * level
--------------------------------------- = total_increase_points
-			slope
-
-allocated_challenge_points = total_increase_points + base_challenge_points
+allocated_challenge_points = Log(level^2) * (challenge_slope * level) + level_base_challenge_points
 
 if (allocated_challenge_points > max_challenge_points) { allocated_challenge_points = max_challenge_points; }
 ```
@@ -169,8 +162,14 @@ Creatures have the following definition structure, which is also listed inside t
 Q. I broke my configuration files and want to try again.
 	A. You can delete any/all yaml configuration (or the primary config file) from this mod and it will be automatically generated again for you on startup.
 
-Q. I am getting an error about not being able to add enough creatures to the wave
-	A. You need to either delete your monster configuration or ensure that each biome after meadows has definitions for: 1+ unique, 1+ elite, 2+ rares, 3+ commons
+Q. Wave generation seems insanely unbalanced, what gives?
+	A. Delete your configurations (SpawnableCreatures.yaml in the VFortress folder) and MidnightsFX.ValheimFortress.cfg, this will regenerate new configurations with the defaults.
+	If you are trying to increase or lower the difficulty from this base point, it is recommended you start by decreasing/increasing the difficulty slope in small increments
+
+Q. The skeltons are attacking the greydwarfs again
+	A. The faction changes (and drop removal etc) are not persisted across game restarts. So if you save/quit during a challenge the remaining creatures will not act the same when you log back in, 
+		and will revert back to their vanilla settings. Loosing stars, gaining their loot, loosing their connection to the shrine. It won't cause issues for your game. But you will still have to kill them normally, and won't get shrine rewards for it.
+
 
 ## Future Features / Incomplete things
 There are a number of things that I plan on adding in the future. Here is the current list.
@@ -203,8 +202,40 @@ If you like this mod maybe you'll like my other work
 - Mobs can form a 'spawn tower' if they can't find someone to attack on spawn
 - Automated turret likes to fire off into space instead of hitting its target occassionally (its aim isn't perfect)
 	- If you can reliably reproduce this issue please report it on the Github or Discord
+- Singleplayer logging during a challenge will result in the challenge dissappearing (looking into improvements)
+- Multiplayer having the region host change during a challenge can break the challenge (looking into solutions)
 
 ## Changelog
+**0.9.0**
+```
+- Overhauled main configuration & creature configuration (IT IS RECOMMEND YOU DELETE YOUR CONFIGS!)
+- Added a filewatcher for the Rewards.yaml & SpawnableCreatures.yaml, meaning edits during gameplay will be reflected if they are valid
+- Overhauled spawning wave generation
+	- Rewards are now significantly larger
+	- Waves now spawn in seperated segments, providing a small amount of time for recovery in-between
+	- Rebalanced wave generation form
+	- Waves now have a chance to spawn from all portals at the same time
+	- Increased rewards scaling with levels, now higher levels will give a much larger reward
+	- Allowed duplicate creature types in a wave, which will result in more of a singular type spawning
+	- Reduced the chance for creatures from previous biomes to spawn in the current biome wave to 5% (from 20%)
+	- Added a configuration option to control how frequently previous biome creatures are added
+- Chanced challenge modes slightly
+	- Boss mode will now generate a boss on the final part of a wave (instead of earlier)
+	- Hardmode will now double the pointpool for spawns (for every part of the wave)
+	- Siege mode will double the number of waves faced for a challenge
+- Added a seperate debug configuration for the turrets, since they are very noisy
+```
+
+**0.8.3**
+```
+- !!CHANGED CONFIG LOCATION!! now MidnightsFX.ValheimFortress.cfg
+- Fixed boss loot enable/disable, now correctly will allow boss loot
+- Removed more informational logging
+- Fixed some configs that were not Admin only (server enforced)
+- More wave generation tuning, mountains, plains, and mistlands should no longer feel impossible on their first levels
+- Added an enabled/disabled config for all spawnable creatures, if you really hate fighting something you can just disable it now
+```
+
 **0.8.2**
 ```
 - Added an additional spawn type 'elite' which now includes especially challenging creatures like: trolls, abominations, golemns etc.

@@ -7,132 +7,110 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.XR;
 using static Jotunn.Managers.MinimapManager;
 
 namespace ValheimFortress.Challenge
 {
     class Spawner : MonoBehaviour
     {
-        static private List<String> bosses = new List<String>(new string[] { "Eikythr", "TheElder", "BoneMass", "Moder", "Yagluth", "TheQueen" });
 
-        public void TrySpawningHoard(List<Levels.HoardConfig> hoards, bool siege_mode, GameObject shrine, int level)
+        public void TrySpawningPhase(float wave_regroup_duration, bool send_message, List<HoardConfig> phase_hoard_configs, GameObject shrine, Vector3[] remote_spawn_locations)
         {
-            // Should check if you are the runtime owner of this chunk
-            Jotunn.Logger.LogInfo($"Trying to spawn {hoards.Count} hoards.");
-            Vector3[] remote_spawn_locations = DetermineRemoteSpawnLocations(shrine);
-            shrine.GetComponent<Shrine>().setSpawnedWaveTarget((Int16)hoards.Count);
-            List<GameObject> portals = new List<GameObject> { };
-
-            if (VFConfig.EnableGladiatorMode.Value == false)
-            {
-                portals = DrawMapOverlayAndPortals(remote_spawn_locations);
-                shrine.GetComponent<Shrine>().setPortals(portals);
-            }
-
-            foreach (Levels.HoardConfig hoard in hoards)
-            {
-                Jotunn.Logger.LogInfo($"Starting spawn for {hoard.amount} {hoard.creature}");
-                StartCoroutine(Spawn(hoard, shrine, siege_mode, remote_spawn_locations, level));
-            }
+            Jotunn.Logger.LogInfo($"Attempting phase spawn with {phase_hoard_configs.Count} hordes.");
+            StartCoroutine(SpawnPhaseController(wave_regroup_duration, send_message, phase_hoard_configs, shrine, remote_spawn_locations));
         }
 
-        IEnumerator Spawn(Levels.HoardConfig hoard, GameObject shrine, bool siege_mode, Vector3[] remote_spawn_locations, int level)
+        IEnumerator SpawnPhaseController(float wave_regroup_duration, bool send_message, List<HoardConfig> phase_hoard_configs, GameObject shrine, Vector3[] remote_spawn_locations)
         {
-            float wave_spawn_delay = 1.5f * level;
-            float initial_wait = 0.0f;
-            if(VFConfig.EnableGladiatorMode.Value == false) { initial_wait = 5.0f; } else { wave_spawn_delay = wave_spawn_delay * 2; }
-            if (siege_mode) { wave_spawn_delay = wave_spawn_delay * 2; } // Increase delay between waves significantly
-            yield return new WaitForSeconds(initial_wait);
-
-            GameObject gameObject = PrefabManager.Instance.GetPrefab(hoard.prefab);
-            int hoard_frac = hoard.amount / 3;
-            bool should_pause_during_horde = true;
-            if (hoard_frac == 0) 
-            { 
-                should_pause_during_horde = false;
-                Jotunn.Logger.LogInfo($"Hoard {hoard.creature} does not have any pausepoints, and will spawn immediately.");
-            } else {
-                Jotunn.Logger.LogInfo($"Hoard {hoard.creature} pausepoints {hoard_frac} {hoard_frac * 2}.");
-            }
-
-            int spawn_failures = 0;
-
-            int pause_point_1 = hoard_frac;
-            int pause_point_2 = (hoard_frac * 2);
-            Vector3 spawn_position = remote_spawn_locations[0];
-            // Spawn our requested number of creatures, modify them as required.
-            for (int i = 0; i < hoard.amount; i++)
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Starting phase, message while we wait? {send_message}"); }
+            if (send_message == true)
             {
-                if (spawn_failures > 10) { 
-                    Jotunn.Logger.LogWarning($"Too many spawn failures when trying to spawn {hoard.creature} wave.");
-                }
-                // Update the spawnpoint based on which pausepoint we are at, doesn't matter if we actually pause.
-                // We don't change the spawn if there are no pausepoints for this horde (boss horde)
-                Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
-                
-                if (i == pause_point_1 && pause_point_1 > 0)
-                {
-                    spawn_position = remote_spawn_locations[1];
-                }
-                if (i == pause_point_2 && pause_point_2 > 0)
-                {
-                    spawn_position = remote_spawn_locations[2];
-                }
-                
-                // This is the fractional pause section. This area is useful because it is only triggered once for each spawn position
-                if (should_pause_during_horde && i == hoard_frac || i == (hoard_frac * 2))
-                {
-                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Pausing {hoard.creature} spawning for wave-delay of {wave_spawn_delay} seconds."); }
-                    yield return new WaitForSeconds(wave_spawn_delay);
-                }
-                // This is really verbose
-                // if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Spawning {hoard.creature}"); }
-                GameObject creature = UnityEngine.Object.Instantiate(gameObject, spawn_position, rotation);
-                // creature.GetComponent<ZNetView>(); // but why
-
-                if (hoard.stars > 0)
-                {
-                    Jotunn.Logger.LogInfo($"Upgrading {hoard.creature} to {hoard.stars} stars.");
-                    Character creature_character = creature.GetComponent<Character>();
-                    if ((bool)creature_character) { creature_character.m_level = (hoard.stars + 1); }
-                }
-                creature.GetComponent<Humanoid>().m_faction = Character.Faction.Boss;
-                // Set the Itemdrop script to be disabled for these creatures, otherwise these hoards are likely to be more rewarding than the reward
-                if (!VFConfig.EnableHordeDrops.Value)
-                {
-                    Destroy(creature.GetComponent<CharacterDrop>());
-                }
-                if (!VFConfig.EnableBossDrops.Value && bosses.Contains(hoard.creature))
-                {
-                    Destroy(creature.GetComponent<CharacterDrop>());
-                }
-
-                // Set the AI to hunt the nearby player
-                BaseAI ai = creature.GetComponent<BaseAI>();
-                if (ai != null)
-                {
-                    ai.SetHuntPlayer(true);
-                } else
-                {
-                    // This creatures AI isn't set to target the player, and it won't go on the attack
-                    Destroy(creature);
-                    i = i - 1;
-                    spawn_failures++;
-                    continue;
-                }
-                shrine.GetComponent<Shrine>().IncrementSpawned();
-                // Add the rewards tracker, and set the reference shrine
-                creature.AddComponent<CreatureTracker>();
-                creature.GetComponent<CreatureTracker>().SetShrine(shrine);
-
+                UI.PhasePausePhrase();
             }
+            yield return new WaitForSeconds(wave_regroup_duration);
 
-            shrine.GetComponent<Shrine>().WaveSpawned();
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Starting Phase spawn."); }
+            SpawnPhase(phase_hoard_configs, shrine, remote_spawn_locations);
 
+            shrine.GetComponent<Shrine>().phaseCompleted();
             yield break;
         }
 
-        public List<GameObject> DrawMapOverlayAndPortals(Vector3[] remote_spawns)
+        void SpawnPhase(List<HoardConfig> phase_hoard_configs, GameObject shrine, Vector3[] remote_spawn_locations)
+        {
+            int spawn_failures = 0;
+            foreach (HoardConfig hoard in phase_hoard_configs)
+            {
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Starting hoardspawn for {hoard.creature} - {hoard.amount}"); }
+                GameObject gameObject = PrefabManager.Instance.GetPrefab(hoard.prefab);
+                for (int i = 0; i < hoard.amount; i++)
+                {
+                    // Randomize the rotation of this individual spawn, this helps prevent spawn towers
+                    Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
+                    // Randomly select one of the 3 spawn portals as the location for this mob to come out of
+                    int spawn_location_selected = UnityEngine.Random.Range(0, 3);
+                    if (spawn_failures > 10)
+                    {
+                        Jotunn.Logger.LogWarning($"Too many spawn failures when trying to spawn {hoard.creature} wave.");
+                        break;
+                    }
+                    GameObject creature = UnityEngine.Object.Instantiate(gameObject, remote_spawn_locations[spawn_location_selected], rotation);
+                    // Attempt to set the stars, it is possible that this will fail
+                    if (hoard.stars > 0)
+                    {
+                        if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Upgrading {hoard.creature} to {hoard.stars} stars."); }
+                        Character creature_character = creature.GetComponent<Character>();
+                        if ((bool)creature_character) { creature_character.m_level = (hoard.stars + 1); }
+                    }
+
+                    // Enable drops for hoard creatures or bosses, if configured, else destroy
+                    if (Levels.SpawnableCreatures[hoard.creature].dropsEnabled == false)
+                    {
+                        Destroy(creature.GetComponent<CharacterDrop>());
+                    }
+
+                    // Set the creatures to the same faction so they don't fight each other
+                    Humanoid creature_metadata = creature.GetComponent<Humanoid>();
+                    if (creature_metadata != null)
+                    {
+                        creature_metadata.m_faction = Character.Faction.Boss;
+                    } else
+                    {
+                        // This creatures faction isn't set so destroy it and try again.
+                        Destroy(creature);
+                        i = i - 1;
+                        spawn_failures++;
+                        continue;
+                    }
+                    
+
+                    // Set the AI to hunt the nearby player
+                    BaseAI ai = creature.GetComponent<BaseAI>();
+                    if (ai != null)
+                    {
+                        ai.SetHuntPlayer(true);
+                    }
+                    else
+                    {
+                        // This creatures AI isn't set to target the player, and it won't go on the attack
+                        Destroy(creature);
+                        i = i - 1;
+                        spawn_failures++;
+                        continue;
+                    }
+
+                    // Add the rewards tracker, and set the reference shrine
+                    shrine.GetComponent<Shrine>().addEnemy(creature);
+                    shrine.GetComponent<Shrine>().IncrementSpawned();
+                    creature.AddComponent<CreatureTracker>();
+                    creature.GetComponent<CreatureTracker>().SetShrine(shrine);
+
+                }
+            }
+        }
+
+        public static List<GameObject> DrawMapOverlayAndPortals(Vector3[] remote_spawns)
         {
             Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
             List<GameObject> portals = new List<GameObject> { };
@@ -142,7 +120,7 @@ namespace ValheimFortress.Challenge
             // Color color = Color.magenta;
             Color[] colorPixels = new Color[circle_radius * circle_radius].Populate(Color.magenta);
 
-            Jotunn.Logger.LogInfo("Spawn portals started");
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Spawn portals started"); }
             foreach (Vector3 spawn_location in remote_spawns)
             {
                 var tempportal = UnityEngine.Object.Instantiate(ValheimFortress.getPortal(), spawn_location, rotation);
@@ -170,7 +148,7 @@ namespace ValheimFortress.Challenge
             yield break;
         }
 
-        public Vector3[] DetermineRemoteSpawnLocations(GameObject shrine)
+        public static Vector3[] DetermineRemoteSpawnLocations(GameObject shrine)
         {
             Vector3 shrine_position = shrine.transform.position;
             GameObject shrine_spawnpoint = shrine.transform.Find("spawnpoint").gameObject;
@@ -192,7 +170,7 @@ namespace ValheimFortress.Challenge
                 spawn_locations.Append(shrine_gladiator_spawn_position);
                 spawn_locations.Append(shrine_gladiator_spawn_position);
             }
-            Jotunn.Logger.LogInfo($"Starting spawn destination in incrments of {range_increment} from x{shrine_gladiator_spawn_position.x} y{shrine_gladiator_spawn_position.y} z{shrine_gladiator_spawn_position.z}");
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Starting spawn destination in incrments of {range_increment} from x{shrine_gladiator_spawn_position.x} y{shrine_gladiator_spawn_position.y} z{shrine_gladiator_spawn_position.z}"); }
             int spawn_location_attempts = 0;
             // We want three remote spawn locations, each one will be a wave
             while(spawn_location_attempts < 100 && spawn_locations.Count < 3)
@@ -204,7 +182,7 @@ namespace ValheimFortress.Challenge
                     current_max_z += range_increment;
                     current_min_z -= range_increment;
                 }
-                Jotunn.Logger.LogInfo($"Starting spawning attempt with x {current_max_x}<->{current_min_x} z {current_max_z}<->{current_min_z}");
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Starting spawning attempt with x {current_max_x}<->{current_min_x} z {current_max_z}<->{current_min_z}"); }
                 spawn_location_attempts++;
                 Vector3 potential_spawn = new Vector3(UnityEngine.Random.Range(current_min_x, current_max_x), 200, UnityEngine.Random.Range(current_min_z, current_max_z));
                 float height;
@@ -215,7 +193,7 @@ namespace ValheimFortress.Challenge
                 if((bool)EffectArea.IsPointInsideArea(potential_spawn, EffectArea.Type.PlayerBase)) { continue; } // Don't spawn in players bases
                 if(potential_spawn.y < 28) { continue;  } // This is a Y check which prevents spawns in a body of water
 
-                Jotunn.Logger.LogInfo($"Valid spawn location determined: x={potential_spawn.x} y={potential_spawn.y} z={potential_spawn.z}");
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Valid spawn location determined: x={potential_spawn.x} y={potential_spawn.y} z={potential_spawn.z}"); }
                 spawn_locations.Add(potential_spawn);
 
             }
@@ -238,10 +216,11 @@ namespace ValheimFortress.Challenge
                 {
                     spawn_locations.Append(shrine_gladiator_spawn_position);
                 }
-                Jotunn.Logger.LogInfo("No Valid remote spawn locations found, will force-spawn on the shrine.");
+                Jotunn.Logger.LogWarning("No Valid remote spawn locations found, will force-spawn on the shrine.");
             }
             Vector3[] spawn_location_results = spawn_locations.ToArray();
-            Jotunn.Logger.LogInfo($"spawn Locations [{string.Join(", ", spawn_location_results)}]");
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"spawn Locations [{string.Join(", ", spawn_location_results)}]"); }
+            shrine.GetComponent<Shrine>().SetWaveSpawnPoints(spawn_location_results);
             return spawn_location_results;
         }
     }
