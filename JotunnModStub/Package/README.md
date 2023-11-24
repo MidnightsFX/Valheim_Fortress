@@ -212,6 +212,11 @@ If you like this mod maybe you'll like my other work
 - Multiplayer having the region host change during a challenge can break the challenge (looking into solutions)
 
 ## Changelog
+**0.9.3**
+```
+- Fix rewards/main config server sync interchange
+```
+
 **0.9.2**
 ```
 - Fixed server file sync and config file location for linux servers

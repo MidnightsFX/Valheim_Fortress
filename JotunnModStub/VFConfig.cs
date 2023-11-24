@@ -38,17 +38,19 @@ namespace ValheimFortress
         private static String rewardFilePath = Path.Combine(Paths.ConfigPath, "VFortress", "Rewards.yaml");
         private static String creatureFilePath = Path.Combine(Paths.ConfigPath, "VFortress", "SpawnableCreatures.yaml");
 
+        private static IDeserializer yamldeserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
+
         public VFConfig(ConfigFile Config)
         {
             // Init with the default plugin config file
             cfg = Config;
             cfg.SaveOnConfigSet = true;
             CreateConfigValues(Config);
-            rewardFilePath = Paths.ConfigPath;
+            var mainfilepath = Paths.ConfigPath;
             // = Path.Combine(, $"{ValheimFortress.PluginGUID}.cfg");
 
             FileSystemWatcher maincfgFSWatcher = new FileSystemWatcher();
-            maincfgFSWatcher.Path = rewardFilePath;
+            maincfgFSWatcher.Path = mainfilepath;
             maincfgFSWatcher.NotifyFilter = NotifyFilters.LastWrite;
             maincfgFSWatcher.Filter = $"{ValheimFortress.PluginGUID}.cfg";
             maincfgFSWatcher.Changed += new FileSystemEventHandler(UpdateMainConfigFile);
@@ -145,16 +147,15 @@ namespace ValheimFortress
             // now that we have ensured the files exist lets read them
             string spawnableCreatureConfigs = File.ReadAllText(creatureFilePath);
             string rewardConfigs = File.ReadAllText(rewardFilePath);
-            var deserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
             try
             {
-                var creatureValues = deserializer.Deserialize<SpawnableCreatureCollection>(spawnableCreatureConfigs);
+                var creatureValues = yamldeserializer.Deserialize<SpawnableCreatureCollection>(spawnableCreatureConfigs);
                 UpdateSpawnableCreatures(creatureValues);
             } catch ( Exception ) { Jotunn.Logger.LogWarning("There was an error updating the creature values, defaults will be used."); }
             
             try
             {
-                var rewardsValues = deserializer.Deserialize<Rewards.RewardEntryCollection>(rewardConfigs);
+                var rewardsValues = yamldeserializer.Deserialize<Rewards.RewardEntryCollection>(rewardConfigs);
                 Rewards.UpdateRewardsEntries(rewardsValues);
             } catch ( Exception ) { Jotunn.Logger.LogWarning("There was an error updating the rewards values, defaults will be used."); }
 
@@ -191,7 +192,7 @@ namespace ValheimFortress
             return package;
         }
 
-        private IEnumerator OnClientReceiveCreatureConfigs(long sender, ZPackage package)
+        private static IEnumerator OnClientReceiveCreatureConfigs(long sender, ZPackage package)
         {
             var creatureyaml = package.ReadString();
             // Just write the updated values to the client. This will trigger an update.
@@ -202,7 +203,7 @@ namespace ValheimFortress
             yield return null;
         }
 
-        private IEnumerator OnClientReceiveRewardsConfigs(long sender, ZPackage package)
+        private static IEnumerator OnClientReceiveRewardsConfigs(long sender, ZPackage package)
         {
             var rewardsyaml = package.ReadString();
             // Just write the updated values to the client. This will trigger an update.
@@ -215,55 +216,48 @@ namespace ValheimFortress
 
         private static void UpdateCreatureConfigFileOnChange(object sender, FileSystemEventArgs e)
         {
-            if (SynchronizationManager.Instance.PlayerIsAdmin)
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"{e} Creature filewatcher called, updating creature values."); }
+            string spawnableCreatureConfigs = File.ReadAllText(creatureFilePath);
+            SpawnableCreatureCollection creatureConfigValues;
+            try
             {
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"{e} Creature filewatcher called, updating creature values."); }
-                string spawnableCreatureConfigs = File.ReadAllText(creatureFilePath);
-                try
+                creatureConfigValues = yamldeserializer.Deserialize<SpawnableCreatureCollection>(spawnableCreatureConfigs);
+            } catch {
+                if (VFConfig.EnableDebugMode.Value)
                 {
-                    var deserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
-                    var creatureValues = deserializer.Deserialize<SpawnableCreatureCollection>(spawnableCreatureConfigs);
-                    UpdateSpawnableCreatures(creatureValues);
-                    try {
-                        monsterSyncRPC.SendPackage(ZNet.instance.m_peers, SendCreatureConfigs());
-                    } catch {
-                        Jotunn.Logger.LogError("Error while server syncing creature configs");
-                    }
+                    Jotunn.Logger.LogWarning("Creatures failed deserializing, skipping update."); 
                 }
-                catch (Exception) { Jotunn.Logger.LogWarning("Updating Creature Configs failed."); }
-            } else
-            {
-                Jotunn.Logger.LogInfo("Player is not an admin. Creature configurations will not be updated.");
+                return;
+            }
+            UpdateSpawnableCreatures(creatureConfigValues);
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Updated creature in-memory values."); }
+            try {
+                monsterSyncRPC.SendPackage(ZNet.instance.m_peers, SendCreatureConfigs());
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sent creature configs to clients."); }
+            } catch {
+                Jotunn.Logger.LogError("Error while server syncing creature configs");
             }
         }
 
         private static void UpdateRewardsConfigFileOnChange(object sender, FileSystemEventArgs e)
         {
-            if (SynchronizationManager.Instance.PlayerIsAdmin)
-            {
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Rewards filewatcher called, updating rewards values."); }
-                try
-                {
-                    string rewardConfigs = File.ReadAllText(rewardFilePath);
-                    var deserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
-                    var rewardsValues = deserializer.Deserialize<Rewards.RewardEntryCollection>(rewardConfigs);
-                    Rewards.UpdateRewardsEntries(rewardsValues);
-                    try
-                    {
-                        rewardSyncRPC.SendPackage(ZNet.instance.m_peers, SendRewardsConfigs());
-                    }
-                    catch
-                    {
-                        Jotunn.Logger.LogError("Error while server syncing creature configs");
-                    }
+                string rewardConfigs = File.ReadAllText(rewardFilePath);
+                Rewards.RewardEntryCollection rewardsValues;
+                try {
+                    rewardsValues = yamldeserializer.Deserialize<Rewards.RewardEntryCollection>(rewardConfigs);
+                } catch (Exception) {
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogWarning("Creatures failed deserializing, skipping update."); }
+                    return; 
                 }
-                catch (Exception) { Jotunn.Logger.LogWarning("Updating Creature Configs failed."); }
+                Rewards.UpdateRewardsEntries(rewardsValues);
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Updated rewards in-memory values."); }
+                try {
+                   rewardSyncRPC.SendPackage(ZNet.instance.m_peers, SendRewardsConfigs());
+                   if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sent rewards configs to clients."); }
+                } catch (Exception){
+                    Jotunn.Logger.LogError("Error while server syncing rewards configs");
                 }
-            else
-            {
-                Jotunn.Logger.LogInfo("Player is not an admin. Rewards configurations will not be updated.");
-            }
-
         }
 
         private static void UpdateMainConfigFile(object sender, FileSystemEventArgs e)
