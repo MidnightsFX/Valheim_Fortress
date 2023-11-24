@@ -169,6 +169,12 @@ Q. Wave generation seems insanely unbalanced, what gives?
 Q. The skeltons are attacking the greydwarfs again
 	A. The faction changes (and drop removal etc) are not persisted across game restarts. So if you save/quit during a challenge the remaining creatures will not act the same when you log back in, 
 		and will revert back to their vanilla settings. Loosing stars, gaining their loot, loosing their connection to the shrine. It won't cause issues for your game. But you will still have to kill them normally, and won't get shrine rewards for it.
+ 
+Q. My game freezes or becomes very slow for some period of time during waves or when creatures are spawning
+	A. This mod is fairly intensive on the CPU, in order to perform all of the calculations that go into creating an interesting and varied wave- then actually spawning all of those creatures (and the potentially massive number of interactions with them)
+	   can be very taxing on your computer. If you find this to be an issue consider increasing the number of cores used for GC collection, another option would be reducing the configured number of maximum creatures to spawn.
+		1. Increase GC collection duration. from Steam, Right Click on Valheim -> Manage -> Browse Local Files. Go to valheim_Data folder and open boot config file. change `gc-max-time-slice=3` to `gc-max-time-slice=10`.
+		2. Reduce `max_creatures_per_wave`
 
 
 ## Future Features / Incomplete things
@@ -206,6 +212,23 @@ If you like this mod maybe you'll like my other work
 - Multiplayer having the region host change during a challenge can break the challenge (looking into solutions)
 
 ## Changelog
+**0.9.2**
+```
+- Fixed server file sync and config file location for linux servers
+- Added configuration for the max number of creatures in a wave, the generator will attempt to reduce creatures to this point (by upgrading their stars)
+- Added a configuration option for the max stars (0-15), more than 2 stars will have no effect if you do not have CLLC
+- Added filesync support for the primary config file
+	- Recipes (like whats required to build something) are not hot-reloaded.
+```
+
+**0.9.1**
+```
+- Fix for potential error from generating a wave and adding a duplicate creature
+- Added max_creatures_per_wave as a configuration option, reducing this will reduce the number of creatures that spawn at once
+	- Reducing this will result in more creatures being upgraded to higher stars, the overall difficulty remains largely the same
+- Reduced the default spawn radius for shrine portals to be 100
+```
+
 **0.9.0**
 ```
 - Overhauled main configuration & creature configuration (IT IS RECOMMEND YOU DELETE YOUR CONFIGS!)

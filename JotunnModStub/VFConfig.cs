@@ -21,7 +21,7 @@ namespace ValheimFortress
 {
     class VFConfig
     {
-        public ConfigFile cfg;
+        public static ConfigFile cfg;
         public static ConfigEntry<bool> EnableDebugMode;
         public static ConfigEntry<bool> EnableTurretDebugMode;
         public static ConfigEntry<bool> EnableGladiatorMode;
@@ -35,12 +35,24 @@ namespace ValheimFortress
         private static CustomRPC monsterSyncRPC;
         private static CustomRPC rewardSyncRPC;
 
+        private static String rewardFilePath = Path.Combine(Paths.ConfigPath, "VFortress", "Rewards.yaml");
+        private static String creatureFilePath = Path.Combine(Paths.ConfigPath, "VFortress", "SpawnableCreatures.yaml");
+
         public VFConfig(ConfigFile Config)
         {
             // Init with the default plugin config file
             cfg = Config;
-            Config.SaveOnConfigSet = true;
+            cfg.SaveOnConfigSet = true;
             CreateConfigValues(Config);
+            rewardFilePath = Paths.ConfigPath;
+            // = Path.Combine(, $"{ValheimFortress.PluginGUID}.cfg");
+
+            FileSystemWatcher maincfgFSWatcher = new FileSystemWatcher();
+            maincfgFSWatcher.Path = rewardFilePath;
+            maincfgFSWatcher.NotifyFilter = NotifyFilters.LastWrite;
+            maincfgFSWatcher.Filter = $"{ValheimFortress.PluginGUID}.cfg";
+            maincfgFSWatcher.Changed += new FileSystemEventHandler(UpdateMainConfigFile);
+            maincfgFSWatcher.EnableRaisingEvents = true;
         }
 
 
@@ -65,9 +77,6 @@ namespace ValheimFortress
             string externalConfigFolder = VFConfig.GetSecondaryConfigDirectoryPath();
             bool hasRewardsConfig = false;
             bool hasCreatureConfig = false;
-            
-            string rewardFilePath = $"{externalConfigFolder}\\Rewards.yaml";
-            string spawnableCreaturesPath = $"{externalConfigFolder}\\SpawnableCreatures.yaml";
 
             string[] presentFiles = Directory.GetFiles(externalConfigFolder);
 
@@ -83,7 +92,7 @@ namespace ValheimFortress
                 if (configFile.Contains("SpawnableCreatures.yaml"))
                 {
                     if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Found Creature configuration: {configFile}"); }
-                    spawnableCreaturesPath = configFile;
+                    creatureFilePath = configFile;
                     hasCreatureConfig = true;
                 }
             }
@@ -112,7 +121,7 @@ namespace ValheimFortress
             if (hasCreatureConfig == false)
             {
                 Jotunn.Logger.LogInfo("CreatureConfig file missing, recreating.");
-                using (StreamWriter writetext = new StreamWriter(spawnableCreaturesPath))
+                using (StreamWriter writetext = new StreamWriter(creatureFilePath))
                 {
                     // ValheimFortress.ReadEmbeddedResourceFile("SpawnableCreatures.yaml")
                     String header = @"#################################################
@@ -134,7 +143,7 @@ namespace ValheimFortress
                 }
             }
             // now that we have ensured the files exist lets read them
-            string spawnableCreatureConfigs = File.ReadAllText(spawnableCreaturesPath);
+            string spawnableCreatureConfigs = File.ReadAllText(creatureFilePath);
             string rewardConfigs = File.ReadAllText(rewardFilePath);
             var deserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
             try
@@ -168,7 +177,7 @@ namespace ValheimFortress
 
         private static ZPackage SendCreatureConfigs()
         {
-            string spawnableCreatureConfigs = File.ReadAllText($"{VFConfig.GetSecondaryConfigDirectoryPath()}\\SpawnableCreatures.yaml");
+            string spawnableCreatureConfigs = File.ReadAllText(creatureFilePath);
             ZPackage package = new ZPackage();
             package.Write(spawnableCreatureConfigs);
             return package;
@@ -176,7 +185,7 @@ namespace ValheimFortress
 
         private static ZPackage SendRewardsConfigs()
         {
-            string rewardsConfigs = File.ReadAllText($"{VFConfig.GetSecondaryConfigDirectoryPath()}\\Rewards.yaml");
+            string rewardsConfigs = File.ReadAllText(rewardFilePath);
             ZPackage package = new ZPackage();
             package.Write(rewardsConfigs);
             return package;
@@ -186,7 +195,7 @@ namespace ValheimFortress
         {
             var creatureyaml = package.ReadString();
             // Just write the updated values to the client. This will trigger an update.
-            using (StreamWriter writetext = new StreamWriter($"{VFConfig.GetSecondaryConfigDirectoryPath()}\\SpawnableCreatures.yaml"))
+            using (StreamWriter writetext = new StreamWriter(creatureFilePath))
             {
                 writetext.WriteLine(creatureyaml);
             }
@@ -197,7 +206,7 @@ namespace ValheimFortress
         {
             var rewardsyaml = package.ReadString();
             // Just write the updated values to the client. This will trigger an update.
-            using (StreamWriter writetext = new StreamWriter($"{VFConfig.GetSecondaryConfigDirectoryPath()}\\Rewards.yaml"))
+            using (StreamWriter writetext = new StreamWriter(rewardFilePath))
             {
                 writetext.WriteLine(rewardsyaml);
             }
@@ -209,13 +218,17 @@ namespace ValheimFortress
             if (SynchronizationManager.Instance.PlayerIsAdmin)
             {
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"{e} Creature filewatcher called, updating creature values."); }
-                string spawnableCreatureConfigs = File.ReadAllText($"{VFConfig.GetSecondaryConfigDirectoryPath()}\\SpawnableCreatures.yaml");
+                string spawnableCreatureConfigs = File.ReadAllText(creatureFilePath);
                 try
                 {
                     var deserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
                     var creatureValues = deserializer.Deserialize<SpawnableCreatureCollection>(spawnableCreatureConfigs);
                     UpdateSpawnableCreatures(creatureValues);
-                    monsterSyncRPC.SendPackage(ZNet.instance.m_peers, SendCreatureConfigs());
+                    try {
+                        monsterSyncRPC.SendPackage(ZNet.instance.m_peers, SendCreatureConfigs());
+                    } catch {
+                        Jotunn.Logger.LogError("Error while server syncing creature configs");
+                    }
                 }
                 catch (Exception) { Jotunn.Logger.LogWarning("Updating Creature Configs failed."); }
             } else
@@ -231,11 +244,18 @@ namespace ValheimFortress
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Rewards filewatcher called, updating rewards values."); }
                 try
                 {
-                    string rewardConfigs = File.ReadAllText($"{VFConfig.GetSecondaryConfigDirectoryPath()}\\Rewards.yaml");
+                    string rewardConfigs = File.ReadAllText(rewardFilePath);
                     var deserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
                     var rewardsValues = deserializer.Deserialize<Rewards.RewardEntryCollection>(rewardConfigs);
                     Rewards.UpdateRewardsEntries(rewardsValues);
-                    rewardSyncRPC.SendPackage(ZNet.instance.m_peers, SendRewardsConfigs());
+                    try
+                    {
+                        rewardSyncRPC.SendPackage(ZNet.instance.m_peers, SendRewardsConfigs());
+                    }
+                    catch
+                    {
+                        Jotunn.Logger.LogError("Error while server syncing creature configs");
+                    }
                 }
                 catch (Exception) { Jotunn.Logger.LogWarning("Updating Creature Configs failed."); }
                 }
@@ -244,6 +264,20 @@ namespace ValheimFortress
                 Jotunn.Logger.LogInfo("Player is not an admin. Rewards configurations will not be updated.");
             }
 
+        }
+
+        private static void UpdateMainConfigFile(object sender, FileSystemEventArgs e)
+        {
+            try
+            {
+                cfg.SaveOnConfigSet = false;
+                cfg.Reload();
+                cfg.SaveOnConfigSet = true;
+            }
+            catch
+            {
+                Jotunn.Logger.LogError($"There was an issue reloading {ValheimFortress.PluginGUID}.cfg.");
+            }
         }
 
         /// <summary>
@@ -327,7 +361,7 @@ namespace ValheimFortress
         // Create Configuration and load it.
         private void CreateConfigValues(ConfigFile Config)
         {
-            MaxSpawnRange = BindServerConfig("Shrine of Challenge", "MaxSpawnRange", 400, "The radius around the shrine that enemies can spawn in. When the shrine is not in gladiator mode.", false, 10, 800);
+            MaxSpawnRange = BindServerConfig("Shrine of Challenge", "MaxSpawnRange", 100, "The radius around the shrine that enemies can spawn in. When the shrine is not in gladiator mode.", false, 10, 800);
             // Max level the shrine can be set to / min level it can be set to
             MaxChallengeLevel = BindServerConfig("Shrine of Challenge", "MaxLevel", (short)30, "The Maximum level the shrine can be set to, you must still beat bosses to increase your allowed level. 5 Levels per biome. Setting to 10 will cap challenges out at meadows(1-5) + blackforest(6-10).", false, 1, 30);
             EnableGladiatorMode = BindServerConfig("Shrine of Challenge", "EnableGladiatorMode", false, "Whether the shrine of challenge should default to spawning mobs on itself (gladiator arena), or remotely (fortress siege).", false);

@@ -24,7 +24,7 @@ namespace ValheimFortress.Challenge
         static private float chance_of_prior_biome_creature = 0.05f;
         static private short max_creature_stars = 2; // This is the vanilla default, and should never be higher unless other mods support it.
         static private short base_challenge_points = 100;
-        // static private short base_challenge_points_increase = 10;
+        static private short max_creatures_per_wave = 60;
         static private short max_challenge_points = 3000;
         static private float star_chance = 0.15f;
         const String COMMON = CONST.COMMON;
@@ -44,7 +44,7 @@ namespace ValheimFortress.Challenge
         // Reference used to build a wave template
         public class WaveOutline
         {
-            Dictionary<String, float> selectedCreatures = new Dictionary<string, float>();
+            List<String> selectedCreatures = new List<string>();
             List<HoardConfig> commonCreatures = new List<HoardConfig>();
             List<HoardConfig> rareCreatures = new List<HoardConfig>();
             List<HoardConfig> eliteCreatures = new List<HoardConfig>();
@@ -56,7 +56,7 @@ namespace ValheimFortress.Challenge
             /// <param name="creature"></param>
             /// <param name="percentage"></param>
             /// <param name="entries"></param>
-            public void AddCreatureToWave(String creature, float percentage, int total_points, short min_stars = 0, short max_stars =0)
+            public void AddCreatureToWave(String creature, int total_points, float percentage, short min_stars = 0, short max_stars =0)
             {
                 short stars = DetermineCreatureStars(min_stars, max_stars);
                 short creature_spawn_amount = DetermineCreatureSpawnAmount(creature, total_points, percentage);
@@ -64,19 +64,19 @@ namespace ValheimFortress.Challenge
                 {
                     case COMMON:
                         commonCreatures.Add(new HoardConfig(creature, SpawnableCreatures[creature].prefabName, creature_spawn_amount, stars));
-                        selectedCreatures.Add(creature, percentage);
+                        selectedCreatures.Add(creature);
                         break;
                     case RARE:
                         rareCreatures.Add(new HoardConfig(creature, SpawnableCreatures[creature].prefabName, creature_spawn_amount, stars));
-                        selectedCreatures.Add(creature, percentage);
+                        selectedCreatures.Add(creature);
                         break;
                     case ELITE:
                         eliteCreatures.Add(new HoardConfig(creature, SpawnableCreatures[creature].prefabName, creature_spawn_amount, stars));
-                        selectedCreatures.Add(creature, percentage);
+                        selectedCreatures.Add(creature);
                         break;
                     case UNIQUE:
                         uniqueCreatures.Add(new HoardConfig(creature, SpawnableCreatures[creature].prefabName, creature_spawn_amount, stars));
-                        selectedCreatures.Add(creature, percentage);
+                        selectedCreatures.Add(creature);
                         break;
 
                 }
@@ -101,9 +101,9 @@ namespace ValheimFortress.Challenge
 
             public bool HasKey(String key)
             {
-                return selectedCreatures.ContainsKey(key);
+                return selectedCreatures.Contains(key);
             }
-            public int GetCount() { return selectedCreatures.Count;}
+            public int GetCount() { return selectedCreatures.Count();}
         }
 
         // These should all stay as close as possible to 100% totals
@@ -283,6 +283,20 @@ namespace ValheimFortress.Challenge
                 "The chance that a valid prior biome creature will be selected. Only 1 can be selected per wave. Setting to zero disables generating waves with previous biome creatures.",
                 false, 0.00f, 1.0f).Value;
 
+            max_creatures_per_wave = cfg.BindServerConfig(
+                "shine of challenge - levels",
+                "max_creatures_per_wave",
+                (short)60,
+                "The max number of creatures that a wave can generate with, creatures will attempt to upgrade and reduce counts based on this.",
+                true, 25, 200).Value;
+
+            max_creature_stars = cfg.BindServerConfig(
+                "shine of challenge - levels",
+                "max_creature_stars",
+                (short)2,
+                "This is the max number of stars a creature can have. CLLC is required for anything over 2.",
+                true, 0, 10).Value;
+
         }
 
 
@@ -314,7 +328,7 @@ namespace ValheimFortress.Challenge
             if (siege_mode)
             {
                 Jotunn.Logger.LogInfo("Siege Mode has been enabled, prepare the ballistas.");
-                point_estimate = (Int16)(point_estimate * 1.5);
+                // point_estimate = (Int16)(point_estimate * 1.5);
             }
             if (boss_mode)
             {
@@ -463,7 +477,7 @@ namespace ValheimFortress.Challenge
                         if (current_creature_biome_level != targeted_wave_biome_level) { creatures_selected_from_previous_biome += 1; min_stars += 1;  }
 
                         // Add the creature!
-                        waveOutline.AddCreatureToWave(skey, percentage, max_wave_points, min_stars, max_creature_stars);
+                        waveOutline.AddCreatureToWave(skey, max_wave_points, percentage, min_stars, max_creature_stars);
                         creature_added = true;
                         duplicate_chance = 0.25f;
                         if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"creature {skey} added as {waveType} {percentage}."); }
@@ -488,6 +502,11 @@ namespace ValheimFortress.Challenge
             while (phases > phases_generated)
             {
                 List<HoardConfig> hoardPhase = new List<HoardConfig>();
+                
+                short common_creatures_in_wave = 0;
+                short rare_creatures_in_wave = 0;
+                short elite_creatures_in_wave = 0;
+                short unique_creatures_in_wave = 0;
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Generating Phase {phases_generated}"); }
 
                 // Add common creatures to each wave with a linear diminishing curve, frontloading creatures
@@ -498,6 +517,7 @@ namespace ValheimFortress.Challenge
                     short spawn_amount = (short)(entry.amount * wavePercent);
                     if (spawn_amount <= 0) {  spawn_amount = 1; }
                     if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Adding COMMON entry {entry.creature} - {spawn_amount}"); }
+                    common_creatures_in_wave += spawn_amount;
                     hoardPhase.Add(new HoardConfig(entry.creature, entry.prefab, spawn_amount, entry.stars));
                 }
 
@@ -510,6 +530,7 @@ namespace ValheimFortress.Challenge
                         short spawn_amount = (short)(entry.amount * wavePercent);
                         if (spawn_amount <= 0) { spawn_amount = 1; }
                         if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Adding RARE entry {entry.creature} - {spawn_amount}"); }
+                        rare_creatures_in_wave += spawn_amount;
                         hoardPhase.Add(new HoardConfig(entry.creature, entry.prefab, spawn_amount, entry.stars));
                     }
                 }
@@ -522,6 +543,7 @@ namespace ValheimFortress.Challenge
                         short spawn_amount = entry.amount;
                         if (spawn_amount <= 0) { spawn_amount = 1; }
                         if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Adding ELITE entry {entry.creature} - {entry.amount}"); }
+                        elite_creatures_in_wave += spawn_amount;
                         hoardPhase.Add(new HoardConfig(entry.creature, entry.prefab, spawn_amount, entry.stars));
                     }
                 }
@@ -534,9 +556,18 @@ namespace ValheimFortress.Challenge
                         short spawn_amount = entry.amount;
                         if (spawn_amount <= 0) { spawn_amount = 1; }
                         if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Adding UNIQUE entry {entry.creature}"); }
+                        unique_creatures_in_wave += spawn_amount;
                         hoardPhase.Add(new HoardConfig(entry.creature, entry.prefab, spawn_amount, entry.stars));
                     }
                 }
+
+                // Post processing on the wave itself
+                short total_creatures_in_wave = (short)(common_creatures_in_wave + rare_creatures_in_wave + elite_creatures_in_wave + unique_creatures_in_wave);
+                if(total_creatures_in_wave > max_creatures_per_wave)
+                {
+                    ReduceWaveSizeToMax(hoardPhase, total_creatures_in_wave);
+                }
+                
 
                 finalizedWaveGeneration.AddPhase(hoardPhase);
                 phases_generated += 1;
@@ -637,6 +668,49 @@ namespace ValheimFortress.Challenge
         public static String BiomeIntToString(Int16 biome_index)
         {
             return biomes[biome_index];
+        }
+
+        public static List<HoardConfig> ReduceWaveSizeToMax(List<HoardConfig> hoards, short total_creatures_in_wave)
+        {
+            if (total_creatures_in_wave <= max_creatures_per_wave) { return hoards; }
+
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Wave has more creatures than allowed from configuration to remove: {total_creatures_in_wave} > {max_creatures_per_wave}"); }
+            // The most this gets us is one iteration through, so this isn't going to scale up insanely
+            foreach (HoardConfig entry in hoards)
+            {
+                if (total_creatures_in_wave <= max_creatures_per_wave) { break; }
+                // This innately starts with common types, since that is what we added first, and they are generally the most populous except in later levels
+                // We don't want to reduce amounts from waves that are too small since we start loosing precision and will either make the wave much harder or much easier
+                total_creatures_in_wave = MutatingReduceHoardConfigSize(entry, total_creatures_in_wave);
+            }
+            // Run a second time, but only for groups that have more than 5 entries
+            if (total_creatures_in_wave > max_creatures_per_wave)
+            {
+                foreach (HoardConfig entry in hoards)
+                {
+                    if (entry.amount <= 5) { continue; }
+                    if (total_creatures_in_wave <= max_creatures_per_wave) { break; }
+                    total_creatures_in_wave = MutatingReduceHoardConfigSize(entry, total_creatures_in_wave);
+                }
+            }
+
+            return hoards;
+        }
+
+        private static short MutatingReduceHoardConfigSize(HoardConfig hoard, short total_creatures_in_wave)
+        {
+            if (total_creatures_in_wave > max_creatures_per_wave)
+            {
+                if (hoard.stars < max_creature_stars)
+                {
+                    short creature_difference = (short)(hoard.amount / 2);
+                    hoard.amount = creature_difference;
+                    hoard.stars += 1;
+                    total_creatures_in_wave = (short)(total_creatures_in_wave - creature_difference);
+                }
+            }
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"wave {hoard.creature} reduced from {hoard.amount*2} to {hoard.amount} total creatures in wave now: {total_creatures_in_wave}"); }
+            return total_creatures_in_wave;
         }
     }
 }
