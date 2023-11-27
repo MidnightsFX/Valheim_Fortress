@@ -12,7 +12,7 @@ namespace ValheimFortress.Challenge
         static GameObject ChallengePanel;
 
         // this is unset until the shrine building calls for the UI, in which case it is then set
-        static GameObject Shrine;
+        static Shrine Shrine;
 
         static List<String> currentLevels = new List<String> {};
         static List<String> availableRewards = new List<String> {};
@@ -21,53 +21,71 @@ namespace ValheimFortress.Challenge
         public static GameObject hardModeToggle;
         public static GameObject bossModeToggle;
         public static GameObject siegeModeToggle;
+        public static GameObject estimate_text;
+        public static short estimatedRewards = 0;
+        public static string estimatedRewardName = "";
+        
+        public static short selected_level = 0;
+        public static bool current_hard_mode = false;
+        public static bool current_boss_mode = false;
+        public static bool current_siege_mode = false;
+
         // Right now maxlevel needs to correlate to: defined levels & level warning messages
         private static List<String> shrine_phase_warnings = new List<String>
-                {
-                    Localization.instance.Localize("$shrine_phase_warning"),
-                    Localization.instance.Localize("$shrine_phase_warning2"),
-                    Localization.instance.Localize("$shrine_phase_warning3"),
-                    Localization.instance.Localize("$shrine_phase_warning4"),
-                    Localization.instance.Localize("$shrine_phase_warning5"),
-                    Localization.instance.Localize("$shrine_phase_warning6"),
-                    Localization.instance.Localize("$shrine_phase_warning7"),
-                    Localization.instance.Localize("$shrine_phase_warning8"),
-                    Localization.instance.Localize("$shrine_phase_warning9"),
-                    Localization.instance.Localize("$shrine_phase_warning10"),
-                    Localization.instance.Localize("$shrine_phase_warning11"),
-                    Localization.instance.Localize("$shrine_phase_warning12"),
-                    Localization.instance.Localize("$shrine_phase_warning13"),
-                    Localization.instance.Localize("$shrine_phase_warning14")
-                };
+        {
+            Localization.instance.Localize("$shrine_phase_warning"),
+            Localization.instance.Localize("$shrine_phase_warning2"),
+            Localization.instance.Localize("$shrine_phase_warning3"),
+            Localization.instance.Localize("$shrine_phase_warning4"),
+            Localization.instance.Localize("$shrine_phase_warning5"),
+            Localization.instance.Localize("$shrine_phase_warning6"),
+            Localization.instance.Localize("$shrine_phase_warning7"),
+            Localization.instance.Localize("$shrine_phase_warning8"),
+            Localization.instance.Localize("$shrine_phase_warning9"),
+            Localization.instance.Localize("$shrine_phase_warning10"),
+            Localization.instance.Localize("$shrine_phase_warning11"),
+            Localization.instance.Localize("$shrine_phase_warning12"),
+            Localization.instance.Localize("$shrine_phase_warning13"),
+            Localization.instance.Localize("$shrine_phase_warning14")
+        };
 
         public static bool IsPanelVisible()
         {
             return ChallengePanel.activeSelf;
         }
 
-        public static bool IsPanelVisible(GameObject obj)
+        public void Update()
         {
-            return obj.activeSelf;
+            if (IsPanelVisible()) {
+                estimatedRewardName = availableRewards[rewardSelector.GetComponent<Dropdown>().value];
+                short level = (short)(levelSelector.GetComponent<Dropdown>().value + 1);
+                bool hardmode_status = hardModeToggle.GetComponent<Toggle>().isOn;
+                bool bossmode_status = bossModeToggle.GetComponent<Toggle>().isOn;
+                bool siegemode_status = siegeModeToggle.GetComponent<Toggle>().isOn;
+                // This is an early bail on doing the panel updates for rewards, if it hasn't changed. So we don't run that calculation (and its log lines) constantly.
+                if (hardmode_status == current_hard_mode && bossmode_status == current_boss_mode && siegemode_status == current_siege_mode && selected_level == level) { return; }
+                selected_level = level;
+                current_hard_mode = hardmode_status;
+                current_boss_mode = bossmode_status;
+                current_siege_mode = siegemode_status;
+                estimatedRewards = Rewards.DetermineRewardAmount(estimatedRewardName, selected_level, hardmode_status, bossmode_status, siegemode_status);
+                estimate_text.GetComponent<Text>().text = $"{estimatedRewards}";
+            }
         }
 
-        public static void Init(AssetBundle EmbeddedResourceBundle)
+        public void Awake()
         {
-            //GameObject prefab = EmbeddedResourceBundle.LoadAsset<GameObject>("Assets/Custom/UI/VFShrineUI.prefab");
-            //Jotunn.Logger.LogInfo("Loaded UI Prefab.");
-            // Built the challenge UI, since this is a static class
-            // all of these values and UI componets will be used when instanciating the UI for the game below
+            Shrine = this.GetComponent<Shrine>();
             CreateChallengeUI();
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Instanciated UI."); }
         }
-
 
         private static void UpdateLevelsAndRewards()
         {
             Int16 max_level = 5;
-            Dictionary<String, Rewards.RewardEntry> possible_rewards = Rewards.GetResouceRewards();
+            Dictionary<String, RewardEntry> possible_rewards = Rewards.GetResouceRewards();
             availableRewards = new List<String> { };
             var zs = ZoneSystem.instance;
-            foreach (KeyValuePair<string, Rewards.RewardEntry> entry in possible_rewards)
+            foreach (KeyValuePair<string, RewardEntry> entry in possible_rewards)
             {
                 if(entry.Value.requiredBoss == "None") { 
                     availableRewards.Add(entry.Key);
@@ -151,9 +169,9 @@ namespace ValheimFortress.Challenge
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Levels and rewards updated."); }
         }
 
-        private static void StartChallenge()
+        private void StartChallenge()
         {
-            Shrine.GetComponent<Shrine>().DisableUI();
+            HideUI();
             String selected_reward = availableRewards[rewardSelector.GetComponent<Dropdown>().value];
             // Trying to decide if we want to do this, which will use the wave dropdown text value as the entry, or if we should just do the index + 1, which is currently the same
             // TODO: this should be reworked when we switch from wave levels to another system
@@ -167,21 +185,20 @@ namespace ValheimFortress.Challenge
             bool siege_mode = false;
             if (VFConfig.EnableSiegeModifer.Value) { siege_mode = siegeModeToggle.GetComponent<Toggle>().isOn; }
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Shrine challenge. Selected reward: {selected_reward}, selected level: {selected_level}"); }
-            if (Shrine.GetComponent<Shrine>().IsChallengeActive())
+            if (Shrine.IsChallengeActive())
             {
                 Jotunn.Logger.LogInfo("There is a challenge active, refusing to start another.");
             } else
             {
                 // Start the coroutine that sends the warning text
                 PreparePhase(selected_level, boss_mode);
-                Shrine.GetComponent<Shrine>().EnablePortal();
-                // Shrine.GetComponent<Shrine>().StartChallengeMode();
-                Shrine.GetComponent<Shrine>().SetLevel(selected_level);
-                Shrine.GetComponent<Shrine>().SetReward(selected_reward);
-                if (hard_mode) { Shrine.GetComponent<Shrine>().SetHardMode(); }
-                if (boss_mode) { Shrine.GetComponent<Shrine>().SetBossMode(); }
-                if (siege_mode) { Shrine.GetComponent<Shrine>().SetSiegeMode(); }
-                Levels.generateRandomWaveWithOptions(selected_level, hard_mode, boss_mode, siege_mode, Shrine);
+                Shrine.EnablePortal();
+                Shrine.SetLevel(selected_level);
+                Shrine.SetReward(selected_reward);
+                if (hard_mode) { Shrine.SetHardMode(); }
+                if (boss_mode) { Shrine.SetBossMode(); }
+                if (siege_mode) { Shrine.SetSiegeMode(); }
+                Levels.generateRandomWaveWithOptions(selected_level, hard_mode, boss_mode, siege_mode, gameObject);
                 Jotunn.Logger.LogInfo($"Challenge started. Level: {selected_level} Reward: {selected_reward}");
             }
         }
@@ -226,22 +243,23 @@ namespace ValheimFortress.Challenge
         }
 
 
-        public static void DisplayUI(GameObject shrine)
+        public void DisplayUI()
         {
-            Shrine = shrine;
             CreateChallengeUI();
             ChallengePanel.SetActive(true);
             GUIManager.BlockInput(true);
+            Shrine.SetShrineUIStatus(true);
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Enabled UI from Shrine object."); }
         }
 
-        public static void HideUI()
+        public void HideUI()
         {
             ChallengePanel.SetActive(false);
             GUIManager.BlockInput(false);
+            Shrine.SetShrineUIStatus(false);
         }
 
-        public static void CreateChallengeUI()
+        public void CreateChallengeUI()
         {
             // Always want to update the rewards and challenge levels
             UpdateLevelsAndRewards();
@@ -321,7 +339,7 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(100f, 60f),
+                position: new Vector2(45f, 60f),
                 fontSize: 16,
                 width: 200f,
                 height: 40f);
@@ -342,12 +360,45 @@ namespace ValheimFortress.Challenge
                 height: 40f,
                 addContentSizeFitter: false);
 
+            if (VFConfig.EnableRewardsEstimate.Value)
+            {
+                // Shrine reward estimate
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_reward_estimate"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(180f, 50f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 16,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 40f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+                estimate_text = GUIManager.Instance.CreateText(
+                    text: $"{estimatedRewards}",
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(220f, 50f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 16,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 100f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+            }
+
             // create the wave selector dropdown
             levelSelector = GUIManager.Instance.CreateDropDown(
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(100f, 5f),
+                position: new Vector2(45f, 5f),
                 fontSize: 16,
                 width: 200f,
                 height: 40f);
@@ -419,7 +470,7 @@ namespace ValheimFortress.Challenge
                     parent: ChallengePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(180f, -77f),
+                    position: new Vector2(160f, -77f),
                     font: GUIManager.Instance.AveriaSerifBold,
                     fontSize: 14,
                     color: GUIManager.Instance.ValheimBeige,
@@ -527,7 +578,7 @@ namespace ValheimFortress.Challenge
                     parent: ChallengePanel.transform,
                     anchorMin: new Vector2(0.5f, 0.5f),
                     anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(165f, -175f),
+                    position: new Vector2(160f, -175f),
                     font: GUIManager.Instance.AveriaSerifBold,
                     fontSize: 14,
                     color: GUIManager.Instance.ValheimBeige,
@@ -585,7 +636,7 @@ namespace ValheimFortress.Challenge
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Adding UI Listeners"); }
             // Add a listener to the button to close the panel again
             Button cancelButton = cancelButtonObj.GetComponent<Button>();
-            cancelButton.onClick.AddListener(Shrine.GetComponent<Shrine>().DisableUI);
+            cancelButton.onClick.AddListener(HideUI);
             // Add a listener to the button to close the panel and trigger the challenge scripts
             Button startButton = startButtonObj.GetComponent<Button>();
             startButton.onClick.AddListener(StartChallenge);

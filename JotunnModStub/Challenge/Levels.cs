@@ -211,8 +211,7 @@ namespace ValheimFortress.Challenge
         {
             var creatureCollection = new SpawnableCreatureCollection();
             creatureCollection.Creatures = SpawnableCreatures;
-            var serializer = new SerializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
-            var yaml = serializer.Serialize(creatureCollection);
+            var yaml = CONST.yamlserializer.Serialize(creatureCollection);
             return yaml;
         }
 
@@ -555,7 +554,7 @@ namespace ValheimFortress.Challenge
                     {
                         short spawn_amount = entry.amount;
                         if (spawn_amount <= 0) { spawn_amount = 1; }
-                        if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Adding UNIQUE entry {entry.creature}"); }
+                        if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Adding UNIQUE entry {entry.creature} - {entry.amount}"); }
                         unique_creatures_in_wave += spawn_amount;
                         hoardPhase.Add(new HoardConfig(entry.creature, entry.prefab, spawn_amount, entry.stars));
                     }
@@ -678,6 +677,8 @@ namespace ValheimFortress.Challenge
             // The most this gets us is one iteration through, so this isn't going to scale up insanely
             foreach (HoardConfig entry in hoards)
             {
+                // We always skip reductions for unique types since they are always 1.
+                if (SpawnableCreatures[entry.creature].spawnType == CONST.UNIQUE) { continue; }
                 if (total_creatures_in_wave <= max_creatures_per_wave) { break; }
                 // This innately starts with common types, since that is what we added first, and they are generally the most populous except in later levels
                 // We don't want to reduce amounts from waves that are too small since we start loosing precision and will either make the wave much harder or much easier

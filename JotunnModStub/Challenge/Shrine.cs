@@ -21,14 +21,14 @@ namespace ValheimFortress.Challenge
         private static Int16 selected_level = 0;
         private ZNetView zNetView;
         public static bool shrine_ui_active = false;
-        public static Int16 spawned_waves = 0;
         public List<GameObject> portals = new List<GameObject>();
 
         private static List<GameObject> enemies = new List<GameObject>();
         private static PhasedWaveTemplate wave_phases_definitions = new PhasedWaveTemplate();
-        private static int challenge_phase = 0;
         private static Vector3[] remote_spawn_locations = new Vector3[0];
         private static bool phase_running = false;
+        private static Spawner spawn_controller;
+        private static UI ui_controller;
 
         public void SetHardMode()
         {
@@ -61,16 +61,6 @@ namespace ValheimFortress.Challenge
         public void IncrementSpawned()
         {
             spawned_creatures += 1;
-        }
-
-        public void WaveSpawned()
-        {
-            spawned_waves -= 1;
-        }
-
-        public void setSpawnedWaveTarget(Int16 target)
-        {
-            spawned_waves = target;
         }
 
         public void setPortals(List<GameObject> portal_list)
@@ -121,13 +111,17 @@ namespace ValheimFortress.Challenge
             remote_spawn_locations = spawn_points;
         }
 
+        public void SetShrineUIStatus(bool status)
+        {
+            shrine_ui_active = status;
+        }
+
         public void StartChallengeMode()
         {
             if (zNetView.IsOwner() && challenge_active == false)
             {
                 Jotunn.Logger.LogInfo("Challenge started!");
                 challenge_active = true;
-                Spawner spawn_controller = this.gameObject.GetComponent<Spawner>();
                 spawn_controller.TrySpawningPhase(8f, false, wave_phases_definitions.GetCurrentPhase(), gameObject, remote_spawn_locations);
                 phase_running = true;
                 // Spawner.TrySpawningPhase(2f, false, wave_phases_definitions.GetCurrentPhase(), this.gameObject, remote_spawn_locations);
@@ -154,54 +148,12 @@ namespace ValheimFortress.Challenge
             
         }
 
-        //public void Update()
-        //{
-        //    if (shrine_ui_active && (Input.GetKeyDown(KeyCode.Escape)))
-        //    {
-        //        Jotunn.Logger.LogInfo("Shrine UI detected close commands.");
-        //        DisableUI();
-        //    }
-        //    // Everything past here should only be run once, by whatever main thread is controlling the ticks in this region.
-        //    if (!zNetView.IsOwner())
-        //    {
-        //        return;
-        //    }
-        //    if (challenge_active == true)
-        //    {
-        //        if (spawned_creatures == 0 && spawned_waves <= 0)
-        //        {
-        //            spawned_waves = 0;
-        //            Jotunn.Logger.LogInfo("Challenge complete! Spawning reward.");
-        //            Player.m_localPlayer.Message(MessageHud.MessageType.Center, "Challenge Complete!");
-        //            Rewards.SpawnReward(selected_reward, selected_level, gameObject, hard_mode, boss_mode, siege_mode);
-        //            challenge_active = false;
-        //            boss_mode = false;
-        //            hard_mode = false;
-        //            siege_mode = false;
-        //            Disableportal();
-        //            if (portals.Count > 0)
-        //            {
-        //                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Destroying wave portals"); }
-        //                destroyPortals();
-        //            }
-        //            Destroy(this.GetComponent<Spawner>()); // remove the spawner since its completed its work and will be recreated for the next challenge.
-        //        }
-        //    } else {
-        //        // challenge mode is not active yet, this is a fallback to ensure we activate the challenge if its already got metadata
-        //        if (spawned_creatures > 0 && spawned_waves <= 0)
-        //        {
-        //            StartChallengeMode();
-        //            EnablePortal();
-        //        }
-        //    }
-        //}
-
         public void Update()
         {
             if (shrine_ui_active && (Input.GetKeyDown(KeyCode.Escape)))
             {
                 Jotunn.Logger.LogInfo("Shrine UI detected close commands.");
-                DisableUI();
+                ui_controller.HideUI();
             }
             // Everything past here should only be run once, by whatever main thread is controlling the ticks in this region.
             if (!zNetView.IsOwner())
@@ -212,30 +164,29 @@ namespace ValheimFortress.Challenge
             {
                 if (wave_phases_definitions.CountPhases() > 0)
                 {
-                    // enemies dead, last phase completed
-                    if (spawned_creatures <= 0 && wave_phases_definitions.CountPhases() == challenge_phase)
-                    {
-                        Jotunn.Logger.LogInfo("Challenge complete! Spawning reward.");
-                        Player.m_localPlayer.Message(MessageHud.MessageType.Center, "Challenge Complete!");
-                        Rewards.SpawnReward(selected_reward, selected_level, gameObject, hard_mode, boss_mode, siege_mode);
-                        challenge_active = false;
-                        boss_mode = false;
-                        hard_mode = false;
-                        siege_mode = false;
-                        Disableportal();
-                        if (portals.Count > 0)
-                        {
-                            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Destroying wave portals"); }
-                            destroyPortals();
-                        }
-                    }
+                    //// enemies dead, last phase completed
+                    //if (spawned_creatures <= 0 && wave_phases_definitions.CountPhases() == challenge_phase)
+                    //{
+                    //    Jotunn.Logger.LogInfo("Challenge complete! Spawning reward.");
+                    //    Player.m_localPlayer.Message(MessageHud.MessageType.Center, "Challenge Complete!");
+                    //    Rewards.SpawnReward(selected_reward, selected_level, gameObject, hard_mode, boss_mode, siege_mode);
+                    //    challenge_active = false;
+                    //    boss_mode = false;
+                    //    hard_mode = false;
+                    //    siege_mode = false;
+                    //    Disableportal();
+                    //    if (portals.Count > 0)
+                    //    {
+                    //        if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Destroying wave portals"); }
+                    //        destroyPortals();
+                    //    }
+                    //}
 
                     // We need to A. have spawned creatures & there needs to be none of those spawned creatures remaining
                     if (enemies.Count > 0 && spawned_creatures <= 0 && phase_running == false) {
                         if (wave_phases_definitions.RemainingPhases())
                         {
                             // Start the next phase
-                            Spawner spawn_controller = this.gameObject.GetComponent<Spawner>();
                             spawn_controller.TrySpawningPhase(10f, true, wave_phases_definitions.GetCurrentPhase(), gameObject, remote_spawn_locations);
                             phase_running = true;
                         } else
@@ -243,7 +194,7 @@ namespace ValheimFortress.Challenge
                             // No phases remaining, we are done!
                             Jotunn.Logger.LogInfo("Challenge complete! Spawning reward.");
                             Player.m_localPlayer.Message(MessageHud.MessageType.Center, "Challenge Complete!");
-                            Rewards.SpawnReward(selected_reward, selected_level, gameObject, hard_mode, boss_mode, siege_mode);
+                            StartCoroutine(Rewards.SpawnReward(selected_reward, selected_level, gameObject, hard_mode, boss_mode, siege_mode));
                             challenge_active = false;
                             boss_mode = false;
                             hard_mode = false;
@@ -256,26 +207,18 @@ namespace ValheimFortress.Challenge
                                 destroyPortals();
                             }
                         }
-                        
-                        
                     }
                 }
             }
-            // check if challenge mode is enabled
-            // Check if there are remaing phases
-            // check if there are remaining enemies, if there are skip
-
-
-                // If this is the first wave, send out the warning message and start
-                // If there are not remaining enemies, send out the regroup messaging, wait and spawn the next wave
-                // If this is the last wave send out the final wave warning, send the wave
-
         }
 
         private void Awake()
         {
             zNetView = GetComponent<ZNetView>();
             this.gameObject.AddComponent<Spawner>();
+            spawn_controller = this.gameObject.GetComponent<Spawner>();
+            this.gameObject.AddComponent<UI>();
+            ui_controller = this.gameObject.GetComponent<UI>();
         }
 
         public string GetHoverText()
@@ -307,7 +250,7 @@ namespace ValheimFortress.Challenge
                     Player.m_localPlayer.Message(MessageHud.MessageType.Center, $"A challenge is active! Creatures remaining {spawned_creatures}");
                 } else
                 {
-                    EnableUI();
+                    ui_controller.DisplayUI();
                 }
                 
             }
@@ -317,18 +260,6 @@ namespace ValheimFortress.Challenge
         public bool UseItem(Humanoid user, ItemDrop.ItemData item)
         {
             return false;
-        }
-
-        public void EnableUI()
-        {
-            shrine_ui_active = true;
-            UI.DisplayUI(this.gameObject);
-        }
-
-        public void DisableUI()
-        {
-            shrine_ui_active = false;
-            UI.HideUI();
         }
     }
 }

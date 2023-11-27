@@ -4,7 +4,10 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using YamlDotNet.Serialization.NamingConventions;
+using YamlDotNet.Serialization;
 using static ValheimFortress.Challenge.Levels;
+using static ValheimFortress.Challenge.Rewards;
 
 namespace ValheimFortress.Challenge
 {
@@ -21,6 +24,16 @@ namespace ValheimFortress.Challenge
         public const String PLAINS = "Plains";
         public const String MISTLANDS = "Mistlands";
         public const String ASHLANDS = "Ashlands";
+        public const String NONE = "None";
+        public const String EIKYTHR = "Eikythr";
+        public const String ELDER = "TheElder";
+        public const String BONEMASS = "BoneMass";
+        public const String MODER = "Moder";
+        public const String YAGLUTH = "Yagluth";
+        public const String QUEEN = "TheQueen";
+
+        public static IDeserializer yamldeserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
+        public static ISerializer yamlserializer = new SerializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
     }
 
 
@@ -120,6 +133,22 @@ namespace ValheimFortress.Challenge
 
         // Needed only for Serialization
         public CreatureValues() { }
+    }
+
+    [DataContract]
+    public class RewardEntry
+    {
+        public short resouceCost { get; set; }
+        public String requiredBoss { get; set; }
+        public String resourcePrefab { get; set; }
+        public bool enabled { get; set; }
+        // required for serialization, since this used to have a custom init
+        public RewardEntry() { }
+    }
+
+    public class RewardEntryCollection
+    {
+        public Dictionary<string, RewardEntry> Rewards { get; set; }
     }
 
     public class SpawnableCreatureCollection

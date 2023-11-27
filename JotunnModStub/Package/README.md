@@ -93,8 +93,8 @@ if (allocated_challenge_points > max_challenge_points) { allocated_challenge_poi
 ## Configuration
 This mod is HIGHLY configurable. All buildings have configurable crafting recipes and many aspects about the shrine of challenge can be configured to your liking.
 
-This mod uses almost exclusively server sided configuration. Which means that these values will not be updated while the game is playing. 
-This helps me reduce complexity, in the future I will consider server-synched configs, but right now that is not included in this mod.
+This mod uses almost exclusively server sided configuration. The server supports configuration syncing for Rewards, Monsters and the main config file.
+However, all configurations related to building pieces (like the ballista cost etc) are not reloaded during runtime, and will require a game restart.
 
 This mod does support [BepinEx in-game Configuration](https://valheim.thunderstore.io/package/Azumatt/Official_BepInEx_ConfigurationManager/)
 Configurations can also be edited in the config file within your Bepinex folder `BepinEx\Config\com.midnightsfx.ValheimFortress.cfg`
@@ -170,11 +170,21 @@ Q. The skeltons are attacking the greydwarfs again
 	A. The faction changes (and drop removal etc) are not persisted across game restarts. So if you save/quit during a challenge the remaining creatures will not act the same when you log back in, 
 		and will revert back to their vanilla settings. Loosing stars, gaining their loot, loosing their connection to the shrine. It won't cause issues for your game. But you will still have to kill them normally, and won't get shrine rewards for it.
  
-Q. My game freezes or becomes very slow for some period of time during waves or when creatures are spawning
+Q. My game freezes or becomes very slow for some period of time during waves or when creatures are spawning, what do I do?
 	A. This mod is fairly intensive on the CPU, in order to perform all of the calculations that go into creating an interesting and varied wave- then actually spawning all of those creatures (and the potentially massive number of interactions with them)
-	   can be very taxing on your computer. If you find this to be an issue consider increasing the number of cores used for GC collection, another option would be reducing the configured number of maximum creatures to spawn.
-		1. Increase GC collection duration. from Steam, Right Click on Valheim -> Manage -> Browse Local Files. Go to valheim_Data folder and open boot config file. change `gc-max-time-slice=3` to `gc-max-time-slice=10`.
-		2. Reduce `max_creatures_per_wave`
+	   can be very taxing on your computer. If you find this to be an issue consider reducing the configured number of maximum creatures to spawn or increasing the number of cores used for GC collection.
+		A. Reduce `max_creatures_per_wave`
+		A. Optionally, Increase GC collection duration. From Steam, Right Click on Valheim -> Manage -> Browse Local Files. Go to valheim_Data folder and open boot config file. change `gc-max-time-slice=3` to `gc-max-time-slice=10`	
+	    this will allow scripts to execute for a longer timeperiod, which will allow these long-running scripts to execute without killing your game.
+		
+
+Q. My game freezes, crashes or becomes very slow when the reward is spawned, what do I do?
+	A. Reduce the value of `MaxRewardsPerSecond`, this will spread out reward spawning over a longer period and reduce the impact on your game.
+	A. Optionally, Increase GC collection duration. From Steam, Right Click on Valheim -> Manage -> Browse Local Files. Go to valheim_Data folder and open boot config file. change `gc-max-time-slice=3` to `gc-max-time-slice=10`
+	this will allow scripts to execute for a longer timeperiod, which will allow these long-running scripts to execute without killing your game.
+
+Q. Rewards are too generous / rewards arn't rewarding enough!
+	A. You can configure all of the reward costs, and the bonuses that are applied to determine the pool for rewards. I suggest you read the main mods configuration file and look at the rewards config file.
 
 
 ## Future Features / Incomplete things
@@ -189,8 +199,6 @@ There are a number of things that I plan on adding in the future. Here is the cu
 	* Torch color variants
 	* Lampost color variants
 	* Darkwood variant to aesthetically fit other tar coated wood pieces
-
-* Consider server-synced configuration
 
 ## Other Mods
 If you like this mod maybe you'll like my other work
@@ -212,6 +220,23 @@ If you like this mod maybe you'll like my other work
 - Multiplayer having the region host change during a challenge can break the challenge (looking into solutions)
 
 ## Changelog
+**0.9.5**
+```
+- Optimized the shrine menu calculations for how many rewards will be recieved
+- Optimized reward spawning code to distribute it over many updates
+- Provided configuration to increase/decrease how fast rewards spawn
+```
+
+**0.9.4**
+```
+- More improvements to consistency of server sync'd configurations (building settings are not applied during without a restart)
+- Added configuration to tune rewards value increase per level
+- Added configuration to tune rewards base increase
+- Added configuration to enable/disable displaying of an estimate for the amount of rewards you will recieve
+- Updated default values of rewards to scale considerably higher
+- Fix for boss waves not spawning their bosses
+```
+
 **0.9.3**
 ```
 - Fix rewards/main config server sync interchange

@@ -27,10 +27,14 @@ namespace ValheimFortress
         public static ConfigEntry<bool> EnableGladiatorMode;
         public static ConfigEntry<short> MaxChallengeLevel;
         public static ConfigEntry<short> MaxSpawnRange;
+        public static ConfigEntry<float> rewardsMultiplier;
+        public static ConfigEntry<float> rewardsDifficultyScalar;
         public static ConfigEntry<bool> EnableBossModifier;
         public static ConfigEntry<bool> EnableHardModifier;
         public static ConfigEntry<bool> EnableSiegeModifer;
+        public static ConfigEntry <bool> EnableRewardsEstimate;
         public static ConfigEntry<bool> EnableMapPings;
+        public static ConfigEntry<short> MaxRewardsPerSecond;
 
         private static CustomRPC monsterSyncRPC;
         private static CustomRPC rewardSyncRPC;
@@ -38,7 +42,7 @@ namespace ValheimFortress
         private static String rewardFilePath = Path.Combine(Paths.ConfigPath, "VFortress", "Rewards.yaml");
         private static String creatureFilePath = Path.Combine(Paths.ConfigPath, "VFortress", "SpawnableCreatures.yaml");
 
-        private static IDeserializer yamldeserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
+        
 
         public VFConfig(ConfigFile Config)
         {
@@ -48,20 +52,24 @@ namespace ValheimFortress
             CreateConfigValues(Config);
             var mainfilepath = Paths.ConfigPath;
             // = Path.Combine(, $"{ValheimFortress.PluginGUID}.cfg");
-
             FileSystemWatcher maincfgFSWatcher = new FileSystemWatcher();
             maincfgFSWatcher.Path = mainfilepath;
             maincfgFSWatcher.NotifyFilter = NotifyFilters.LastWrite;
             maincfgFSWatcher.Filter = $"{ValheimFortress.PluginGUID}.cfg";
             maincfgFSWatcher.Changed += new FileSystemEventHandler(UpdateMainConfigFile);
+            maincfgFSWatcher.Created += new FileSystemEventHandler(UpdateMainConfigFile);
+            maincfgFSWatcher.Renamed += new RenamedEventHandler(UpdateMainConfigFile);
+            maincfgFSWatcher.SynchronizingObject = ThreadingHelper.SynchronizingObject;
             maincfgFSWatcher.EnableRaisingEvents = true;
+
+            Jotunn.Logger.LogInfo("Main config filewatcher initialized.");
         }
 
 
         public void SetupConfigRPCs()
         {
-            monsterSyncRPC = NetworkManager.Instance.AddRPC("monsteryaml_rpc", null, OnClientReceiveCreatureConfigs);
-            rewardSyncRPC = NetworkManager.Instance.AddRPC("rewardsyaml_rpc", null, OnClientReceiveRewardsConfigs);
+            monsterSyncRPC = NetworkManager.Instance.AddRPC("monsteryaml_rpc", OnServerRecieveConfigs, OnClientReceiveCreatureConfigs);
+            rewardSyncRPC = NetworkManager.Instance.AddRPC("rewardsyaml_rpc", OnServerRecieveConfigs, OnClientReceiveRewardsConfigs);
             SynchronizationManager.Instance.AddInitialSynchronization(monsterSyncRPC, SendCreatureConfigs);
             SynchronizationManager.Instance.AddInitialSynchronization(rewardSyncRPC, SendRewardsConfigs);
         }
@@ -149,13 +157,13 @@ namespace ValheimFortress
             string rewardConfigs = File.ReadAllText(rewardFilePath);
             try
             {
-                var creatureValues = yamldeserializer.Deserialize<SpawnableCreatureCollection>(spawnableCreatureConfigs);
+                var creatureValues = CONST.yamldeserializer.Deserialize<SpawnableCreatureCollection>(spawnableCreatureConfigs);
                 UpdateSpawnableCreatures(creatureValues);
             } catch ( Exception ) { Jotunn.Logger.LogWarning("There was an error updating the creature values, defaults will be used."); }
             
             try
             {
-                var rewardsValues = yamldeserializer.Deserialize<Rewards.RewardEntryCollection>(rewardConfigs);
+                var rewardsValues = CONST.yamldeserializer.Deserialize<RewardEntryCollection>(rewardConfigs);
                 Rewards.UpdateRewardsEntries(rewardsValues);
             } catch ( Exception ) { Jotunn.Logger.LogWarning("There was an error updating the rewards values, defaults will be used."); }
 
@@ -165,6 +173,9 @@ namespace ValheimFortress
             creatureFSWatcher.NotifyFilter = NotifyFilters.LastWrite;
             creatureFSWatcher.Filter = "SpawnableCreatures.yaml";
             creatureFSWatcher.Changed += new FileSystemEventHandler(UpdateCreatureConfigFileOnChange);
+            creatureFSWatcher.Created += new FileSystemEventHandler(UpdateCreatureConfigFileOnChange);
+            creatureFSWatcher.Renamed += new RenamedEventHandler(UpdateCreatureConfigFileOnChange);
+            creatureFSWatcher.SynchronizingObject = ThreadingHelper.SynchronizingObject;
             creatureFSWatcher.EnableRaisingEvents = true;
 
             // File watcher for the Rewards
@@ -173,7 +184,17 @@ namespace ValheimFortress
             rewardsFSWatcher.NotifyFilter = NotifyFilters.LastWrite;
             rewardsFSWatcher.Filter = "Rewards.yaml";
             rewardsFSWatcher.Changed += new FileSystemEventHandler(UpdateRewardsConfigFileOnChange);
+            rewardsFSWatcher.Created += new FileSystemEventHandler(UpdateRewardsConfigFileOnChange);
+            rewardsFSWatcher.Renamed += new RenamedEventHandler(UpdateRewardsConfigFileOnChange);
+            rewardsFSWatcher.SynchronizingObject = ThreadingHelper.SynchronizingObject;
             rewardsFSWatcher.EnableRaisingEvents = true;
+
+        }
+
+        private static IEnumerator OnServerRecieveConfigs(long sender, ZPackage package)
+        {
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Server recieved config from client, rejecting due to being the server."); }
+            yield return null;
         }
 
         private static ZPackage SendCreatureConfigs()
@@ -216,12 +237,13 @@ namespace ValheimFortress
 
         private static void UpdateCreatureConfigFileOnChange(object sender, FileSystemEventArgs e)
         {
+            if (!File.Exists(creatureFilePath)) { return; }
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"{e} Creature filewatcher called, updating creature values."); }
             string spawnableCreatureConfigs = File.ReadAllText(creatureFilePath);
             SpawnableCreatureCollection creatureConfigValues;
             try
             {
-                creatureConfigValues = yamldeserializer.Deserialize<SpawnableCreatureCollection>(spawnableCreatureConfigs);
+                creatureConfigValues = CONST.yamldeserializer.Deserialize<SpawnableCreatureCollection>(spawnableCreatureConfigs);
             } catch {
                 if (VFConfig.EnableDebugMode.Value)
                 {
@@ -231,37 +253,66 @@ namespace ValheimFortress
             }
             UpdateSpawnableCreatures(creatureConfigValues);
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Updated creature in-memory values."); }
-            try {
-                monsterSyncRPC.SendPackage(ZNet.instance.m_peers, SendCreatureConfigs());
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sent creature configs to clients."); }
-            } catch {
-                Jotunn.Logger.LogError("Error while server syncing creature configs");
+            if (GUIManager.IsHeadless())
+            {
+                try
+                {
+                    monsterSyncRPC.SendPackage(ZNet.instance.m_peers, SendCreatureConfigs());
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sent creature configs to clients."); }
+                }
+                catch
+                {
+                    Jotunn.Logger.LogError("Error while server syncing creature configs");
+                }
+            } else
+            {
+                if (VFConfig.EnableDebugMode.Value)
+                {
+                    Jotunn.Logger.LogInfo("Instance is not a server, and will not send znet creature updates.");
+                }
             }
+
         }
 
         private static void UpdateRewardsConfigFileOnChange(object sender, FileSystemEventArgs e)
         {
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Rewards filewatcher called, updating rewards values."); }
-                string rewardConfigs = File.ReadAllText(rewardFilePath);
-                Rewards.RewardEntryCollection rewardsValues;
-                try {
-                    rewardsValues = yamldeserializer.Deserialize<Rewards.RewardEntryCollection>(rewardConfigs);
-                } catch (Exception) {
-                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogWarning("Creatures failed deserializing, skipping update."); }
-                    return; 
+            if (!File.Exists(rewardFilePath)) { return; }
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Rewards filewatcher called, updating rewards values."); }
+            string rewardConfigs = File.ReadAllText(rewardFilePath);
+            RewardEntryCollection rewardsValues;
+            try {
+                rewardsValues = CONST.yamldeserializer.Deserialize<RewardEntryCollection>(rewardConfigs);
+            } catch (Exception) {
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogWarning("Rewards failed deserializing, skipping update."); }
+                return; 
+            }
+            Rewards.UpdateRewardsEntries(rewardsValues);
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Updated rewards in-memory values."); }
+            if (GUIManager.IsHeadless())
+            {
+                try
+                {
+                    rewardSyncRPC.SendPackage(ZNet.instance.m_peers, SendRewardsConfigs());
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sent rewards configs to clients."); }
                 }
-                Rewards.UpdateRewardsEntries(rewardsValues);
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Updated rewards in-memory values."); }
-                try {
-                   rewardSyncRPC.SendPackage(ZNet.instance.m_peers, SendRewardsConfigs());
-                   if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sent rewards configs to clients."); }
-                } catch (Exception){
+                catch (Exception)
+                {
                     Jotunn.Logger.LogError("Error while server syncing rewards configs");
                 }
+            }
+            else
+            {
+                if (VFConfig.EnableDebugMode.Value)
+                {
+                    Jotunn.Logger.LogInfo("Instance is not a server, and will not send znet reward updates.");
+                }
+            }
+
         }
 
         private static void UpdateMainConfigFile(object sender, FileSystemEventArgs e)
         {
+            if (!File.Exists(creatureFilePath)) { return; }
             try
             {
                 cfg.SaveOnConfigSet = false;
@@ -363,7 +414,10 @@ namespace ValheimFortress
             EnableBossModifier = BindServerConfig("Shrine of Challenge", "EnableBossModifier", true, "Whether or not boss mod is available as a level modifier (more rewards & spawns the biome specific boss)", true);
             EnableSiegeModifer = BindServerConfig("Shrine of Challenge", "EnableSiegeModifer", true, "Whether or not siege mode is available as a modifier. Siege mode gives much larger pauses between waves, and 100% larger waves for 50% more reward.", true);
             EnableMapPings = BindServerConfig("Shrine of Challenge", "EnableMapPings", false, "Whether or not waves spawning from the shrine of challenge should ping the map when they spawn.", true);
-
+            EnableRewardsEstimate = BindServerConfig("Shrine of Challenge", "EnableRewardsEstimate", true, "Enables showing an estimate of how many rewards you will get for doing the selected level for the specified reward.", true);
+            rewardsMultiplier = BindServerConfig("Shrine of Challenge", "rewardsMultiplier", 1.1f, "The base multiplier for rewards, higher values will make every wave more rewarding", true);
+            rewardsDifficultyScalar = BindServerConfig("Shrine of Challenge", "rewardsDifficultyScalar", 0.02f, "Multiplier for rewards that scales with level, each level adds this to the value, making high level challenges much more rewarding.", true);
+            MaxRewardsPerSecond = BindServerConfig("Shrine of Challenge", "MaxRewardsPerSecond", 120, "Sets how fast the shrine will spawn rewards. Reducing this will reduce the performance impact of spawning so many items at once.", true, 10, 400);
             // Client side configurations
 
             // Debugmode
