@@ -214,12 +214,20 @@ If you like this mod maybe you'll like my other work
 - Building pieces sometimes don't have destructable bits
 - Building pieces don't have wear and tear
 - Mobs can form a 'spawn tower' if they can't find someone to attack on spawn
-- Automated turret likes to fire off into space instead of hitting its target occassionally (its aim isn't perfect)
+- Automated turret likes to fire off into space instead of hitting its target occassionally (its aim isn't perfect, so sometimes this is intended)
 	- If you can reliably reproduce this issue please report it on the Github or Discord
-- Singleplayer logging during a challenge will result in the challenge dissappearing (looking into improvements)
+- Singleplayer logging out during a challenge will result in the challenge dissappearing (looking into improvements)
 - Multiplayer having the region host change during a challenge can break the challenge (looking into solutions)
 
 ## Changelog
+**0.9.6**
+```
+- Improved support for toggling various shrine settings on/off during gameplay
+- Improved support for estimating values
+- Added a system to send flares & teleport remaining creatures to shrine, with configuration options- for when you just can't find those remaining enemies
+- Fixed situations where the UI could generate without its button clicks being wired up
+```
+
 **0.9.5**
 ```
 - Optimized the shrine menu calculations for how many rewards will be recieved

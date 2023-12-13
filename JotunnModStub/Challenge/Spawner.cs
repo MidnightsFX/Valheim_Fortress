@@ -158,7 +158,10 @@ namespace ValheimFortress.Challenge
             float current_min_x = shrine_position.x - range_increment;
             float current_max_z = shrine_position.z + range_increment;
             float current_min_z = shrine_position.z - range_increment;
-            
+            float min_y_difference = shrine_position.y - 32;
+            float max_y_difference = shrine_position.y + 32;
+
+
 
             List<Vector3> spawn_locations =new List<Vector3>();
 
@@ -192,6 +195,7 @@ namespace ValheimFortress.Challenge
                 }
                 if((bool)EffectArea.IsPointInsideArea(potential_spawn, EffectArea.Type.PlayerBase)) { continue; } // Don't spawn in players bases
                 if(potential_spawn.y < 28) { continue;  } // This is a Y check which prevents spawns in a body of water
+                if (potential_spawn.y > max_y_difference || potential_spawn.y < min_y_difference) { continue; } // skip spawn setups which have a massive difference in height, this helps prevent portals ontop of pines
 
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Valid spawn location determined: x={potential_spawn.x} y={potential_spawn.y} z={potential_spawn.z}"); }
                 spawn_locations.Add(potential_spawn);

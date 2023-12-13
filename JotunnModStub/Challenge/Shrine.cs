@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.XR;
 using static ValheimFortress.Challenge.Levels;
 
 namespace ValheimFortress.Challenge
@@ -24,11 +25,13 @@ namespace ValheimFortress.Challenge
         public List<GameObject> portals = new List<GameObject>();
 
         private static List<GameObject> enemies = new List<GameObject>();
+        private static GameObject shrine_spawnpoint;
         private static PhasedWaveTemplate wave_phases_definitions = new PhasedWaveTemplate();
         private static Vector3[] remote_spawn_locations = new Vector3[0];
         private static bool phase_running = false;
         private static Spawner spawn_controller;
         private static UI ui_controller;
+        private static bool creature_beacons = false;
 
         public void SetHardMode()
         {
@@ -164,29 +167,12 @@ namespace ValheimFortress.Challenge
             {
                 if (wave_phases_definitions.CountPhases() > 0)
                 {
-                    //// enemies dead, last phase completed
-                    //if (spawned_creatures <= 0 && wave_phases_definitions.CountPhases() == challenge_phase)
-                    //{
-                    //    Jotunn.Logger.LogInfo("Challenge complete! Spawning reward.");
-                    //    Player.m_localPlayer.Message(MessageHud.MessageType.Center, "Challenge Complete!");
-                    //    Rewards.SpawnReward(selected_reward, selected_level, gameObject, hard_mode, boss_mode, siege_mode);
-                    //    challenge_active = false;
-                    //    boss_mode = false;
-                    //    hard_mode = false;
-                    //    siege_mode = false;
-                    //    Disableportal();
-                    //    if (portals.Count > 0)
-                    //    {
-                    //        if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Destroying wave portals"); }
-                    //        destroyPortals();
-                    //    }
-                    //}
-
                     // We need to A. have spawned creatures & there needs to be none of those spawned creatures remaining
                     if (enemies.Count > 0 && spawned_creatures <= 0 && phase_running == false) {
                         if (wave_phases_definitions.RemainingPhases())
                         {
                             // Start the next phase
+                            creature_beacons = false;
                             spawn_controller.TrySpawningPhase(10f, true, wave_phases_definitions.GetCurrentPhase(), gameObject, remote_spawn_locations);
                             phase_running = true;
                         } else
@@ -219,6 +205,7 @@ namespace ValheimFortress.Challenge
             spawn_controller = this.gameObject.GetComponent<Spawner>();
             this.gameObject.AddComponent<UI>();
             ui_controller = this.gameObject.GetComponent<UI>();
+            shrine_spawnpoint = this.transform.Find("spawnpoint").gameObject;
         }
 
         public string GetHoverText()
@@ -247,7 +234,19 @@ namespace ValheimFortress.Challenge
             {
                 if (challenge_active) 
                 {
-                    Player.m_localPlayer.Message(MessageHud.MessageType.Center, $"A challenge is active! Creatures remaining {spawned_creatures}");
+                    if (spawned_creatures <= VFConfig.NotifyCreatureThreshold.Value && creature_beacons == false)
+                    {
+                        NotifyRemainingCreatures();
+                        Player.m_localPlayer.Message(MessageHud.MessageType.Center, $"A few Creatures remaining ({spawned_creatures}) sending flares.");
+                        creature_beacons = true;
+                    } else if (spawned_creatures <= VFConfig.TeleportCreatureThreshold.Value)
+                    {
+                        Player.m_localPlayer.Message(MessageHud.MessageType.Center, $"Teleporting final creatures to the shrine.");
+                        TeleportRemainingCreatures();
+                    } else
+                    {
+                        Player.m_localPlayer.Message(MessageHud.MessageType.Center, $"Creatures remaining {spawned_creatures}");
+                    }
                 } else
                 {
                     ui_controller.DisplayUI();
@@ -260,6 +259,34 @@ namespace ValheimFortress.Challenge
         public bool UseItem(Humanoid user, ItemDrop.ItemData item)
         {
             return false;
+        }
+
+        public void NotifyRemainingCreatures()
+        {
+            int alive_creatures = 0;
+            foreach (GameObject enemy in enemies)
+            {
+                if (enemy == null) { continue; }
+
+                alive_creatures += 1;
+                GameObject vfx = UnityEngine.Object.Instantiate(ValheimFortress.getNotifier(), enemy.transform.localPosition, enemy.transform.rotation);
+                vfx.transform.parent = enemy.transform; // Parent to the creature?
+            }
+            // If somehow the tracked creatures got de-synced, this has literally never happend but- why not
+            if (alive_creatures != spawned_creatures) { spawned_creatures = alive_creatures; }
+        }
+
+        public void TeleportRemainingCreatures()
+        {
+            int alive_creatures = 0;
+            foreach (GameObject enemy in enemies)
+            {
+                if (enemy == null) { continue; }
+                enemy.transform.position = shrine_spawnpoint.transform.position; 
+                alive_creatures += 1;
+            }
+            // If somehow the tracked creatures got de-synced, this has literally never happend but- why not
+            if (alive_creatures != spawned_creatures) { spawned_creatures = alive_creatures; }
         }
     }
 }

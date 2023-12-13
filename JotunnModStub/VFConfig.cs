@@ -35,6 +35,8 @@ namespace ValheimFortress
         public static ConfigEntry <bool> EnableRewardsEstimate;
         public static ConfigEntry<bool> EnableMapPings;
         public static ConfigEntry<short> MaxRewardsPerSecond;
+        public static ConfigEntry<short> NotifyCreatureThreshold;
+        public static ConfigEntry<short> TeleportCreatureThreshold;
 
         private static CustomRPC monsterSyncRPC;
         private static CustomRPC rewardSyncRPC;
@@ -418,6 +420,8 @@ namespace ValheimFortress
             rewardsMultiplier = BindServerConfig("Shrine of Challenge", "rewardsMultiplier", 1.1f, "The base multiplier for rewards, higher values will make every wave more rewarding", true);
             rewardsDifficultyScalar = BindServerConfig("Shrine of Challenge", "rewardsDifficultyScalar", 0.02f, "Multiplier for rewards that scales with level, each level adds this to the value, making high level challenges much more rewarding.", true);
             MaxRewardsPerSecond = BindServerConfig("Shrine of Challenge", "MaxRewardsPerSecond", 120, "Sets how fast the shrine will spawn rewards. Reducing this will reduce the performance impact of spawning so many items at once.", true, 10, 400);
+            NotifyCreatureThreshold = BindServerConfig("Shrine of Challenge", "NotifyCreatureThreshold", 10, "Sets the level at which interacting with the shrine will add notifier to remaining creatures.", true, 1, 50);
+            TeleportCreatureThreshold = BindServerConfig("Shrine of Challenge", "TeleportCreatureThreshold", 3, "Sets the level at which interacting with the shrine teleport remaining creatures to the shrine.", true, 1, 50);
             // Client side configurations
 
             // Debugmode

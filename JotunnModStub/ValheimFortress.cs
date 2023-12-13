@@ -21,11 +21,12 @@ namespace ValheimFortress
     {
         public const string PluginGUID = "MidnightsFX.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.9.5";
+        public const string PluginVersion = "0.9.6";
 
         AssetBundle EmbeddedResourceBundle;
         public VFConfig cfg;
         public static GameObject spawnPortal;
+        public static GameObject creatureNotifier;
 
         private void Awake()
         {
@@ -37,6 +38,7 @@ namespace ValheimFortress
             AddLocalizations();
             ValheimFortressPieces vfpieces = new ValheimFortressPieces(EmbeddedResourceBundle, cfg);
             spawnPortal = EmbeddedResourceBundle.LoadAsset<GameObject>($"Assets/Custom/Pieces/VFortress/VF_portal.prefab");
+            creatureNotifier = EmbeddedResourceBundle.LoadAsset<GameObject>($"Assets/Custom/Pieces/VFortress/VF_creature_notify.prefab");
 
             // Yaml configs
             VFConfig.GetYamlConfigFiles();
@@ -88,6 +90,8 @@ namespace ValheimFortress
         {
             return spawnPortal;
         }
+
+        internal static GameObject getNotifier() { return creatureNotifier; }
 
         public static string LocalizeOrDefault(string str_to_localize,string default_string)
         {
