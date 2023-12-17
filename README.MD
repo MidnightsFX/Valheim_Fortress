@@ -159,6 +159,9 @@ Creatures have the following definition structure, which is also listed inside t
 
 ## FAQ
 
+Q. There are remaining creatures and I can't find them!?
+	A . By default, interacting with the shrine when at or below 10 creatures will summon fireworks on them. Interacting at or below 3 creatures will summon those creatures directly to the shrine.
+
 Q. I broke my configuration files and want to try again.
 	A. You can delete any/all yaml configuration (or the primary config file) from this mod and it will be automatically generated again for you on startup.
 
@@ -220,6 +223,26 @@ If you like this mod maybe you'll like my other work
 - Multiplayer having the region host change during a challenge can break the challenge (looking into solutions)
 
 ## Changelog
+**0.9.9**
+```
+- Fixes a potential phase-skip issue
+- Improves the wave-generations abilities to reduce the wave size to smaller quantities
+- Reduced the minimum wave reduction size, so you can now face smaller waves with more powerful enemies, if you so choose
+- Added spawning jitter for each phase, adding a delay when spawning large amounts of enemies
+- Randomized the orientation of spawn portals
+- Added more wave pause flavortext
+```
+
+**0.9.8**
+```
+- fix for rare NPE exceptions with multiple players loading the shrine at different points
+```
+
+**0.9.7**
+```
+- bugfix for a case where parts of the UI might not regenerate after being re-opened
+```
+
 **0.9.6**
 ```
 - Improved support for toggling various shrine settings on/off during gameplay

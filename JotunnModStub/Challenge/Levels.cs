@@ -287,7 +287,7 @@ namespace ValheimFortress.Challenge
                 "max_creatures_per_wave",
                 (short)60,
                 "The max number of creatures that a wave can generate with, creatures will attempt to upgrade and reduce counts based on this.",
-                true, 25, 200).Value;
+                true, 12, 200).Value;
 
             max_creature_stars = cfg.BindServerConfig(
                 "shine of challenge - levels",
@@ -674,28 +674,31 @@ namespace ValheimFortress.Challenge
             if (total_creatures_in_wave <= max_creatures_per_wave) { return hoards; }
 
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Wave has more creatures than allowed from configuration to remove: {total_creatures_in_wave} > {max_creatures_per_wave}"); }
-            // The most this gets us is one iteration through, so this isn't going to scale up insanely
-            foreach (HoardConfig entry in hoards)
+            short iterations = 0;
+            // This won't scale up infinitely in reducing waves, but could produce waves up to 1/4th the size
+            while(iterations < 4)
             {
-                // We always skip reductions for unique types since they are always 1.
-                if (SpawnableCreatures[entry.creature].spawnType == CONST.UNIQUE) { continue; }
+                total_creatures_in_wave = EvaluateAndReduceWave(hoards, total_creatures_in_wave);
                 if (total_creatures_in_wave <= max_creatures_per_wave) { break; }
-                // This innately starts with common types, since that is what we added first, and they are generally the most populous except in later levels
-                // We don't want to reduce amounts from waves that are too small since we start loosing precision and will either make the wave much harder or much easier
-                total_creatures_in_wave = MutatingReduceHoardConfigSize(entry, total_creatures_in_wave);
+                iterations++;
             }
-            // Run a second time, but only for groups that have more than 5 entries
+
+            return hoards;
+        }
+
+        private static short EvaluateAndReduceWave(List<HoardConfig> hoards, short total_creatures_in_wave, short stop_reduction_at = 5)
+        {
             if (total_creatures_in_wave > max_creatures_per_wave)
             {
                 foreach (HoardConfig entry in hoards)
                 {
-                    if (entry.amount <= 5) { continue; }
+                    if (entry.amount <= stop_reduction_at) { continue; }
                     if (total_creatures_in_wave <= max_creatures_per_wave) { break; }
+                    if (SpawnableCreatures[entry.creature].spawnType == CONST.UNIQUE) { continue; }
                     total_creatures_in_wave = MutatingReduceHoardConfigSize(entry, total_creatures_in_wave);
                 }
             }
-
-            return hoards;
+            return total_creatures_in_wave;
         }
 
         private static short MutatingReduceHoardConfigSize(HoardConfig hoard, short total_creatures_in_wave)
