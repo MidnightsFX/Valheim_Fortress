@@ -21,6 +21,8 @@ namespace ValheimFortress.Challenge
             CurrentCompletedHordes ++;
         }
 
+        public int GetCurrentHorde() { return CurrentCompletedHordes; }
+
         public void TrySpawningPhase(float wave_regroup_duration, bool send_message, List<HoardConfig> phase_hoard_configs, GameObject shrine, Vector3[] remote_spawn_locations)
         {
             Jotunn.Logger.LogInfo($"Attempting phase spawn with {phase_hoard_configs.Count} hordes.");
@@ -32,7 +34,7 @@ namespace ValheimFortress.Challenge
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Starting phase, message while we wait? {send_message}"); }
             if (send_message == true)
             {
-                UI.PhasePausePhrase();
+                UI.PhasePausePhrase(shrine);
             }
             yield return new WaitForSeconds(wave_regroup_duration);
 

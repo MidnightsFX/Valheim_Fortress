@@ -48,6 +48,7 @@
   "$shrine_phase_warning17": "The forsaken are enraged...",
   "$shrine_phase_warning18": "You've defeated this group.",
   "$shrine_phase_warning19": "Odin watches your progress...",
+  "$shrine_challenge_complete": "Challenge Complete!",
   // Shrine of challenge piecename
   "piece_shrine_of_challenge": "Shrine of challenge",
   // Shrine level selector menu

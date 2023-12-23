@@ -159,6 +159,9 @@ Creatures have the following definition structure, which is also listed inside t
 
 ## FAQ
 
+Q. The portals from my last attempt didn't dissapear!
+	A . Starting a new challenge with `EnablePortalCleanupMode` on will remove a number of local portals that failed to get deleted beforehand. You can also turn off this configuration if you find it causes lag for you.
+
 Q. There are remaining creatures and I can't find them!?
 	A . By default, interacting with the shrine when at or below 10 creatures will summon fireworks on them. Interacting at or below 3 creatures will summon those creatures directly to the shrine.
 
@@ -223,6 +226,16 @@ If you like this mod maybe you'll like my other work
 - Multiplayer having the region host change during a challenge can break the challenge (looking into solutions)
 
 ## Changelog
+**0.9.10**
+```
+- Fix for potentially unresponsive UI that primarily occurs after the shrine is built
+- Fixes for portals not being visible to everyone in multiplayer
+- Fixes for shrine announcements not being visible to every player in multiplayer
+- Fixes for multiplayer area sychronization issues
+- Interact to reset if the shrine gets stuck at (0) creatures
+- Cleanup methods for removing orphaned portals
+```
+
 **0.9.9**
 ```
 - Fixes a potential phase-skip issue

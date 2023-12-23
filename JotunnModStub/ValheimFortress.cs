@@ -21,7 +21,7 @@ namespace ValheimFortress
     {
         public const string PluginGUID = "MidnightsFX.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.9.9";
+        public const string PluginVersion = "0.9.10";
 
         AssetBundle EmbeddedResourceBundle;
         public VFConfig cfg;
@@ -37,8 +37,7 @@ namespace ValheimFortress
             // Logger.LogInfo($"Embedded resources: {string.Join(",", typeof(ValheimFortress).Assembly.GetManifestResourceNames())}");
             AddLocalizations();
             ValheimFortressPieces vfpieces = new ValheimFortressPieces(EmbeddedResourceBundle, cfg);
-            spawnPortal = EmbeddedResourceBundle.LoadAsset<GameObject>($"Assets/Custom/Pieces/VFortress/VF_portal.prefab");
-            creatureNotifier = EmbeddedResourceBundle.LoadAsset<GameObject>($"Assets/Custom/Pieces/VFortress/VF_creature_notify.prefab");
+            SetupVFXObjects(EmbeddedResourceBundle);
 
             // Yaml configs
             VFConfig.GetYamlConfigFiles();
@@ -86,12 +85,22 @@ namespace ValheimFortress
             }
         }
 
-        internal static GameObject getPortal()
-        {
-            return spawnPortal;
-        }
+        internal static GameObject getPortal() { return spawnPortal; }
 
         internal static GameObject getNotifier() { return creatureNotifier; }
+
+        private static void SetupVFXObjects(AssetBundle EmbeddedResourceBundle)
+        {
+            // Load and register
+            GameObject portal = EmbeddedResourceBundle.LoadAsset<GameObject>($"Assets/Custom/Pieces/VFortress/VF_portal.prefab");
+            CustomPrefab portalPrefab = new CustomPrefab(portal, false);
+            PrefabManager.Instance.AddPrefab(portalPrefab);
+            spawnPortal = portalPrefab.Prefab;
+            GameObject notify_ga =  EmbeddedResourceBundle.LoadAsset<GameObject>($"Assets/Custom/Pieces/VFortress/VF_creature_notify.prefab");
+            CustomPrefab notify_custom_prefab = new CustomPrefab(notify_ga, false);
+            PrefabManager.Instance.AddPrefab(notify_custom_prefab);
+            creatureNotifier = notify_custom_prefab.Prefab;
+        }
 
         public static string LocalizeOrDefault(string str_to_localize,string default_string)
         {

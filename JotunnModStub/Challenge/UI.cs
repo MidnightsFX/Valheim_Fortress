@@ -13,7 +13,6 @@ namespace ValheimFortress.Challenge
 
         // this is unset until the shrine building calls for the UI, in which case it is then set
         static Shrine Shrine;
-        private static bool UICreated = false;
 
         static List<String> currentLevels = new List<String> {};
         static List<String> availableRewards = new List<String> {};
@@ -69,18 +68,11 @@ namespace ValheimFortress.Challenge
 
         public static bool IsPanelVisible()
         {
-            
             return ChallengePanel.activeSelf;
         }
 
         public void Update()
         {
-            // If this wasn't setup in awake for the current player, then it needs to be added later
-            if (ChallengePanel == null) {
-                Shrine = this.GetComponent<Shrine>();
-                CreateStaticUIObjects(false);
-            }
-
             if (IsPanelVisible()) {
                 // Skip the whole thing if we don't need to estimate rewards
                 if (VFConfig.EnableRewardsEstimate.Value == false) { return; }
@@ -121,7 +113,7 @@ namespace ValheimFortress.Challenge
         public void Awake()
         {
             Shrine = this.GetComponent<Shrine>();
-            CreateStaticUIObjects(false);
+            CreateStaticUIObjects(true);
             // CreateChallengeUI();
         }
 
@@ -231,25 +223,18 @@ namespace ValheimFortress.Challenge
             bool siege_mode = false;
             if (VFConfig.EnableSiegeModifer.Value) { siege_mode = siegeModeToggle.GetComponent<Toggle>().isOn; }
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Shrine challenge. Selected reward: {selected_reward}, selected level: {selected_level}"); }
-            if (Shrine.IsChallengeActive())
-            {
-                Jotunn.Logger.LogInfo("There is a challenge active, refusing to start another.");
-            } else
-            {
-                // Start the coroutine that sends the warning text
-                PreparePhase(selected_level, boss_mode);
-                Shrine.EnablePortal();
-                Shrine.SetLevel(selected_level);
-                Shrine.SetReward(selected_reward);
-                if (hard_mode) { Shrine.SetHardMode(); }
-                if (boss_mode) { Shrine.SetBossMode(); }
-                if (siege_mode) { Shrine.SetSiegeMode(); }
-                Levels.generateRandomWaveWithOptions(selected_level, hard_mode, boss_mode, siege_mode, gameObject);
-                Jotunn.Logger.LogInfo($"Challenge started. Level: {selected_level} Reward: {selected_reward}");
-            }
+            // Start the coroutine that sends the warning text
+            PreparePhase(selected_level, boss_mode, Shrine.gameObject);
+            Shrine.SetLevel(selected_level);
+            Shrine.SetReward(selected_reward);
+            if (hard_mode) { Shrine.SetHardMode(); }
+            if (boss_mode) { Shrine.SetBossMode(); }
+            if (siege_mode) { Shrine.SetSiegeMode(); }
+            // This call will trigger the shrine to start building out the wave and running the challenge
+            Shrine.SetStartChallenge();
         }
 
-        private static void PreparePhase(Int16 selected_level, bool boss_mode)
+        private static void PreparePhase(Int16 selected_level, bool boss_mode, GameObject shrine)
         {
             String challenge_warning = "This might hurt.";
             if (selected_level < 6) {
@@ -276,16 +261,25 @@ namespace ValheimFortress.Challenge
                 challenge_warning = Localization.instance.Localize("$shrine_warning_mistlands");
                 if (boss_mode) { challenge_warning = Localization.instance.Localize("$shrine_warning_mistlands_boss"); }
             }
-
-            Player.m_localPlayer.Message(MessageHud.MessageType.Center, challenge_warning);
+            List<Player> nearby_players = new List<Player> { };
+            Player.GetPlayersInRange(shrine.transform.position, VFConfig.ShrineAnnouncementRange.Value, nearby_players);
+            foreach(Player localplayer in nearby_players)
+            {
+                localplayer.Message(MessageHud.MessageType.Center, challenge_warning);
+            }
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Activated Shrine portal & sent warning message"); }
         }
 
-        public static void PhasePausePhrase()
+        public static void PhasePausePhrase(GameObject shrine)
         {
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Picking and sending phase waiting text from {shrine_phase_warnings.Count} phrases."); }
             string selected_message = shrine_phase_warnings[UnityEngine.Random.Range(0, (shrine_phase_warnings.Count -1))];
-            Player.m_localPlayer.Message(MessageHud.MessageType.Center, selected_message);
+            List<Player> nearby_players = new List<Player> { };
+            Player.GetPlayersInRange(shrine.transform.position, VFConfig.ShrineAnnouncementRange.Value, nearby_players);
+            foreach (Player localplayer in nearby_players)
+            {
+                localplayer.Message(MessageHud.MessageType.Center, selected_message);
+            }
         }
 
 
@@ -308,7 +302,9 @@ namespace ValheimFortress.Challenge
 
         public void CreateStaticUIObjects(bool should_update_ui)
         {
-            if (UICreated) { return; }
+            // This was supposed to allow this is not need to be recreated much/at all
+            // However, there are a few edge cases that cause this to b
+            if (should_update_ui == false) { return; }
             if (GUIManager.Instance == null)
             {
                 Jotunn.Logger.LogError("GUIManager instance is null");
@@ -469,8 +465,6 @@ namespace ValheimFortress.Challenge
             Button startButton = startButtonObj.GetComponent<Button>();
             startButton.onClick.AddListener(StartChallenge);
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Shrine UI Created."); }
-
-            UICreated = should_update_ui;
         }
 
         public void CreateChallengeUI()

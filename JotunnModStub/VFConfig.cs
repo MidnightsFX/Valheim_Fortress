@@ -23,6 +23,7 @@ namespace ValheimFortress
     {
         public static ConfigFile cfg;
         public static ConfigEntry<bool> EnableDebugMode;
+        public static ConfigEntry<bool> EnablePortalCleanupMode;
         public static ConfigEntry<bool> EnableTurretDebugMode;
         public static ConfigEntry<bool> EnableGladiatorMode;
         public static ConfigEntry<short> MaxChallengeLevel;
@@ -32,11 +33,12 @@ namespace ValheimFortress
         public static ConfigEntry<bool> EnableBossModifier;
         public static ConfigEntry<bool> EnableHardModifier;
         public static ConfigEntry<bool> EnableSiegeModifer;
-        public static ConfigEntry <bool> EnableRewardsEstimate;
+        public static ConfigEntry<bool> EnableRewardsEstimate;
         public static ConfigEntry<bool> EnableMapPings;
         public static ConfigEntry<short> MaxRewardsPerSecond;
         public static ConfigEntry<short> NotifyCreatureThreshold;
         public static ConfigEntry<short> TeleportCreatureThreshold;
+        public static ConfigEntry<float> ShrineAnnouncementRange;
 
         private static CustomRPC monsterSyncRPC;
         private static CustomRPC rewardSyncRPC;
@@ -422,6 +424,8 @@ namespace ValheimFortress
             MaxRewardsPerSecond = BindServerConfig("Shrine of Challenge", "MaxRewardsPerSecond", 120, "Sets how fast the shrine will spawn rewards. Reducing this will reduce the performance impact of spawning so many items at once.", true, 10, 400);
             NotifyCreatureThreshold = BindServerConfig("Shrine of Challenge", "NotifyCreatureThreshold", 10, "Sets the level at which interacting with the shrine will add notifier to remaining creatures.", true, 1, 50);
             TeleportCreatureThreshold = BindServerConfig("Shrine of Challenge", "TeleportCreatureThreshold", 3, "Sets the level at which interacting with the shrine teleport remaining creatures to the shrine.", true, 1, 50);
+            ShrineAnnouncementRange = BindServerConfig("Shrine of Challenge", "ShrineAnnouncementRange", 100f, "Sets the range at which announcements will display for shrine of challenge related activities", true, 50f, 500f);
+            EnablePortalCleanupMode = BindServerConfig("Shrine of Challenge", "EnablePortalCleanupMode", true, "Whether or not the enable portal cleanup scripts to run on shrine completion. This should be disabled if you use multiple shrines of challenge at the same time.", true);
             // Client side configurations
 
             // Debugmode

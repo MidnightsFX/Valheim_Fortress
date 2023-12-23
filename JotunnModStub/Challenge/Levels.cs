@@ -319,6 +319,8 @@ namespace ValheimFortress.Challenge
 
         public static void generateRandomWaveWithOptions(Int16 level, bool hard_mode, bool boss_mode, bool siege_mode, GameObject shrine)
         {
+            // This whole function is exclusively ran by the znetview owner.
+
             Int16 point_estimate = level;
             if (hard_mode) {
                 Jotunn.Logger.LogInfo("Hard mode has been enabled, bigger challenge, bigger reward.");
@@ -334,10 +336,8 @@ namespace ValheimFortress.Challenge
                 Jotunn.Logger.LogInfo("Boss Mode has been enabled, the forsaken will find you.");
             }
             Int16 wave_total_points = ComputeChallengePoints(point_estimate);
-            
             Jotunn.Logger.LogInfo($"Wave Challenge points: {wave_total_points}");
             // Builds out a template for wave generation
-            // Enable flag for old style generation?
             // WaveTemplate wavedefinition = getLevelTemplate(level, wave_total_points);
             PhasedWaveTemplate wavedefinition = dynamicBuildWaveTemplate(level, wave_total_points, boss_mode, siege_mode);
 
@@ -352,14 +352,6 @@ namespace ValheimFortress.Challenge
                 List<GameObject> portals = Spawner.DrawMapOverlayAndPortals(remote_spawn_locations);
                 shrine.GetComponent<Shrine>().setPortals(portals);
             }
-            // Spawn the first wave, with a 5s delay, and don't send a pause message- since this is the start
-            // Spawner.SpawnPhaseController(2f, false, wavedefinition.GetCurrentPhase(), shrine, remote_spawn_locations);
-            shrine.GetComponent<Shrine>().StartChallengeMode();
-            // Add the component, and call it
-            //shrine.AddComponent<Spawner>();
-            //Spawner spawn_controller = shrine.GetComponent<Spawner>();
-            //Spawner.TrySpawningPhase(2f, false, wavedefinition.GetCurrentPhase(), shrine, remote_spawn_locations);
-            //Jotunn.Logger.LogInfo("After phase spawn attempt.");
         }
 
         public static WaveGenerationFormat DecideWaveStyle(Int16 level, bool boss_mode)
