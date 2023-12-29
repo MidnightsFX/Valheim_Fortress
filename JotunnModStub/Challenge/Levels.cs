@@ -349,8 +349,7 @@ namespace ValheimFortress.Challenge
             // If gladiator mode is enabled we don't spawn remote portals
             if (VFConfig.EnableGladiatorMode.Value == false)
             {
-                List<GameObject> portals = Spawner.DrawMapOverlayAndPortals(remote_spawn_locations);
-                shrine.GetComponent<Shrine>().setPortals(portals);
+                List<GameObject> portals = Spawner.DrawMapOverlayAndPortals(remote_spawn_locations, shrine);
             }
         }
 

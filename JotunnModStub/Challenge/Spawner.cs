@@ -144,7 +144,7 @@ namespace ValheimFortress.Challenge
             yield break;
         }
 
-        public static List<GameObject> DrawMapOverlayAndPortals(Vector3[] remote_spawns)
+        public static List<GameObject> DrawMapOverlayAndPortals(Vector3[] remote_spawns, GameObject shrine)
         {
             List<GameObject> portals = new List<GameObject> { };
 
@@ -159,6 +159,8 @@ namespace ValheimFortress.Challenge
                 Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
                 var tempportal = UnityEngine.Object.Instantiate(ValheimFortress.getPortal(), spawn_location, rotation);
                 portals.Add(tempportal);
+                tempportal.AddComponent<PortalTracker>();
+                tempportal.GetComponent<PortalTracker>().SetShrine(shrine);
                 if (VFConfig.EnableMapPings.Value) { Chat.instance.SendPing(spawn_location); }
                 // attackOverlay.ForestFilter.SetPixels((int)spawn_location.x, (int)spawn_location.y, circle_radius, circle_radius, colorPixels);
             }
@@ -228,7 +230,7 @@ namespace ValheimFortress.Challenge
                     potential_spawn.y = height;
                 }
                 if((bool)EffectArea.IsPointInsideArea(potential_spawn, EffectArea.Type.PlayerBase)) { continue; } // Don't spawn in players bases
-                if(potential_spawn.y < 28) { continue;  } // This is a Y check which prevents spawns in a body of water
+                if(potential_spawn.y < 27) { continue;  } // This is a Y check which prevents spawns in a body of water
                 if (potential_spawn.y > max_y_difference || potential_spawn.y < min_y_difference) { continue; } // skip spawn setups which have a massive difference in height, this helps prevent portals ontop of pines
 
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Valid spawn location determined: x={potential_spawn.x} y={potential_spawn.y} z={potential_spawn.z}"); }

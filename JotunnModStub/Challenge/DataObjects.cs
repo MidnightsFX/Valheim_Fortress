@@ -8,6 +8,7 @@ using YamlDotNet.Serialization.NamingConventions;
 using YamlDotNet.Serialization;
 using static ValheimFortress.Challenge.Levels;
 using static ValheimFortress.Challenge.Rewards;
+using UnityEngine;
 
 namespace ValheimFortress.Challenge
 {
@@ -345,6 +346,23 @@ namespace ValheimFortress.Challenge
         }
 
         protected override void SetValue(string value)
+        {
+            zNetView.GetZDO().Set(Key, value);
+        }
+    }
+
+    public class Vector3ZNetProperty : ZNetProperty<Vector3>
+    {
+        public Vector3ZNetProperty(string key, ZNetView zNetView, Vector3 defaultValue) : base(key, zNetView, defaultValue)
+        {
+        }
+
+        public override Vector3 Get()
+        {
+            return zNetView.GetZDO().GetVec3(Key, DefaultValue);
+        }
+
+        protected override void SetValue(Vector3 value)
         {
             zNetView.GetZDO().Set(Key, value);
         }

@@ -10,7 +10,7 @@ namespace ValheimFortress.Challenge
     public class UI : MonoBehaviour
     {
         static GameObject ChallengePanel;
-
+        static GameObject CancelPanel;
         // this is unset until the shrine building calls for the UI, in which case it is then set
         static Shrine Shrine;
 
@@ -717,6 +717,228 @@ namespace ValheimFortress.Challenge
                 if (siegeModeToggle != null) { Destroy(siegeModeToggle.gameObject); siegeModeToggle = null; }
             }
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Shrine UI Dynamic Componets updated."); }
+        }
+
+        public void createCancelUI()
+        {
+            // Create parent panel object
+            CancelPanel = GUIManager.Instance.CreateWoodpanel(
+                parent: GUIManager.CustomGUIFront.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(0, 0),
+                width: 400,
+                height: 400,
+                draggable: true);
+            // Create the close button object
+            GameObject cancelButtonObj = GUIManager.Instance.CreateButton(
+                text: Localization.instance.Localize("$shrine_cancel"),
+                parent: CancelPanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(175f, 175f),
+                width: 40f,
+                height: 40f);
+            cancelButtonObj.SetActive(true);
+            // Create the title
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_in_progress_header"),
+                parent: CancelPanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(20f, 165f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 30,
+                color: GUIManager.Instance.ValheimOrange,
+                outline: true,
+                outlineColor: Color.black,
+                width: 400f,
+                height: 40f,
+                addContentSizeFitter: false);
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_cancel_enemies_remaining"),
+                parent: CancelPanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(-15f, 115f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 16,
+                color: GUIManager.Instance.ValheimBeige,
+                outline: true,
+                outlineColor: Color.black,
+                width: 200f,
+                height: 40f,
+            addContentSizeFitter: false);
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize($"{Shrine.EnemiesRemaining()}"),
+                parent: CancelPanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(85f, 115f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 16,
+                color: GUIManager.Instance.ValheimBeige,
+                outline: true,
+                outlineColor: Color.black,
+                width: 40f,
+                height: 40f,
+            addContentSizeFitter: false);
+
+            // Create cancel challenge button
+            GameObject cancelChallengeObj = GUIManager.Instance.CreateButton(
+                text: Localization.instance.Localize("$shrine_cancel_challenge"),
+                parent: CancelPanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(110f, -150f),
+                width: 100f,
+                height: 60f);
+            cancelChallengeObj.SetActive(true);
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_cancel_challenge_desc"),
+                parent: CancelPanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(-55f, -150f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 16,
+                color: GUIManager.Instance.ValheimBeige,
+                outline: true,
+                outlineColor: Color.black,
+                width: 200f,
+                height: 40f,
+            addContentSizeFitter: false);
+
+            // Create cleanup portals button
+            GameObject cleanupPortalsObj = GUIManager.Instance.CreateButton(
+                text: Localization.instance.Localize("$shrine_cleanup_portals"),
+                parent: CancelPanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(110f, -75f),
+                width: 100f,
+                height: 40f);
+            cancelChallengeObj.SetActive(true);
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_cleanup_portals_desc"),
+                parent: CancelPanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(-55f, -75f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 16,
+                color: GUIManager.Instance.ValheimBeige,
+                outline: true,
+                outlineColor: Color.black,
+                width: 200f,
+                height: 40f,
+            addContentSizeFitter: false);
+
+            // Create enable flares button
+            GameObject enableFlaresObj = GUIManager.Instance.CreateButton(
+                text: Localization.instance.Localize("$shrine_enable_flares"),
+                parent: CancelPanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(110f, 0f),
+                width: 100f,
+                height: 40f);
+            cancelChallengeObj.SetActive(true);
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_enable_flares_desc"),
+                parent: CancelPanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(-55f, 0f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 16,
+                color: GUIManager.Instance.ValheimBeige,
+                outline: true,
+                outlineColor: Color.black,
+                width: 200f,
+                height: 40f,
+            addContentSizeFitter: false);
+
+            // Create teleport creatures button
+            GameObject teleportCreaturesObj = GUIManager.Instance.CreateButton(
+                text: Localization.instance.Localize("$shrine_teleport_creatures"),
+                parent: CancelPanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(110f, 75f),
+                width: 100f,
+                height: 40f);
+            cancelChallengeObj.SetActive(true);
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_teleport_creatures_desc"),
+                parent: CancelPanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(-55f, 75f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 16,
+                color: GUIManager.Instance.ValheimBeige,
+                outline: true,
+                outlineColor: Color.black,
+                width: 200f,
+                height: 40f,
+            addContentSizeFitter: false);
+
+            Button cancelButton = cancelButtonObj.GetComponent<Button>();
+            cancelButton.onClick.AddListener(HideCancelUI);
+            Button cancelChallengeButton = cancelChallengeObj.GetComponent<Button>();
+            cancelChallengeButton.onClick.AddListener(CancelChallengeButtonClick);
+            Button cleanupPortalsButton = cleanupPortalsObj.GetComponent<Button>();
+            cleanupPortalsButton.onClick.AddListener(CleanupPortalsButtonClick);
+            Button enableFlaresButton = enableFlaresObj.GetComponent<Button>();
+            enableFlaresButton.onClick.AddListener(AddCreatureFlares);
+            Button teleportCreaturesButton = teleportCreaturesObj.GetComponent<Button>();
+            teleportCreaturesButton.onClick.AddListener(TeleportCreatures);
+            
+        }
+
+        private void CleanupPortalsButtonClick()
+        {
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Cleaning up portals."); }
+            HideCancelUI();
+            Shrine.CleanupOldPortals(9);
+        }
+
+        private void CancelChallengeButtonClick()
+        {
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Cancelling the active challenge."); }
+            HideCancelUI();
+            Shrine.CancelShrineRun();
+        }
+
+        public void HideCancelUI()
+        {
+            CancelPanel.SetActive(false);
+            GUIManager.BlockInput(false);
+            Shrine.SetShrineUIStatus(false);
+        }
+
+        public void DisplayCancelUI()
+        {
+            createCancelUI();
+            CancelPanel.SetActive(true);
+            GUIManager.BlockInput(true);
+            Shrine.SetShrineUIStatus(true);
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Enabled Cancel UI from Shrine object."); }
+        }
+
+        public void AddCreatureFlares()
+        {
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Adding creature flares."); }
+            HideCancelUI();
+            Shrine.NotifyRemainingCreatures();
+        }
+
+        public void TeleportCreatures()
+        {
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Teleporting creatures to the shrine."); }
+            HideCancelUI();
+            Shrine.TeleportRemainingCreatures();
         }
     }
 }

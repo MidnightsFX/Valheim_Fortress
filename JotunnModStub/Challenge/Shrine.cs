@@ -14,7 +14,7 @@ namespace ValheimFortress.Challenge
     public class Shrine : MonoBehaviour, Hoverable, Interactable
     {
         private ZNetView zNetView;
-        public Int32 spawned_creatures = 0;
+        public IntZNetProperty spawned_creatures { get; private set; }
         public BoolZNetProperty hard_mode { get; private set; }
         public BoolZNetProperty boss_mode { get; private set; }
         public BoolZNetProperty siege_mode { get; private set; }
@@ -24,9 +24,11 @@ namespace ValheimFortress.Challenge
 
         public IntZNetProperty selected_level { get; private set; }
         public StringZNetProperty selected_reward { get; private set; }
-        
+        public BoolZNetProperty end_of_challenge { get; private set; }
+        public BoolZNetProperty should_add_creature_beacons { get; private set; }
+        public BoolZNetProperty should_destroy_creatures { get; private set; }
+        private static bool client_set_creature_beacons = false;
         public static bool shrine_ui_active = false;
-        public List<GameObject> portals = new List<GameObject>();
 
         private static List<GameObject> enemies = new List<GameObject>();
         private static GameObject shrine_spawnpoint;
@@ -35,7 +37,6 @@ namespace ValheimFortress.Challenge
         private static bool phase_running = false;
         private static Spawner spawn_controller;
         private static UI ui_controller;
-        private static bool creature_beacons = false;
 
         public void SetHardMode()
         {
@@ -72,22 +73,7 @@ namespace ValheimFortress.Challenge
 
         public void IncrementSpawned()
         {
-            spawned_creatures += 1;
-        }
-
-        public void setPortals(List<GameObject> portal_list)
-        {
-            portals.Clear();
-            portals = portal_list;
-        }
-
-        public void destroyPortals()
-        {
-            foreach(GameObject portal in portals)
-            {
-                Destroy(portal, UnityEngine.Random.Range(1, 5));
-            }
-            portals.Clear();
+            spawned_creatures.Set(spawned_creatures.Get() + 1);
         }
 
         public void EnablePortal()
@@ -112,6 +98,11 @@ namespace ValheimFortress.Challenge
         {
             phase_running = false;
         }
+
+        public int EnemiesRemaining()
+        {
+            return spawned_creatures.Get();
+        }
         
         public void SetWaveDefinition(PhasedWaveTemplate defined_waves)
         {
@@ -132,7 +123,6 @@ namespace ValheimFortress.Challenge
         {
             if (challenge_active.Get() == false)
             {
-                if (VFConfig.EnablePortalCleanupMode.Value) { CleanupOldPortals(); }
                 Jotunn.Logger.LogInfo($"Challenge started. Level: {selected_level.Get()} Reward: {selected_reward.Get()}");
                 Levels.generateRandomWaveWithOptions((short)selected_level.Get(), hard_mode.Get(), boss_mode.Get(), siege_mode.Get(), gameObject);
                 challenge_active.Set(true);
@@ -147,21 +137,29 @@ namespace ValheimFortress.Challenge
             
         }
 
-        private void CleanupOldPortals()
+        public void CleanupOldPortals(short max_cleanup_iterations = 6)
         {
             Jotunn.Logger.LogInfo("Starting cleanup of old portals.");
             // Cleanups up old portals
             int portals_cleaned = 1;
-            int limit = 10;
-            for (var i = 0; i <= portals_cleaned && i < limit; i++)
+            int limit = (max_cleanup_iterations + 1);
+            try
             {
-                GameObject old_portal = GameObject.Find("VF_portal(Clone)");
-                Jotunn.Logger.LogInfo($"Found gameobject: {old_portal.name}.");
-                if (old_portal != null)
+                for (var i = 0; i <= portals_cleaned; i++)
                 {
-                    Destroy(old_portal);
-                    portals_cleaned++;
+                    if (i > limit) { break; }
+                    GameObject old_portal = GameObject.Find("VF_portal(Clone)");
+                    if (old_portal != null)
+                    {
+                        Jotunn.Logger.LogInfo($"Found gameobject: {old_portal.name}.");
+                        Destroy(old_portal.gameObject);
+                        // we keep doing iterations if we actually find something to clean
+                        portals_cleaned++;
+                    }
                 }
+            } catch
+            {
+                Jotunn.Logger.LogInfo("Cleanup of portals failed.");
             }
         }
 
@@ -174,9 +172,9 @@ namespace ValheimFortress.Challenge
             }
             // We don't want to try to decrease this past what is expected.
             // The spawned creatures data could be lost at some point so lets avoid going negative.
-            if (spawned_creatures > 0)
+            if (spawned_creatures.Get() > 0)
             {
-                spawned_creatures -= 1;
+                spawned_creatures.Set(spawned_creatures.Get() - 1);
             }
             
         }
@@ -187,15 +185,16 @@ namespace ValheimFortress.Challenge
             {
                 Jotunn.Logger.LogInfo("Shrine UI detected close commands.");
                 ui_controller.HideUI();
+                ui_controller.HideCancelUI();
             }
 
             // So clients and servers see the internal structure portal update
             if (challenge_active.Get() == true)
             {
                 EnablePortal();
-            } else
-            {
+            } else if (end_of_challenge.Get()) {
                 Disableportal();
+                end_of_challenge.Set(false);
             }
 
             // Everything past here should only be run once, by whatever main thread is controlling the ticks in this region.
@@ -203,9 +202,27 @@ namespace ValheimFortress.Challenge
             {
                 return;
             }
+
+            // Znet owner is being asked to destroy the spawned creatures
+            if (should_destroy_creatures.Get())
+            {
+                DestroySpawnedCreatures();
+                should_destroy_creatures.Set(false);
+            }
+
+            // Kick off the challenge- even if it was trigger by a non-znet owner
             if (start_challenge.Get() == true)
             {
                 StartChallengeMode();
+                // we skip to the next update iteration
+                return;
+            }
+
+            // This is the znet owner, and there are enemies remaining, even though the shrine is not active
+            if (challenge_active.Get() == false && enemies.Count > 0)
+            {
+                // Destroy any spawned enemies also
+                DestroySpawnedCreatures();
                 // we skip to the next update iteration
                 return;
             }
@@ -215,11 +232,11 @@ namespace ValheimFortress.Challenge
                 if (wave_phases_definitions.CountPhases() > 0)
                 {
                     // We need to A. have spawned creatures & there needs to be none of those spawned creatures remaining
-                    if (enemies.Count > 0 && spawned_creatures <= 0 && phase_running == false) {
+                    if (enemies.Count > 0 && spawned_creatures.Get() <= 0 && phase_running == false) {
                         if (wave_phases_definitions.RemainingPhases())
                         {
                             // Start the next phase
-                            creature_beacons = false;
+                            should_add_creature_beacons.Set(false);
                             spawn_controller.TrySpawningPhase(10f, true, wave_phases_definitions.GetCurrentPhase(), gameObject, remote_spawn_locations);
                             phase_running = true;
                         } else
@@ -237,18 +254,12 @@ namespace ValheimFortress.Challenge
                             boss_mode.Set(false);
                             hard_mode.Set(false);
                             siege_mode.Set(false);
+                            end_of_challenge.Set(true);
                             Disableportal();
                             wave_phases_definitions = new PhasedWaveTemplate(); // Got to clear the template
-                            if (portals.Count > 0)
-                            {
-                                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Destroying wave portals"); }
-                                destroyPortals();
-                            }
                         }
                     }
                 }
-                // If enemies.count == 0 && spawned_creatures == 0 && challenge is active
-                // we are likely in an invalid state, because we could potentially be disrupting something we might not want to automatically fix this
             }
         }
 
@@ -263,6 +274,7 @@ namespace ValheimFortress.Challenge
 
             if (zNetView.IsValid())
             {
+                spawned_creatures = new IntZNetProperty("spawned_creatures", zNetView, 0);
                 hard_mode = new BoolZNetProperty("shrine_hard_mode", zNetView, false);
                 boss_mode = new BoolZNetProperty("shrine_boss_mode", zNetView, false);
                 siege_mode = new BoolZNetProperty("shrine_siege_mode", zNetView, false);
@@ -270,6 +282,9 @@ namespace ValheimFortress.Challenge
                 start_challenge = new BoolZNetProperty("shrine_start_challenge", zNetView, false);
                 selected_level = new IntZNetProperty("shrine_selected_level", zNetView, 0);
                 selected_reward = new StringZNetProperty("shrine_selected_reward", zNetView, "coins");
+                end_of_challenge = new BoolZNetProperty("end_of_challenge", zNetView, false);
+                should_add_creature_beacons = new BoolZNetProperty("should_add_creature_beacons", zNetView, false);
+                should_destroy_creatures = new BoolZNetProperty("should_destroy_creatures", zNetView, false);
             }
         }
 
@@ -282,8 +297,7 @@ namespace ValheimFortress.Challenge
 
         public string GetHoverName()
         {
-            // TODO: Localization
-            return "Shrine of Challenge";
+            return Localization.instance.Localize("$piece_shrine_of_challenge");
         }
 
         public bool Interact(Humanoid user, bool hold, bool alt)
@@ -299,29 +313,9 @@ namespace ValheimFortress.Challenge
             {
                 if (challenge_active.Get())
                 {
-                    // You are interacting with the shrine because it should not be active currently-most likely
-                    if (spawned_creatures == 0)
-                    {
-                        challenge_active.ForceSet(false);
-                        boss_mode.ForceSet(false);
-                        hard_mode.ForceSet(false);
-                        siege_mode.ForceSet(false);
-                        Disableportal();
-                        CleanupOldPortals();
-                    }
-                    else if (spawned_creatures <= VFConfig.NotifyCreatureThreshold.Value && creature_beacons == false)
-                    {
-                        NotifyRemainingCreatures();
-                        Player.m_localPlayer.Message(MessageHud.MessageType.Center, $"A few Creatures remaining ({spawned_creatures}) sending flares.");
-                        creature_beacons = true;
-                    } else if (spawned_creatures <= VFConfig.TeleportCreatureThreshold.Value)
-                    {
-                        Player.m_localPlayer.Message(MessageHud.MessageType.Center, $"Teleporting final creatures to the shrine.");
-                        TeleportRemainingCreatures();
-                    } else
-                    {
-                        Player.m_localPlayer.Message(MessageHud.MessageType.Center, $"Creatures remaining {spawned_creatures}");
-                    }
+                    // Cancel / remaining UI here.
+                    Player.m_localPlayer.Message(MessageHud.MessageType.Center, $"Creatures remaining {spawned_creatures.Get()}");
+                    ui_controller.DisplayCancelUI();
                 } else
                 {
                     ui_controller.DisplayUI();
@@ -336,8 +330,36 @@ namespace ValheimFortress.Challenge
             return false;
         }
 
+        public void CancelShrineRun()
+        {
+            challenge_active.ForceSet(false);
+            boss_mode.ForceSet(false);
+            hard_mode.ForceSet(false);
+            siege_mode.ForceSet(false);
+            Disableportal();
+            should_destroy_creatures.ForceSet(true);
+        }
+
+        private void DestroySpawnedCreatures()
+        {
+            if (!zNetView.IsOwner())
+            {
+                return;
+            }
+            // Destroy any spawned enemies also
+            if (enemies.Count > 0)
+            {
+                foreach (var enemy in enemies)
+                {
+                    Destroy(enemy);
+                }
+            }
+        }
+
         public void NotifyRemainingCreatures()
         {
+            // if (should_add_creature_beacons.Get() == false) { return; }
+            if (client_set_creature_beacons == true) { return; }
             int alive_creatures = 0;
             foreach (GameObject enemy in enemies)
             {
@@ -348,11 +370,22 @@ namespace ValheimFortress.Challenge
                 vfx.transform.parent = enemy.transform; // Parent to the creature?
             }
             // If somehow the tracked creatures got de-synced, this has literally never happend but- why not
-            if (alive_creatures != spawned_creatures) { spawned_creatures = alive_creatures; }
+            if (alive_creatures != spawned_creatures.Get()) { spawned_creatures.Set(alive_creatures); }
+            client_set_creature_beacons = true;
         }
 
         public void TeleportRemainingCreatures()
         {
+            if (spawned_creatures.Get() > 6)
+            {
+                List<Player> nearby_players = new List<Player> { };
+                Player.GetPlayersInRange(this.transform.position, VFConfig.ShrineAnnouncementRange.Value, nearby_players);
+                foreach (Player localplayer in nearby_players)
+                {
+                    localplayer.Message(MessageHud.MessageType.Center,  $"{Localization.instance.Localize("$shrine_too_many_creautres_to_teleport")} {spawned_creatures.Get()}.");
+                }
+                return;
+            }
             int alive_creatures = 0;
             foreach (GameObject enemy in enemies)
             {
@@ -361,7 +394,7 @@ namespace ValheimFortress.Challenge
                 alive_creatures += 1;
             }
             // If somehow the tracked creatures got de-synced, this has literally never happend but- why not
-            if (alive_creatures != spawned_creatures) { spawned_creatures = alive_creatures; }
+            if (alive_creatures != spawned_creatures.Get()) { spawned_creatures.Set(alive_creatures); }
         }
     }
 }

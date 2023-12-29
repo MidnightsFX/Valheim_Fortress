@@ -215,6 +215,7 @@ If you like this mod maybe you'll like my other work
 - A big thank you to Margmas, Venture, Redseiko and Probablykory for providing some examples and answers to my silly questions
 - The valheim team for continuing to develop valheim, even after their initial roadmap!
 	- The continued blogposts about upcoming Valheim content, which got my gears grinding to make this mod
+- Unity Ultimate VFX for some or partial visual effects
 
 ## Known issues
 - Building pieces sometimes don't have destructable bits
@@ -226,6 +227,27 @@ If you like this mod maybe you'll like my other work
 - Multiplayer having the region host change during a challenge can break the challenge (looking into solutions)
 
 ## Changelog
+**0.9.12**
+```
+- Added a new UI for the shrine providing in-challenge actions
+	- Cancel challenge option (kills spawned enemies)
+	- Enable flares on existing enemies (to help find them)
+	- Teleport last enemies to the shrine (must be less than 6 enemies)
+	- Cleanup portals
+- Sync improvements to number of creatures remaining, fixing non-znet hosts from accidentally stopping challenges
+- Increased the default shrine announcement range
+- Added Zsync'd state for post-challenge cleanup to prevent cleanup scripts from running regularly
+- Removed the auto-cancel challenge if shrine is interacted with and there are zero enemies
+- Removed the configuration option to cleanup portals on a regular iterval
+- Added more safety checks to the portal removal process
+- Changed the default portal removal process and added some vfx
+```
+
+**0.9.11**
+```
+- Improvements to portal cleanup, now with more clients getting portals cleaned up!
+```
+
 **0.9.10**
 ```
 - Fix for potentially unresponsive UI that primarily occurs after the shrine is built

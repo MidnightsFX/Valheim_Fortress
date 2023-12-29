@@ -57,6 +57,7 @@
     <Compile Include="Challenge\DataObjects.cs" />
     <Compile Include="Challenge\Levels.cs" />
     <Compile Include="Challenge\CreatureTracker.cs" />
+    <Compile Include="Challenge\PortalTracker.cs" />
     <Compile Include="Challenge\Rewards.cs" />
     <Compile Include="Challenge\Shrine.cs" />
     <Compile Include="Challenge\Spawner.cs" />

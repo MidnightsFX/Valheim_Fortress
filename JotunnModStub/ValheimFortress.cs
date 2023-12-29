@@ -21,12 +21,13 @@ namespace ValheimFortress
     {
         public const string PluginGUID = "MidnightsFX.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.9.10";
+        public const string PluginVersion = "0.9.12";
 
         AssetBundle EmbeddedResourceBundle;
         public VFConfig cfg;
         public static GameObject spawnPortal;
         public static GameObject creatureNotifier;
+        public static GameObject portalDestroyVFX;
 
         private void Awake()
         {
@@ -89,6 +90,8 @@ namespace ValheimFortress
 
         internal static GameObject getNotifier() { return creatureNotifier; }
 
+        internal static GameObject getPortalDestroyVFX() { return portalDestroyVFX; }
+
         private static void SetupVFXObjects(AssetBundle EmbeddedResourceBundle)
         {
             // Load and register
@@ -96,6 +99,10 @@ namespace ValheimFortress
             CustomPrefab portalPrefab = new CustomPrefab(portal, false);
             PrefabManager.Instance.AddPrefab(portalPrefab);
             spawnPortal = portalPrefab.Prefab;
+            GameObject portal_destroy_vfx = EmbeddedResourceBundle.LoadAsset<GameObject>($"Assets/Custom/Pieces/VFortress/VF_portal_destroy.prefab");
+            CustomPrefab portal_destroy_vfx_prefab = new CustomPrefab(portal_destroy_vfx, false);
+            PrefabManager.Instance.AddPrefab(portal_destroy_vfx_prefab);
+            portalDestroyVFX = portal_destroy_vfx_prefab.Prefab;
             GameObject notify_ga =  EmbeddedResourceBundle.LoadAsset<GameObject>($"Assets/Custom/Pieces/VFortress/VF_creature_notify.prefab");
             CustomPrefab notify_custom_prefab = new CustomPrefab(notify_ga, false);
             PrefabManager.Instance.AddPrefab(notify_custom_prefab);
