@@ -26,7 +26,6 @@ namespace ValheimFortress.Challenge
         public StringZNetProperty selected_reward { get; private set; }
         public BoolZNetProperty end_of_challenge { get; private set; }
         public BoolZNetProperty should_add_creature_beacons { get; private set; }
-        public BoolZNetProperty should_destroy_creatures { get; private set; }
         private static bool client_set_creature_beacons = false;
         public static bool shrine_ui_active = false;
 
@@ -37,6 +36,30 @@ namespace ValheimFortress.Challenge
         private static bool phase_running = false;
         private static Spawner spawn_controller;
         private static UI ui_controller;
+
+        private void Awake()
+        {
+            zNetView = GetComponent<ZNetView>();
+            this.gameObject.AddComponent<Spawner>();
+            spawn_controller = this.gameObject.GetComponent<Spawner>();
+            ui_controller = this.gameObject.GetComponent<UI>();
+            shrine_spawnpoint = this.transform.Find("spawnpoint").gameObject;
+
+            if (zNetView.IsValid())
+            {
+                spawned_creatures = new IntZNetProperty("spawned_creatures", zNetView, 0);
+                hard_mode = new BoolZNetProperty("shrine_hard_mode", zNetView, false);
+                boss_mode = new BoolZNetProperty("shrine_boss_mode", zNetView, false);
+                siege_mode = new BoolZNetProperty("shrine_siege_mode", zNetView, false);
+                challenge_active = new BoolZNetProperty("shrine_challenge_active", zNetView, false);
+                start_challenge = new BoolZNetProperty("shrine_start_challenge", zNetView, false);
+                selected_level = new IntZNetProperty("shrine_selected_level", zNetView, 0);
+                selected_reward = new StringZNetProperty("shrine_selected_reward", zNetView, "coins");
+                end_of_challenge = new BoolZNetProperty("end_of_challenge", zNetView, false);
+                should_add_creature_beacons = new BoolZNetProperty("should_add_creature_beacons", zNetView, false);
+                Jotunn.Logger.LogInfo("Created Shrine Znet View Values.");
+            }
+        }
 
         public void SetHardMode()
         {
@@ -101,7 +124,15 @@ namespace ValheimFortress.Challenge
 
         public int EnemiesRemaining()
         {
-            return spawned_creatures.Get();
+            try
+            {
+                return spawned_creatures.Get();
+            } catch
+            {
+                Jotunn.Logger.LogInfo("Znet Value not retrieved for enemies remaining.");
+                return 0;
+            }
+            
         }
         
         public void SetWaveDefinition(PhasedWaveTemplate defined_waves)
@@ -181,12 +212,16 @@ namespace ValheimFortress.Challenge
 
         public void Update()
         {
+            // We do nothing when this is not a znet object (this happens during object placement)
+            if (zNetView.IsValid() != true) { return; }
+
             if (shrine_ui_active && (Input.GetKeyDown(KeyCode.Escape)))
             {
                 Jotunn.Logger.LogInfo("Shrine UI detected close commands.");
                 ui_controller.HideUI();
                 ui_controller.HideCancelUI();
             }
+            // Jotunn.Logger.LogInfo("Shrine UI not closing.");
 
             // So clients and servers see the internal structure portal update
             if (challenge_active.Get() == true)
@@ -194,8 +229,10 @@ namespace ValheimFortress.Challenge
                 EnablePortal();
             } else if (end_of_challenge.Get()) {
                 Disableportal();
-                end_of_challenge.Set(false);
+                end_of_challenge.ForceSet(false);
             }
+
+            // Jotunn.Logger.LogInfo("Shrine portal status not updating.");
 
             // Everything past here should only be run once, by whatever main thread is controlling the ticks in this region.
             if (!zNetView.IsOwner())
@@ -203,12 +240,7 @@ namespace ValheimFortress.Challenge
                 return;
             }
 
-            // Znet owner is being asked to destroy the spawned creatures
-            if (should_destroy_creatures.Get())
-            {
-                DestroySpawnedCreatures();
-                should_destroy_creatures.Set(false);
-            }
+            // Jotunn.Logger.LogInfo("Entering ZnetOwner States.");
 
             // Kick off the challenge- even if it was trigger by a non-znet owner
             if (start_challenge.Get() == true)
@@ -218,14 +250,7 @@ namespace ValheimFortress.Challenge
                 return;
             }
 
-            // This is the znet owner, and there are enemies remaining, even though the shrine is not active
-            if (challenge_active.Get() == false && enemies.Count > 0)
-            {
-                // Destroy any spawned enemies also
-                DestroySpawnedCreatures();
-                // we skip to the next update iteration
-                return;
-            }
+            // Jotunn.Logger.LogInfo("Did not need to start a challenge.");
 
             if (challenge_active.Get() == true)
             {
@@ -263,31 +288,6 @@ namespace ValheimFortress.Challenge
             }
         }
 
-        private void Awake()
-        {
-            zNetView = GetComponent<ZNetView>();
-            this.gameObject.AddComponent<Spawner>();
-            spawn_controller = this.gameObject.GetComponent<Spawner>();
-            this.gameObject.AddComponent<UI>();
-            ui_controller = this.gameObject.GetComponent<UI>();
-            shrine_spawnpoint = this.transform.Find("spawnpoint").gameObject;
-
-            if (zNetView.IsValid())
-            {
-                spawned_creatures = new IntZNetProperty("spawned_creatures", zNetView, 0);
-                hard_mode = new BoolZNetProperty("shrine_hard_mode", zNetView, false);
-                boss_mode = new BoolZNetProperty("shrine_boss_mode", zNetView, false);
-                siege_mode = new BoolZNetProperty("shrine_siege_mode", zNetView, false);
-                challenge_active = new BoolZNetProperty("shrine_challenge_active", zNetView, false);
-                start_challenge = new BoolZNetProperty("shrine_start_challenge", zNetView, false);
-                selected_level = new IntZNetProperty("shrine_selected_level", zNetView, 0);
-                selected_reward = new StringZNetProperty("shrine_selected_reward", zNetView, "coins");
-                end_of_challenge = new BoolZNetProperty("end_of_challenge", zNetView, false);
-                should_add_creature_beacons = new BoolZNetProperty("should_add_creature_beacons", zNetView, false);
-                should_destroy_creatures = new BoolZNetProperty("should_destroy_creatures", zNetView, false);
-            }
-        }
-
         public string GetHoverText()
         {
             string text = "[<color=yellow><b>$KEY_Use</b></color>] $piece_shrine_of_challenge";
@@ -309,18 +309,16 @@ namespace ValheimFortress.Challenge
 
             //TODO: Add in support for ward checks
 
-            if (!shrine_ui_active)
+            if (shrine_ui_active == false)
             {
                 if (challenge_active.Get())
                 {
                     // Cancel / remaining UI here.
                     Player.m_localPlayer.Message(MessageHud.MessageType.Center, $"Creatures remaining {spawned_creatures.Get()}");
                     ui_controller.DisplayCancelUI();
-                } else
-                {
+                } else {
                     ui_controller.DisplayUI();
                 }
-                
             }
 
             return true;
@@ -337,23 +335,6 @@ namespace ValheimFortress.Challenge
             hard_mode.ForceSet(false);
             siege_mode.ForceSet(false);
             Disableportal();
-            should_destroy_creatures.ForceSet(true);
-        }
-
-        private void DestroySpawnedCreatures()
-        {
-            if (!zNetView.IsOwner())
-            {
-                return;
-            }
-            // Destroy any spawned enemies also
-            if (enemies.Count > 0)
-            {
-                foreach (var enemy in enemies)
-                {
-                    Destroy(enemy);
-                }
-            }
         }
 
         public void NotifyRemainingCreatures()
