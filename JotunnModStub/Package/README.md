@@ -216,6 +216,7 @@ If you like this mod maybe you'll like my other work
 - The valheim team for continuing to develop valheim, even after their initial roadmap!
 	- The continued blogposts about upcoming Valheim content, which got my gears grinding to make this mod
 - Unity Ultimate VFX for some or partial visual effects
+- Traslations credits to: Azathoth
 
 ## Known issues
 - Building pieces sometimes don't have destructable bits
@@ -227,6 +228,19 @@ If you like this mod maybe you'll like my other work
 - Multiplayer having the region host change during a challenge can break the challenge (looking into solutions)
 
 ## Changelog
+**0.9.14**
+```
+- Fixes an error related to the cancel UI not being available
+- Changes how creatures are destroyed to prevent client desynchronization on challenge forfeit
+- Adds spanish translation!
+```
+
+**0.9.13**
+```
+- Fixes for portals reappearing after world/region reload
+- Optimized vfx textures a little
+```
+
 **0.9.12**
 ```
 - Added a new UI for the shrine providing in-challenge actions

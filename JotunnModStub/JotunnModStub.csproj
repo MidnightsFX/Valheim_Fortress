@@ -62,6 +62,7 @@
     <Compile Include="Challenge\Shrine.cs" />
     <Compile Include="Challenge\Spawner.cs" />
     <Compile Include="Challenge\UI.cs" />
+    <Compile Include="Challenge\UserInterfaceData.cs" />
     <Compile Include="Defenses\VFTurret.cs" />
     <Compile Include="ValheimPiece.cs" />
     <Compile Include="Properties\IgnoreAccessModifiers.cs" />
@@ -73,6 +74,7 @@
     <None Include="app.config" />
     <EmbeddedResource Include="AssetsEmbedded\vfbundle" />
     <EmbeddedResource Include="Localizations\English.json" />
+    <EmbeddedResource Include="Localizations\Spanish.json" />
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>

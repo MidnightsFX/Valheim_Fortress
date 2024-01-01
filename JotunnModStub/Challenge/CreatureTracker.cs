@@ -21,5 +21,13 @@ namespace ValheimFortress.Challenge
             shrineReference.GetComponent<Shrine>().DecrementSpawned();
             //Jotunn.Logger.LogInfo("Creature Destroyed");
         }
+
+        public void Update()
+        {
+            if (shrineReference.GetComponent<Shrine>().challenge_active.Get() == false)
+            {
+                Destroy(gameObject);
+            }
+        }
     }
 }
