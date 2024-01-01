@@ -230,6 +230,7 @@ If you like this mod maybe you'll like my other work
 ## Changelog
 **0.9.14**
 ```
+- Fixes an issue where the shrine UI would not function normally after being placed in the current play session, but would work fine after a reload
 - Fixes an error related to the cancel UI not being available
 - Changes how creatures are destroyed to prevent client desynchronization on challenge forfeit
 - Adds spanish translation!
