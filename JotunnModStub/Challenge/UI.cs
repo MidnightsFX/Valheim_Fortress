@@ -14,8 +14,8 @@ namespace ValheimFortress.Challenge
         // this is unset until the shrine building calls for the UI, in which case it is then set
         private Shrine Shrine;
 
-        private List<String> currentLevels = UserInterfaceData.currentLevels;
-        private List<String> availableRewards = UserInterfaceData.availableRewards;
+        private List<String> currentLevels = new List<string> { };
+        private List<String> availableRewards = new List<string> { };
         public GameObject levelSelector;
         public GameObject rewardSelector;
         public GameObject hardModeToggle;
@@ -47,6 +47,8 @@ namespace ValheimFortress.Challenge
         public void Awake()
         {
             Shrine = this.GetComponent<Shrine>();
+            CreateStaticUIObjects();
+            Jotunn.Logger.LogInfo("UI Awake Finished");
         }
 
         public bool IsPanelVisible()
@@ -125,7 +127,6 @@ namespace ValheimFortress.Challenge
 
         public void DisplayUI()
         {
-            CreateStaticUIObjects();
             CreateChallengeUI();
             ChallengePanel.SetActive(true);
             GUIManager.BlockInput(true);
@@ -144,7 +145,7 @@ namespace ValheimFortress.Challenge
         {
             // This was supposed to allow this is not need to be recreated much/at all
             // However, there are a few edge cases that cause this to be null
-            // if (ChallengePanel != null) { return; }
+            if (ChallengePanel != null) { return; }
 
             if (GUIManager.Instance == null)
             {
@@ -306,13 +307,13 @@ namespace ValheimFortress.Challenge
             Button startChallengeButton = startChallengeButtonGO.GetComponent<Button>();
             startChallengeButton.onClick.AddListener(StartChallenge);
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Adding UI Listeners"); }
-
         }
 
         public void CreateChallengeUI()
         {
             // Always want to update the rewards and challenge levels
-            UserInterfaceData.UpdateLevelsAndRewards();
+            availableRewards = UserInterfaceData.UpdateRewards();
+            currentLevels = UserInterfaceData.UpdateLevels();
             // We specifically want to be able to completely rebuild the UI when this is called again to update the levels and rewards dynamically
 
             // Create the rewards selector dropdown

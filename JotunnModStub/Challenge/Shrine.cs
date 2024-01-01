@@ -40,10 +40,6 @@ namespace ValheimFortress.Challenge
         private void Awake()
         {
             zNetView = GetComponent<ZNetView>();
-            this.gameObject.AddComponent<Spawner>();
-            spawn_controller = this.gameObject.GetComponent<Spawner>();
-            ui_controller = this.gameObject.GetComponent<UI>();
-            shrine_spawnpoint = this.transform.Find("spawnpoint").gameObject;
 
             if (zNetView.IsValid())
             {
@@ -59,6 +55,7 @@ namespace ValheimFortress.Challenge
                 should_add_creature_beacons = new BoolZNetProperty("should_add_creature_beacons", zNetView, false);
                 Jotunn.Logger.LogInfo("Created Shrine Znet View Values.");
             }
+            Jotunn.Logger.LogInfo("Shrine Awake Finished");
         }
 
         public void SetHardMode()
@@ -214,6 +211,14 @@ namespace ValheimFortress.Challenge
         {
             // We do nothing when this is not a znet object (this happens during object placement)
             if (zNetView.IsValid() != true) { return; }
+
+            // reconnect componets if they go missing
+            if (ui_controller == null || spawn_controller == null || shrine_spawnpoint == null)
+            {
+                spawn_controller = this.gameObject.GetComponent<Spawner>();
+                shrine_spawnpoint = this.transform.Find("spawnpoint").gameObject;
+                ui_controller = this.gameObject.GetComponent<UI>();
+            }
 
             if (shrine_ui_active && (Input.GetKeyDown(KeyCode.Escape)))
             {

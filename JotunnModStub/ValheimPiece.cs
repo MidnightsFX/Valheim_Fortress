@@ -279,7 +279,7 @@ namespace ValheimFortress
 
                     // These are custom unity componet scripts which have never seen the light of unity. So they arn't baked into the assets
                     // and must be added later. This allows these scripts to do things like be modified by config values, or reference Jotunn
-                    if(shrinescript) { prefab.AddComponent<Shrine>(); prefab.AddComponent<UI>(); }
+                    if(shrinescript) { prefab.AddComponent<Shrine>(); prefab.AddComponent<UI>(); prefab.AddComponent<Spawner>(); }
                     if(turretscript) { prefab.AddComponent<VFTurret>(); }
 
                     // Add the recipe with helper

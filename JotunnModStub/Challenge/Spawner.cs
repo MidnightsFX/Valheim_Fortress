@@ -26,6 +26,7 @@ namespace ValheimFortress.Challenge
         public void TrySpawningPhase(float wave_regroup_duration, bool send_message, List<HoardConfig> phase_hoard_configs, GameObject shrine, Vector3[] remote_spawn_locations)
         {
             Jotunn.Logger.LogInfo($"Attempting phase spawn with {phase_hoard_configs.Count} hordes.");
+            // Jotunn.Logger.LogInfo($"Starting Coroutine with: wave_regroup-{wave_regroup_duration}, send_message-{send_message}, phase_hoard_configs-{phase_hoard_configs}, shrine-{shrine}, remote_spawn_locations-{remote_spawn_locations}");
             StartCoroutine(SpawnPhaseController(wave_regroup_duration, send_message, phase_hoard_configs, shrine, remote_spawn_locations));
         }
 
@@ -34,7 +35,7 @@ namespace ValheimFortress.Challenge
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Starting phase, message while we wait? {send_message}"); }
             if (send_message == true)
             {
-                UI.PhasePausePhrase(shrine);
+                UserInterfaceData.PhasePausePhrase(shrine);
             }
             yield return new WaitForSeconds(wave_regroup_duration);
 

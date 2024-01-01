@@ -9,8 +9,6 @@ namespace ValheimFortress.Challenge
 {
     internal static class UserInterfaceData
     {
-        public static List<String> currentLevels = new List<String> { };
-        public static List<String> availableRewards = new List<String> { };
         // Right now maxlevel needs to correlate to: defined levels & level warning messages
         private static List<String> shrine_phase_warnings = new List<String>
         {
@@ -89,11 +87,10 @@ namespace ValheimFortress.Challenge
             }
         }
 
-        public static void UpdateLevelsAndRewards()
-        {
-            Int16 max_level = 5;
+
+        public static List<String> UpdateRewards() {
             Dictionary<String, RewardEntry> possible_rewards = Rewards.GetResouceRewards();
-            availableRewards = new List<String> { };
+            List<String> availableRewards = new List<String> { };
             var zs = ZoneSystem.instance;
             foreach (KeyValuePair<string, RewardEntry> entry in possible_rewards)
             {
@@ -145,7 +142,14 @@ namespace ValheimFortress.Challenge
                     continue;
                 }
             }
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Rewards Updated."); }
+            return availableRewards;
+        }
 
+        public static List<String> UpdateLevels()
+        {
+            Int16 max_level = 5;
+            var zs = ZoneSystem.instance;
             if (zs) // If the zonesystem does not exist, we can't check global keys. So skip it. This list will be updated on the UI open anyways.
             {
                 if (zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledEikthyr)) { max_level += 5; }
@@ -166,7 +170,7 @@ namespace ValheimFortress.Challenge
             if (max_level > (short)VFConfig.MaxChallengeLevel.Value) { max_level = (short)VFConfig.MaxChallengeLevel.Value; }
 
             // Empty out the current levels if it exists so we don't get duplicates
-            currentLevels = new List<String> { };
+            List<String> currentLevels = new List<String> { };
             // Toss in all of the available levels
             String biome_or_boss = "";
             for (int i = 1; i <= max_level; i++)
@@ -179,7 +183,8 @@ namespace ValheimFortress.Challenge
                 if (i > 25 && i < 31) { biome_or_boss = Localization.instance.Localize("$shrine_menu_mistland"); }
                 currentLevels.Add($"{i} - {biome_or_boss}");
             }
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Levels and rewards updated."); }
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Levels updated."); }
+            return currentLevels;
         }
     }
 }
