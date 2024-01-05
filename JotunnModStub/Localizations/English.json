@@ -35,7 +35,8 @@
   "shrine_enable_flares_desc": "Enables flares for all remaining creatures currently alive.",
   "shrine_teleport_creatures": "Teleport Creatures",
   "shrine_teleport_creatures_desc": "Teleports remaining creatures if there are less than 6, to the shrine.",
-  "shrine_too_many_creautres_to_teleport": "Can only teleport less than 6 creatures. Remaining",
+  "shrine_too_many_creautres_to_teleport": "Can only teleport less than",
+  "shrine_too_many_creautres_to_teleport_2": "creatures. Remaining",
   "shrine_cancel_enemies_remaining": "Enemies Remaining: ",
   "shrine_in_progress_header": "Challenge Mode Active",
   // Localizations for the shrine of challenge phase breaks

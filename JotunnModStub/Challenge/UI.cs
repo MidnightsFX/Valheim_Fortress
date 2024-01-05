@@ -48,7 +48,7 @@ namespace ValheimFortress.Challenge
         {
             Shrine = this.GetComponent<Shrine>();
             CreateStaticUIObjects();
-            Jotunn.Logger.LogInfo("UI Awake Finished");
+            // Jotunn.Logger.LogInfo("UI Awake Finished");
         }
 
         public bool IsPanelVisible()
