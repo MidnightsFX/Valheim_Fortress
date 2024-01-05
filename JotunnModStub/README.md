@@ -127,7 +127,7 @@ Rewards have the following structure, which is also listed inside the configurat
 # Rewards configurations have a number of key values
 #  Coin:                               |- The name of the reward, this will be the diplayed name if there is no localization for this reward, which is likely the case for any custom entries.
 #    enabled: true                     |- Whether or not the reward is enabled, you can use this to disable any vanilla rewards you do not want. At least 1 reward must be available at ALL times.
-#    resouce_cost: 5                   |- This is the cost to gain 1 of the particular reward. Points are generated based on how many monsters are spawned.
+#    resource_cost: 5                  |- This is the cost to gain 1 of the particular reward. Points are generated based on how many monsters are spawned.
 #    resource_prefab: "Coins"          |- This is the unity prefab name for a resource, you will often see mods list the prefabs they have added. Prefabs are also listed on the valheim wiki.
 #    required_boss: "None"             |- This must be one of the following values: "None" "Eikythr" "TheElder" "BoneMass" "Moder" "Yagluth" "TheQueen"
 ```
@@ -228,6 +228,13 @@ If you like this mod maybe you'll like my other work
 - Multiplayer having the region host change during a challenge can break the challenge (looking into solutions)
 
 ## Changelog
+**0.9.15**
+```
+- Disabled some extra debug logging lines
+- Fixed a misspelling in template example/definition for rewards
+- Fixes TeleportCreatureThreshold to be respected and configurable
+```
+
 **0.9.14**
 ```
 - Fixes an issue where the shrine UI would not function normally after being placed in the current play session, but would work fine after a reload

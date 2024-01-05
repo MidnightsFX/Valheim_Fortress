@@ -55,7 +55,7 @@ namespace ValheimFortress.Challenge
                 should_add_creature_beacons = new BoolZNetProperty("should_add_creature_beacons", zNetView, false);
                 Jotunn.Logger.LogInfo("Created Shrine Znet View Values.");
             }
-            Jotunn.Logger.LogInfo("Shrine Awake Finished");
+            // Jotunn.Logger.LogInfo("Shrine Awake Finished");
         }
 
         public void SetHardMode()
@@ -362,13 +362,13 @@ namespace ValheimFortress.Challenge
 
         public void TeleportRemainingCreatures()
         {
-            if (spawned_creatures.Get() > 6)
+            if (spawned_creatures.Get() > VFConfig.TeleportCreatureThreshold.Value)
             {
                 List<Player> nearby_players = new List<Player> { };
                 Player.GetPlayersInRange(this.transform.position, VFConfig.ShrineAnnouncementRange.Value, nearby_players);
                 foreach (Player localplayer in nearby_players)
                 {
-                    localplayer.Message(MessageHud.MessageType.Center,  $"{Localization.instance.Localize("$shrine_too_many_creautres_to_teleport")} {spawned_creatures.Get()}.");
+                    localplayer.Message(MessageHud.MessageType.Center,  $"{Localization.instance.Localize("$shrine_too_many_creautres_to_teleport")} {VFConfig.TeleportCreatureThreshold.Value} {Localization.instance.Localize("$shrine_too_many_creautres_to_teleport_2")} {spawned_creatures.Get()}.");
                 }
                 return;
             }
