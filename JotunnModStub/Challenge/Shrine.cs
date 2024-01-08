@@ -41,7 +41,7 @@ namespace ValheimFortress.Challenge
         {
             zNetView = GetComponent<ZNetView>();
 
-            if (zNetView.IsValid())
+            if ((bool)zNetView)
             {
                 spawned_creatures = new IntZNetProperty("spawned_creatures", zNetView, 0);
                 hard_mode = new BoolZNetProperty("shrine_hard_mode", zNetView, false);

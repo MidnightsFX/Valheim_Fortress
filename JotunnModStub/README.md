@@ -159,11 +159,8 @@ Creatures have the following definition structure, which is also listed inside t
 
 ## FAQ
 
-Q. The portals from my last attempt didn't dissapear!
-	A . Starting a new challenge with `EnablePortalCleanupMode` on will remove a number of local portals that failed to get deleted beforehand. You can also turn off this configuration if you find it causes lag for you.
-
 Q. There are remaining creatures and I can't find them!?
-	A . By default, interacting with the shrine when at or below 10 creatures will summon fireworks on them. Interacting at or below 3 creatures will summon those creatures directly to the shrine.
+	A . Interacting with the shrine while the challenge is active gives you the option to summon fireworks on creatures or teleport them to the shrine (if there are only a few left, this is configurable)
 
 Q. I broke my configuration files and want to try again.
 	A. You can delete any/all yaml configuration (or the primary config file) from this mod and it will be automatically generated again for you on startup.
@@ -177,7 +174,7 @@ Q. The skeltons are attacking the greydwarfs again
 		and will revert back to their vanilla settings. Loosing stars, gaining their loot, loosing their connection to the shrine. It won't cause issues for your game. But you will still have to kill them normally, and won't get shrine rewards for it.
  
 Q. My game freezes or becomes very slow for some period of time during waves or when creatures are spawning, what do I do?
-	A. This mod is fairly intensive on the CPU, in order to perform all of the calculations that go into creating an interesting and varied wave- then actually spawning all of those creatures (and the potentially massive number of interactions with them)
+	A. This mod is fairly intensive on the CPU (during wave generation), in order to perform all of the calculations that go into creating an interesting and varied wave- then actually spawning all of those creatures (and the potentially massive number of interactions with them)
 	   can be very taxing on your computer. If you find this to be an issue consider reducing the configured number of maximum creatures to spawn or increasing the number of cores used for GC collection.
 		A. Reduce `max_creatures_per_wave`
 		A. Optionally, Increase GC collection duration. From Steam, Right Click on Valheim -> Manage -> Browse Local Files. Go to valheim_Data folder and open boot config file. change `gc-max-time-slice=3` to `gc-max-time-slice=10`	
@@ -228,6 +225,17 @@ If you like this mod maybe you'll like my other work
 - Multiplayer having the region host change during a challenge can break the challenge (looking into solutions)
 
 ## Changelog
+
+**0.9.16**
+```
+- Fixes a NPE error that could occur when unloading and reloading distant portals
+- Fixed a consistency issue with creatures that are destroyed by the shrine not always staying dead, which could occur on reloading
+- Added more flavor text variety between waves
+```
+
+<details>
+  <summary>Full Changelog</summary>
+
 **0.9.15**
 ```
 - Disabled some extra debug logging lines
@@ -468,4 +476,9 @@ If you like this mod maybe you'll like my other work
 - Reduction in the amount of log-spam that debug mode has when spawning creatures.
 ```
 
-**0.5.0** - Initial beta release!
+**0.5.0**
+```
+- Initial beta release!
+```
+
+</details>

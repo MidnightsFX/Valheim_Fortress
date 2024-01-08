@@ -9,7 +9,6 @@ namespace ValheimFortress.Challenge
 {
     internal static class UserInterfaceData
     {
-        // Right now maxlevel needs to correlate to: defined levels & level warning messages
         private static List<String> shrine_phase_warnings = new List<String>
         {
             Localization.instance.Localize("$shrine_phase_warning"),
@@ -30,7 +29,12 @@ namespace ValheimFortress.Challenge
             Localization.instance.Localize("$shrine_phase_warning16"),
             Localization.instance.Localize("$shrine_phase_warning17"),
             Localization.instance.Localize("$shrine_phase_warning18"),
-            Localization.instance.Localize("$shrine_phase_warning19")
+            Localization.instance.Localize("$shrine_phase_warning19"),
+            Localization.instance.Localize("$shrine_phase_warning20"),
+            Localization.instance.Localize("$shrine_phase_warning21"),
+            Localization.instance.Localize("$shrine_phase_warning22"),
+            Localization.instance.Localize("$shrine_phase_warning23"),
+            Localization.instance.Localize("$shrine_phase_warning24")
         };
 
         public static void PreparePhase(Int16 selected_level, bool boss_mode, GameObject shrine)
