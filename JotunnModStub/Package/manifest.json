@@ -4,7 +4,7 @@
   "version_number": "0.9.16",
   "website_url": "https://discord.gg/Dmr9PQTy9m",
   "dependencies": [
-    "ValheimModding-Jotunn-2.14.5",
-	  "denikson-BepInExPack_Valheim-5.4.2100"
+    "ValheimModding-Jotunn-2.16.1",
+    "denikson-BepInExPack_Valheim-5.4.2202"
   ]
 }

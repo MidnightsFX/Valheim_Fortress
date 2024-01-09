@@ -75,19 +75,21 @@
     <EmbeddedResource Include="AssetsEmbedded\vfbundle" />
     <EmbeddedResource Include="Localizations\English.json" />
     <EmbeddedResource Include="Localizations\Spanish.json" />
+    <None Include="ILRepack.targets" />
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Costura.Fody">
-      <Version>5.7.0</Version>
-      <!-- <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets> -->
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
     <PackageReference Include="HarmonyX">
       <Version>2.10.2</Version>
     </PackageReference>
+    <PackageReference Include="ILRepack.Lib">
+      <Version>2.0.25</Version>
+    </PackageReference>
+    <PackageReference Include="ILRepack.Lib.MSBuild.Task">
+      <Version>2.0.25</Version>
+    </PackageReference>
     <PackageReference Include="JotunnLib">
-      <Version>2.15.0</Version>
+      <Version>2.16.1</Version>
     </PackageReference>
     <PackageReference Include="Mono.Cecil">
       <Version>0.11.5</Version>
@@ -101,11 +103,25 @@
     <None Include="Environment.props" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="FodyWeavers.xml" />
+    <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="JotunnPostBuildTaskWin" Condition="'$(OS)' == 'Windows_NT'">
     <Exec Command="powershell.exe -ExecutionPolicy RemoteSigned -File &quot;$(SolutionDir)publish.ps1&quot; -Target &quot;$(ConfigurationName)&quot; -TargetPath &quot;$(TargetDir.TrimEnd('\'))&quot; -TargetAssembly &quot;$(TargetFileName)&quot; -ValheimPath &quot;$(VALHEIM_INSTALL.TrimEnd('\'))&quot; -DeployPath &quot;$(MOD_DEPLOYPATH.TrimEnd('\'))&quot; -ProjectPath &quot;$(ProjectDir.TrimEnd('\'))&quot; " />
+  </Target>
+  <Target Name="CopyToModManagers" AfterTargets="ILRepacker">
+    <Copy
+            SourceFiles="$(TargetDir)\$(TargetFileName)"
+            DestinationFolder="C:\Users\carls\AppData\Roaming\r2modmanPlus-local\Valheim\profiles\Modtest\BepInEx\plugins"
+        />
+    <Copy
+            SourceFiles="$(TargetDir)\$(TargetFileName)"
+            DestinationFolder="C:\Users\carls\AppData\Roaming\Thunderstore Mod Manager\DataFolder\Valheim\profiles\Modtesting\BepInEx\plugins"
+        />
+    <Copy
+            SourceFiles="$(TargetDir)\$(TargetFileName)"
+            DestinationFolder="$(ProjectDir)\Package\plugins\"
+        />
   </Target>
   <PropertyGroup>
     <BuildDependsOn>
@@ -114,13 +130,7 @@
     </BuildDependsOn>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>xcopy "$(TargetDir)\$(TargetFileName)" "C:\Users\carls\AppData\Roaming\r2modmanPlus-local\Valheim\profiles\Modtest\BepInEx\plugins" /q /y /i
-
-xcopy "$(TargetDir)\$(TargetFileName)" "C:\Users\carls\AppData\Roaming\Thunderstore Mod Manager\DataFolder\Valheim\profiles\Modtesting\BepInEx\plugins" /q /y /i
-
-xcopy "$(ProjectDir)\README.md" "$(ProjectDir)\Package\README.md" /q /y /i
-
-xcopy "$(TargetDir)\$(TargetFileName)" "$(ProjectDir)\Package\$(TargetFileName)" /q /y /i
+    <PostBuildEvent>xcopy "$(ProjectDir)\README.md" "$(ProjectDir)\Package\README.md" /q /y /i
 
 </PostBuildEvent>
   </PropertyGroup>
