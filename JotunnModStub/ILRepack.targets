@@ -3,17 +3,19 @@
   <!-- ILRepack -->
   <Target Name="ILRepacker" AfterTargets="Build">
     <ItemGroup>
-      <InputAssemblies Include="$(OutputPath)ValheimFortress.dll" />
-      <InputAssemblies Include="$(OutputPath)YamlDotNet.dll" />
+      <InputAssemblies Include="$(OutputPath)$(AssemblyName).dll" />
+      <!-- This is needed to reference Nuget packages, which this project uses for everything except valheim/bepinex -->
+      <InputAssemblies Include="@(ReferencePathWithRefAssemblies)" Condition="'%(filename)' == 'YamlDotNet'" />
     </ItemGroup>
 
     <ILRepack
+        DebugInfo="true"
         Parallel="true"
         Internalize="true"
         LibraryPath="$(OutputPath)"
         InputAssemblies="@(InputAssemblies)"
         TargetKind="Dll"
-        OutputFile="$(OutputPath)$(AssemblyName)_complete.dll"
+        OutputFile="$(OutputPath)$(AssemblyName).dll"
         />
   </Target>
   <!-- /ILRepack -->

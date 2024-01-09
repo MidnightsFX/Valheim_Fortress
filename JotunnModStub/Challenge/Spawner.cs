@@ -215,7 +215,7 @@ namespace ValheimFortress.Challenge
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Starting spawn destination in incrments of {range_increment} from x{shrine_gladiator_spawn_position.x} y{shrine_gladiator_spawn_position.y} z{shrine_gladiator_spawn_position.z}"); }
             int spawn_location_attempts = 0;
             // We want three remote spawn locations, each one will be a wave
-            while(spawn_location_attempts < 100 && spawn_locations.Count < 3)
+            while(spawn_location_attempts < 30 && spawn_locations.Count < 3)
             {
                 if((spawn_location_attempts % 10) == 0 && spawn_location_attempts > 1) 
                 {
