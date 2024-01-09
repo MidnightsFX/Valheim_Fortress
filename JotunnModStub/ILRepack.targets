@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- ILRepack -->
+  <Target Name="ILRepacker" AfterTargets="Build">
+    <ItemGroup>
+      <InputAssemblies Include="$(OutputPath)ValheimFortress.dll" />
+      <InputAssemblies Include="$(OutputPath)YamlDotNet.dll" />
+    </ItemGroup>
+
+    <ILRepack
+        Parallel="true"
+        Internalize="true"
+        LibraryPath="$(OutputPath)"
+        InputAssemblies="@(InputAssemblies)"
+        TargetKind="Dll"
+        OutputFile="$(OutputPath)$(AssemblyName)_complete.dll"
+        />
+  </Target>
+  <!-- /ILRepack -->
+</Project>

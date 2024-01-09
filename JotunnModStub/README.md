@@ -226,15 +226,22 @@ If you like this mod maybe you'll like my other work
 
 ## Changelog
 
+**0.9.17**
+```
+- Updating Jotunn minimum version
+- Updating BepInEx minimum version
+- Changing inclusion of the yaml.net lib to be repacked instead of merged to avoid issues with thunderstores new assembly scanner
+```
+
+<details>
+  <summary>Full Changelog</summary>
+
 **0.9.16**
 ```
 - Fixes a NPE error that could occur when unloading and reloading distant portals
 - Fixed a consistency issue with creatures that are destroyed by the shrine not always staying dead, which could occur on reloading
 - Added more flavor text variety between waves
 ```
-
-<details>
-  <summary>Full Changelog</summary>
 
 **0.9.15**
 ```
