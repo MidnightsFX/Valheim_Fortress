@@ -118,6 +118,10 @@
             SourceFiles="$(TargetDir)\$(TargetFileName)"
             DestinationFolder="C:\Users\carls\AppData\Roaming\Thunderstore Mod Manager\DataFolder\Valheim\profiles\Modtesting\BepInEx\plugins"
         />
+    <Copy
+            SourceFiles="$(TargetDir)\$(TargetFileName)"
+            DestinationFolder="$(ProjectDir)\Package\plugins\"
+        />
   </Target>
   <PropertyGroup>
     <BuildDependsOn>
