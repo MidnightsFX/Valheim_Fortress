@@ -208,16 +208,18 @@ namespace ValheimFortress.Challenge
             {
                 // The spawn location is divided up into 3 segments currently so we always need three entries.
                 // And we want all three of them to be the shrine itself if we are not spawning enemies remotely.
-                spawn_locations.Append(shrine_gladiator_spawn_position);
-                spawn_locations.Append(shrine_gladiator_spawn_position);
-                spawn_locations.Append(shrine_gladiator_spawn_position);
+                Jotunn.Logger.LogInfo($"Using Gladiator spawnpoint {shrine_gladiator_spawn_position}.");
+                Vector3[] gladiator_spawn = { shrine_gladiator_spawn_position, shrine_gladiator_spawn_position, shrine_gladiator_spawn_position };
+                // Jotunn.Logger.LogInfo($"Spawn Position set to Shrine in gladiator mode [{string.Join(", ", gladiator_spawn)}].");
+                shrine.GetComponent<Shrine>().SetWaveSpawnPoints(gladiator_spawn);
+                return gladiator_spawn;
             }
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Starting spawn destination in incrments of {range_increment} from x{shrine_gladiator_spawn_position.x} y{shrine_gladiator_spawn_position.y} z{shrine_gladiator_spawn_position.z}"); }
             int spawn_location_attempts = 0;
             // We want three remote spawn locations, each one will be a wave
             while(spawn_location_attempts < 30 && spawn_locations.Count < 3)
             {
-                if((spawn_location_attempts % 10) == 0 && spawn_location_attempts > 1) 
+                if((spawn_location_attempts % 10) == 0 && spawn_location_attempts > 1)
                 {
                     current_max_x += range_increment;
                     current_min_x -= range_increment;

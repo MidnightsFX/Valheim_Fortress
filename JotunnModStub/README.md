@@ -226,15 +226,21 @@ If you like this mod maybe you'll like my other work
 
 ## Changelog
 
+**0.9.18**
+```
+- Fix for Gladiator mode not skipping portal generation
+- Reducing the maximum number of portal generation attempts to help prevent primary threadlock
+```
+
+<details>
+  <summary>Full Changelog</summary>
+
 **0.9.17**
 ```
 - Updating Jotunn minimum version
 - Updating BepInEx minimum version
 - Changing inclusion of the yaml.net lib to be repacked instead of merged to avoid issues with thunderstores new assembly scanner
 ```
-
-<details>
-  <summary>Full Changelog</summary>
 
 **0.9.16**
 ```
