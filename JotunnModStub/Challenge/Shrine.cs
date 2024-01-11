@@ -29,6 +29,8 @@ namespace ValheimFortress.Challenge
         private static bool client_set_creature_beacons = false;
         public static bool shrine_ui_active = false;
 
+        private static bool spawn_locations_ready = false;
+        private static bool wave_definition_ready = false;
         private static List<GameObject> enemies = new List<GameObject>();
         private static GameObject shrine_spawnpoint;
         private static PhasedWaveTemplate wave_phases_definitions = new PhasedWaveTemplate();
@@ -140,6 +142,7 @@ namespace ValheimFortress.Challenge
         public void SetWaveSpawnPoints(Vector3[] spawn_points)
         {
             remote_spawn_locations = spawn_points;
+            spawn_locations_ready = true;
         }
 
         public void SetShrineUIStatus(bool status)
@@ -151,11 +154,15 @@ namespace ValheimFortress.Challenge
         {
             if (challenge_active.Get() == false)
             {
-                Jotunn.Logger.LogInfo($"Challenge started. Level: {selected_level.Get()} Reward: {selected_reward.Get()}");
-                Levels.generateRandomWaveWithOptions((short)selected_level.Get(), hard_mode.Get(), boss_mode.Get(), siege_mode.Get(), gameObject);
+                // If gladiator mode is enabled we don't spawn remote portals
+                if (VFConfig.EnableGladiatorMode.Value == false)
+                {
+                    Spawner.DrawMapOverlayAndPortals(remote_spawn_locations, gameObject);
+                }
                 challenge_active.Set(true);
-                spawn_controller.TrySpawningPhase(8f, false, wave_phases_definitions.GetCurrentPhase(), gameObject, remote_spawn_locations);
+                spawn_controller.TrySpawningPhase(5f, false, wave_phases_definitions.GetCurrentPhase(), gameObject, remote_spawn_locations);
                 phase_running = true;
+                Jotunn.Logger.LogInfo($"Challenge started. Level: {selected_level.Get()} Reward: {selected_reward.Get()}");
                 start_challenge.Set(false);
                 Jotunn.Logger.LogInfo("Start challenge functions completed. Challenge started!");
             } else
@@ -250,7 +257,18 @@ namespace ValheimFortress.Challenge
             // Kick off the challenge- even if it was trigger by a non-znet owner
             if (start_challenge.Get() == true)
             {
-                StartChallengeMode();
+                if (wave_definition_ready == false && spawn_locations_ready == false)
+                {
+                    Levels.generateRandomWaveWithOptions((short)selected_level.Get(), hard_mode.Get(), boss_mode.Get(), siege_mode.Get(), gameObject);
+                    wave_definition_ready = true;
+                    StartCoroutine(Spawner.DetermineRemoteSpawnLocations(gameObject));
+                }
+
+                // We can only actually start the challenge when all of the data objects are ready
+                if (wave_definition_ready == true && spawn_locations_ready == true)
+                {
+                    StartChallengeMode();
+                }
                 // we skip to the next update iteration
                 return;
             }
@@ -287,6 +305,8 @@ namespace ValheimFortress.Challenge
                             end_of_challenge.Set(true);
                             Disableportal();
                             wave_phases_definitions = new PhasedWaveTemplate(); // Got to clear the template
+                            wave_definition_ready = false;
+                            spawn_locations_ready = false;
                         }
                     }
                 }
@@ -340,6 +360,9 @@ namespace ValheimFortress.Challenge
             hard_mode.ForceSet(false);
             siege_mode.ForceSet(false);
             Disableportal();
+            wave_phases_definitions = new PhasedWaveTemplate(); // Got to clear the template
+            wave_definition_ready = false;
+            spawn_locations_ready = false;
         }
 
         public void NotifyRemainingCreatures()

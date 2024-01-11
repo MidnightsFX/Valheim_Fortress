@@ -187,7 +187,7 @@ namespace ValheimFortress.Challenge
             yield break;
         }
 
-        public static Vector3[] DetermineRemoteSpawnLocations(GameObject shrine)
+        public static IEnumerator DetermineRemoteSpawnLocations(GameObject shrine)
         {
             Vector3 shrine_position = shrine.transform.position;
             GameObject shrine_spawnpoint = shrine.transform.Find("spawnpoint").gameObject;
@@ -212,12 +212,12 @@ namespace ValheimFortress.Challenge
                 Vector3[] gladiator_spawn = { shrine_gladiator_spawn_position, shrine_gladiator_spawn_position, shrine_gladiator_spawn_position };
                 // Jotunn.Logger.LogInfo($"Spawn Position set to Shrine in gladiator mode [{string.Join(", ", gladiator_spawn)}].");
                 shrine.GetComponent<Shrine>().SetWaveSpawnPoints(gladiator_spawn);
-                return gladiator_spawn;
+                yield break;
             }
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Starting spawn destination in incrments of {range_increment} from x{shrine_gladiator_spawn_position.x} y{shrine_gladiator_spawn_position.y} z{shrine_gladiator_spawn_position.z}"); }
             int spawn_location_attempts = 0;
             // We want three remote spawn locations, each one will be a wave
-            while(spawn_location_attempts < 30 && spawn_locations.Count < 3)
+            while(spawn_location_attempts < 100 && spawn_locations.Count < 3)
             {
                 if((spawn_location_attempts % 10) == 0 && spawn_location_attempts > 1)
                 {
@@ -225,6 +225,8 @@ namespace ValheimFortress.Challenge
                     current_min_x -= range_increment;
                     current_max_z += range_increment;
                     current_min_z -= range_increment;
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Increase spawn range, pausing before more attempts."); }
+                    yield return new WaitForSeconds(0.5f);
                 }
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Starting spawning attempt with x {current_max_x}<->{current_min_x} z {current_max_z}<->{current_min_z}"); }
                 spawn_location_attempts++;
@@ -266,7 +268,7 @@ namespace ValheimFortress.Challenge
             Vector3[] spawn_location_results = spawn_locations.ToArray();
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"spawn Locations [{string.Join(", ", spawn_location_results)}]"); }
             shrine.GetComponent<Shrine>().SetWaveSpawnPoints(spawn_location_results);
-            return spawn_location_results;
+            yield break;
         }
     }
 }

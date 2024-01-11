@@ -343,14 +343,6 @@ namespace ValheimFortress.Challenge
 
             // Set the wave definition and determine the remote spawn points
             shrine.GetComponent<Shrine>().SetWaveDefinition(wavedefinition);
-            Vector3[] remote_spawn_locations =  Spawner.DetermineRemoteSpawnLocations(shrine);
-            // Spawn the portals in & set references for destruction later
-
-            // If gladiator mode is enabled we don't spawn remote portals
-            if (VFConfig.EnableGladiatorMode.Value == false)
-            {
-                List<GameObject> portals = Spawner.DrawMapOverlayAndPortals(remote_spawn_locations, shrine);
-            }
         }
 
         public static WaveGenerationFormat DecideWaveStyle(Int16 level, bool boss_mode)

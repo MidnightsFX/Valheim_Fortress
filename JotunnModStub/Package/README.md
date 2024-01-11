@@ -226,14 +226,21 @@ If you like this mod maybe you'll like my other work
 
 ## Changelog
 
+**0.9.19**
+```
+- Made spawn point determination async. This may delay the time it takes to start a wave a little bit but will support a much larger number of attempts to spawn a portal
+- For non-gladiator mode, portal generation still moves in segments roughly 10% of the maximum distance at a time.
+- Fixes freezes that may occur related to being unable to determine a spawn location around the shrine in a short period of time (freeze when you click 'To Valhalla')
+```
+
+<details>
+  <summary>Full Changelog</summary>
+
 **0.9.18**
 ```
 - Fix for Gladiator mode not skipping portal generation
 - Reducing the maximum number of portal generation attempts to help prevent primary threadlock
 ```
-
-<details>
-  <summary>Full Changelog</summary>
 
 **0.9.17**
 ```
