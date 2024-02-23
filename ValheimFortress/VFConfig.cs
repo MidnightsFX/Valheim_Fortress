@@ -27,7 +27,7 @@ namespace ValheimFortress
         public static ConfigEntry<short> NotifyCreatureThreshold;
         public static ConfigEntry<short> TeleportCreatureThreshold;
         public static ConfigEntry<float> ShrineAnnouncementRange;
-        public static ConfigEntry<short> DistanceBetweenShrines;
+        public static ConfigEntry<float> DistanceBetweenShrines;
         public static ConfigEntry<short> NumberOfEachWildShrine;
 
         private static CustomRPC monsterSyncRPC;
@@ -784,7 +784,7 @@ namespace ValheimFortress
             NotifyCreatureThreshold = BindServerConfig("Shrine of Challenge", "NotifyCreatureThreshold", 10, "Sets the level at which interacting with the shrine will add notifier to remaining creatures.", true, 1, 50);
             TeleportCreatureThreshold = BindServerConfig("Shrine of Challenge", "TeleportCreatureThreshold", 3, "Sets the level at which interacting with the shrine teleport remaining creatures to the shrine.", true, 1, 50);
             ShrineAnnouncementRange = BindServerConfig("Shrine of Challenge", "ShrineAnnouncementRange", 150f, "Sets the range at which announcements will display for shrine of challenge related activities", true, 50f, 800f);
-            DistanceBetweenShrines = BindServerConfig("Wild Shrines", "DistanceBetweenShrines", 1000, "The mimum distance between shrines, setting this higher will result in fewer wild shrines, lower more.", true, 100, 5000);
+            DistanceBetweenShrines = BindServerConfig("Wild Shrines", "DistanceBetweenShrines", 1000f, "The mimum distance between shrines, setting this higher will result in fewer wild shrines, lower more.", true, 100f, 5000f);
             NumberOfEachWildShrine = BindServerConfig("Wild Shrines", "NumberOfEachWildShrine", 100, "Each wild shrine type will attempt to be placed this many times", true, 5, 200);
             // Client side configurations
 

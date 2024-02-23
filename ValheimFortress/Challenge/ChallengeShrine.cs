@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Jotunn.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,8 @@ namespace ValheimFortress.Challenge
     internal class ChallengeShrine : GenericShrine
     {
         private static ChallengeShrineUI ui_controller;
+        private static new GameObject shrine_spawnpoint;
+        private static short fail_to_start = 0;
 
         public override string GetHoverName()
         {
@@ -58,10 +61,23 @@ namespace ValheimFortress.Challenge
                 start_challenge.Set(false);
                 currentPhase.Set(currentPhase.Get() + 1);
                 Jotunn.Logger.LogInfo("Start challenge functions completed. Challenge started!");
-            }
-            else
+            } else
             {
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Challenge mode is already active."); }
+                fail_to_start++;
+            }
+            
+            // this needs to be not super small due to how many times this function is triggered
+            if (fail_to_start > 3)
+            {
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Challenge mode failed to start, resetting."); }
+                // reset all of the characteristics so that we get it all rebuilt to ensure the next try will actually work
+                challenge_active.Set(false);
+                wave_definition_ready.Set(false);
+                spawn_locations_ready.Set(false);
+                fail_to_start = 0;
+                currentPhase.Set(0);
+                start_challenge.Set(true);
             }
         }
 
@@ -74,7 +90,7 @@ namespace ValheimFortress.Challenge
             if (ui_controller == null || spawn_controller == null || shrine_spawnpoint == null)
             {
                 spawn_controller = this.gameObject.GetComponent<Spawner>();
-                shrine_spawnpoint = this.transform.Find("spawnpoint").gameObject;
+                shrine_spawnpoint = this.transform.FindDeepChild("spawnpoint").gameObject;
                 ui_controller = this.gameObject.GetComponent<ChallengeShrineUI>();
             }
 

@@ -1,4 +1,5 @@
-﻿using Jotunn.Managers;
+﻿using Jotunn.Extensions;
+using Jotunn.Managers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,7 @@ namespace ValheimFortress.Challenge
     {
         private static int log_slower = 0;
         private WildShrineConfiguration wildShrineConfiguration;
+        private static new GameObject shrine_spawnpoint;
         public override void Awake()
         {
             //if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Looking for znet view."); }
@@ -172,7 +174,7 @@ namespace ValheimFortress.Challenge
             {
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Missing required references for shrine, reconnecting."); }
                 spawn_controller = this.gameObject.GetComponent<Spawner>();
-                shrine_spawnpoint = this.transform.Find("spawnpoint").gameObject;
+                shrine_spawnpoint = this.transform.FindDeepChild("spawnpoint").gameObject;
             }
             //if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Componets available."); }
 

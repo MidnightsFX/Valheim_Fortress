@@ -30,7 +30,7 @@ namespace ValheimFortress.Challenge
         protected static bool client_set_creature_beacons = false;
         protected static bool shrine_portal_active = false;
         protected static List<GameObject> enemies = new List<GameObject>();
-        protected static GameObject shrine_spawnpoint;
+        protected GameObject shrine_spawnpoint;
         protected static PhasedWaveTemplate wave_phases_definitions;
         protected static Vector3[] remote_spawn_locations = new Vector3[0];
         protected static bool phase_running = false;

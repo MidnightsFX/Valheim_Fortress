@@ -276,6 +276,9 @@ and increase them until the final wave (with random noise, making the increases 
 
 ## FAQ
 
+Q. I am running an older version and do not see any of the wildshrines, what gives?
+	A. You need to run `genloc` (as an admin on the server), this will freeze your client for a little, and add any missing locations to your world (IN UNEXPLORED AREAS).
+
 Q. I can't craft all of the pieces from this mod! They arn't visible in the hammer
 	A . You should install and use [SearsCatalog](https://valheim.thunderstore.io/package/ComfyMods/SearsCatalog/), this will allow the hammer panels to be resized/scrolled to fit any and all prefabs added.
 		If you downloaded from Thunderstore sears catalog will be included automatically as a dependency. However VF does not have a hard dependency on SearsCatalog and can be used without it if desired.
@@ -370,6 +373,8 @@ If you like this mod maybe you'll like my other work
 	- Wildshrine configuration is almost entirely exposed via yaml. You can edit rewards, difficulty, monsters included in generation of the waves etc
 	- Wildshrines can be configured to use any monsters defined in the Monsters.yml, and spawn any rewards (does not need to be configured in the rewards yaml)
 - Fixes for an edgecase where the owner of a znet region rapidly changes during a shrine challenge
+- Fixed a bug where disabling a creature from level generation would still include it in the generation pool, but would not spawn it (it is now properly completely excluded)
+- Reduced texture sheen of the shrine of challenge and wildshrines
 ```
 
 <details>

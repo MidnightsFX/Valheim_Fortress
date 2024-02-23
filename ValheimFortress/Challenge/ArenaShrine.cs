@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Jotunn.Extensions;
+using Steamworks;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +12,8 @@ namespace ValheimFortress.Challenge
     internal class ArenaShrine : GenericShrine
     {
         private static ArenaShrineUI ui_controller;
+        static new Vector3[] remote_spawn_locations = new Vector3[0];
+        private static short fail_to_start = 0;
         // We statically set the remote spawn locations to the internal shrine spawnpoint, because this is the gladiator shrine and thats the only place it spawns things from.
 
         public override string GetHoverName()
@@ -61,6 +65,20 @@ namespace ValheimFortress.Challenge
             else
             {
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Challenge mode is already active."); }
+                fail_to_start++;
+            }
+
+            // this needs to be not super small due to how many times this function is triggered
+            if (fail_to_start > 3)
+            {
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Challenge mode failed to start, resetting."); }
+                // reset all of the characteristics so that we get it all rebuilt to ensure the next try will actually work
+                challenge_active.Set(false);
+                wave_definition_ready.Set(false);
+                spawn_locations_ready.Set(false);
+                fail_to_start = 0;
+                currentPhase.Set(0);
+                start_challenge.Set(true);
             }
 
         }
@@ -75,7 +93,7 @@ namespace ValheimFortress.Challenge
             if (ui_controller == null || spawn_controller == null || shrine_spawnpoint == null || remote_spawn_locations == null)
             {
                 spawn_controller = this.gameObject.GetComponent<Spawner>();
-                shrine_spawnpoint = this.transform.Find("spawnpoint").gameObject;
+                shrine_spawnpoint = this.transform.FindDeepChild("spawnpoint").gameObject;
                 remote_spawn_locations = new Vector3[] { shrine_spawnpoint.transform.position, shrine_spawnpoint.transform.position, shrine_spawnpoint.transform.position };
                 ui_controller = this.gameObject.GetComponent<ArenaShrineUI>();
             }

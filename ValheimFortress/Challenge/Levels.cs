@@ -1139,7 +1139,15 @@ namespace ValheimFortress.Challenge
             bool should_check_only_monsters = false;
             bool should_check_exclude_monsters = false;
             if (defined_level.onlySelectMonsters != null) { if (defined_level.onlySelectMonsters.Count > 0) { should_check_only_monsters = true; } }
-            if (defined_level.excludeSelectMonsters != null) { if (defined_level.excludeSelectMonsters.Count > 0) { should_check_exclude_monsters = true; } } 
+            if (defined_level.excludeSelectMonsters != null) { if (defined_level.excludeSelectMonsters.Count > 0) { should_check_exclude_monsters = true; } }
+
+            // Build a list of creature keys which are valid targets
+            // We build the list once, and shuffle its contents each time to get different creatures picked for the same wave (if there are multiple valid for the role)
+            List<string> creatureKeys = new List<string>();
+            foreach(KeyValuePair<string, CreatureValues> creature in SpawnableCreatures) {
+                if(creature.Value.enabled != true) { continue; }
+                creatureKeys.Add(creature.Key);
+            }
 
             foreach (WaveFormatEntry entry in WaveGenerationFormat.waveFormats)
             {
@@ -1154,7 +1162,7 @@ namespace ValheimFortress.Challenge
                     if (creature_add_iterations > 3) { if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogWarning($"{waveType}-{percentage}% failed to find an addition, skipping it."); } break; }
                     // we shuffle the monster keys so that we run through them in a different order each time
                     // This ensures that we fill the wave in different ways
-                    List<string> this_iteration_key_order = ValheimFortress.shuffleList(new List<string>(SpawnableCreatures.Keys));
+                    List<string> this_iteration_key_order = ValheimFortress.shuffleList(creatureKeys);
                     
                     foreach (String skey in this_iteration_key_order)
                     {

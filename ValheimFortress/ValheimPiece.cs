@@ -301,15 +301,7 @@ namespace ValheimFortress
                     // These are custom unity componet scripts which have never seen the light of unity. So they arn't baked into the assets
                     // and must be added later. This allows these scripts to do things like be modified by config values, or reference Jotunn
                     if(shrinescript) { prefab.AddComponent<ChallengeShrine>(); prefab.AddComponent<ChallengeShrineUI>(); prefab.AddComponent<Spawner>(); }
-                    if(arenascript) 
-                    {
-                        if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"Adding Shrine script to arena shrine."); }
-                        prefab.AddComponent<ArenaShrine>();
-                        if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"Adding UI to Arena shrine."); }
-                        prefab.AddComponent<ArenaShrineUI>();
-                        if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"Adding spawner to arena shrine."); }
-                        prefab.AddComponent<Spawner>(); 
-                    }
+                    if(arenascript)  { prefab.AddComponent<ArenaShrine>(); prefab.AddComponent<ArenaShrineUI>(); prefab.AddComponent<Spawner>(); }
                     if(turretscript) { prefab.AddComponent<VFTurret>(); }
 
                     // Add the recipe with helper
