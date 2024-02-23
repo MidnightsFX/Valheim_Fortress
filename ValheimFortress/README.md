@@ -5,37 +5,80 @@ When the Valheim Devs released the blog ["Fearsome Foes!"](https://www.valheimga
 They did not go into details about what this idea was, but I was very excited! However, what that ended up being, while exciting was not what I was expecting.
 
 I wanted a system that would encourage building a massive fortress, defending it, and reaping rewards for doing so!
+The core system this mod presents is wave defense in a few different forms. In addition some new special defensive pieces are added to help you along the way.
 
-So now you know half of what this mod means to be. The other half is primarily cosmetic, and ease of use.
-That being, more colorways for buildable pieces along with new variants with the goal of helping ensure large-scale base defense does not become too tedious.
 
 Got a bug to report or just want to chat about the mod? Drop by the discord or github.
-|||||
-|--|--|--|--|
-| Discord | [![discord logo](https://i.imgur.com/uE6umQE.png)](https://discord.gg/Dmr9PQTy9m) | Github | [![github logo](https://i.imgur.com/lvbP5OF.png)](https://github.com/MidnightsFX/Valheim_Fortress) |
+[![discord logo](https://i.imgur.com/uE6umQE.png)](https://discord.gg/Dmr9PQTy9m)
+[![github logo](https://i.imgur.com/lvbP5OF.png)](https://github.com/MidnightsFX/Valheim_Fortress)
 
+---
 
-### Localizations - Translations
-I accept community translations! Existing localizations can be found [here](https://github.com/MidnightsFX/Valheim_Fortress/tree/master/JotunnModStub/Localizations). 
-I will keep the English translation up to date, if you would like to provide a translation feel free to reach out to me on discord or open up a github issue.
+## Table of Contents
+<!-- TOC start (generated with https://github.com/derlin/bitdowntoc) -->
 
+- [Features](#features)
+   * [The shrine of challenge](#the-shrine-of-challenge)
+   * [Shrine of the Arena](#shrine-of-the-arena)
+   * [Wild Shrines](#wild-shrines)
+   * [Cosmetics](#cosmetics)
+   * [How to adjust the difficulty](#how-to-adjust-the-difficulty)
+- [Configuration](#configuration)
+   * [Adding Rewards](#adding-rewards)
+   * [Adding Monsters](#adding-monsters)
+   * [Add/Editing Levels](#addediting-levels)
+   * [Adding/Editing WaveStyles](#addingediting-wavestyles)
+   * [Adding/Editing Wildshrine configuration](#addingediting-wildshrine-configuration)
+- [FAQ](#faq)
+- [Localizations - Translations](#localizations-translations)
+- [Future Features / Incomplete things](#future-features-incomplete-things)
+- [Other Mods](#other-mods)
+- [Credits](#credits)
+- [Known issues](#known-issues)
+- [Changelog](#changelog)
+
+<!-- TOC end -->
+
+<!-- TOC --><a name="features"></a>
 ## Features
-Wave survival through the Shrine of Challenge. Cosmetic building variants, and functional building variants.
 
+<!-- TOC --><a name="the-shrine-of-challenge"></a>
 ### The shrine of challenge
 
-![Shrine of Challenge example](https://i.imgur.com/InPMrmL.gif)
+![Shrine of Challenge example](https://i.imgur.com/TGjVDoB.gif)
+* Weapons shown are from [Valheim Armory](https://valheim.thunderstore.io/package/MidnightMods/ValheimArmory/)
 
-This is what the vast majority of the code from this mod supports. A building which allows you to call dangerous enemies to attack you, in exchange for a reward.
-Do you like fighting? Well you can now fight to get more resources!
+The Shrine of Challenge is a buildable piece that allows you to call waves of enemies to attack you. It is highly configurable, and enemies will spawn outside of your build radius.
 
 The goal with the shrine of challenge is to provide a variable but high level of difficulty raid, which the player(s) can invoke in exchange for a promised reward.
 
-The shrine will gradually unlock more levels and rewards as the server defeats the various bosses.
+The shrine will gradually unlock more levels and rewards as the server defeats the various bosses. The shrine of challenge supports custom waves and rewards.
 
-The shrine of challenge is highly configurable. However it only updates configuration values at startup. This is something I am considering changing, but it massively simplifies this mod.
+<!-- TOC --><a name="shrine-of-the-arena"></a>
+### Shrine of the Arena
 
+![Shrine of Arena example](https://i.imgur.com/5BK7C2y.gif)
+* Weapons shown are from [Valheim Armory](https://valheim.thunderstore.io/package/MidnightMods/ValheimArmory/)
 
+The Shrine of the Arena is somewhat the inverse of the shrine of challenge. Instead of enemies attacking from random remote locations the enemies all spawn on the shrine platform itself.
+
+This shrine is designed to facilitate Arena fights, build yourself an Arena demonstrate your skills!
+
+Again, this shrine is highly configurable and can use the same levels or seperate levels from the shrine of challenge. Build your own custom waves, select your favorite rewards and fight to the death!
+
+<!-- TOC --><a name="wild-shrines"></a>
+### Wild Shrines
+
+![Wild Shrine example](https://i.imgur.com/uum1sAM.gif)
+* Weapons shown are from [Valheim Armory](https://valheim.thunderstore.io/package/MidnightMods/ValheimArmory/)
+
+Wild shrines come in a number of different flavors, one type per biome.
+Each wild shrine will ask for different tribute, from their respective biome.
+
+Upon providing the shrine with the required tribute it will spawn an easy wave of similar creatures, which will then reward you with resources from that biome upon completion.
+This is all configurable!
+
+<!-- TOC --><a name="cosmetics"></a>
 ### Cosmetics
 The secondary goal of this mod is to help in providing cosmetics and functional base building pieces!
 
@@ -66,7 +109,7 @@ These pieces likely need better color balancing, and might have other oddities a
 
 </details>
 
-
+<!-- TOC --><a name="how-to-adjust-the-difficulty"></a>
 ### How to adjust the difficulty
 The Shrine of challenge provides a number of key configuration values which can be used to adjust the difficulty level in many different ways.
 
@@ -90,6 +133,7 @@ if (allocated_challenge_points > max_challenge_points) { allocated_challenge_poi
 
 </details>
 
+<!-- TOC --><a name="configuration"></a>
 ## Configuration
 This mod is HIGHLY configurable. All buildings have configurable crafting recipes and many aspects about the shrine of challenge can be configured to your liking.
 
@@ -109,6 +153,7 @@ Basic configuration view in-game.
 
 </details>
 
+<!-- TOC --><a name="adding-rewards"></a>
 ### Adding Rewards
 Rewards can be added through yaml definitions. You can add anything, but invalid prefabs will cause errors when spawning your reward, and you will recieve nothing.
 Many mods list their resouces prefabs, if you desire to have rewards from the shrine be from another mod.
@@ -133,6 +178,7 @@ Rewards have the following structure, which is also listed inside the configurat
 ```
 
 
+<!-- TOC --><a name="adding-monsters"></a>
 ### Adding Monsters
 Monsters can be added through yaml definitions. You can add any monster you want, but some custom creatures might have issues with the spawn modifications, its advised to test custom creature additions
 in singleplayer before adding them to a server.
@@ -158,6 +204,7 @@ Creatures have the following definition structure, which is also listed inside t
 ```
 
 
+<!-- TOC --><a name="addediting-levels"></a>
 ### Add/Editing Levels
 All of the levels used by the shrine of challenge and all other related shrines are collectively defined in the `Levels.yaml` file, which can be found under your mods configuration folder under `VFortress` eg: `BepInEx\config\VFortress`
 
@@ -204,6 +251,7 @@ Each of these segments will select a different creature and the different catago
 #   uniqueSpawnModifiers: 
 ```
 
+<!-- TOC --><a name="addingediting-wavestyles"></a>
 ### Adding/Editing WaveStyles
 
 Wavestyles are the percentage breakdowns of what catagories of creatures make up a wave. This is useful for balancing waves and for providing variety to the way that waves spawn.
@@ -224,6 +272,7 @@ For example if you made every creature common, many waves would spawn with less 
 #     percent: 30            |- This is the percentage of the waves total point pool that will be used for this spawn
 ```
 
+<!-- TOC --><a name="addingediting-wildshrine-configuration"></a>
 ### Adding/Editing Wildshrine configuration
 
 Wildshrine configuration is split into three important parts.
@@ -274,10 +323,11 @@ and increase them until the final wave (with random noise, making the increases 
 #       eliteSpawnModifiers:                                          |- Spawn modifiers for elite creatures
 ```
 
+<!-- TOC --><a name="faq"></a>
 ## FAQ
 
 Q. I am running an older version and do not see any of the wildshrines, what gives?
-	A. You need to run `genloc` (as an admin on the server), this will freeze your client for a little, and add any missing locations to your world (IN UNEXPLORED AREAS).
+	A. You need to run `genloc` (as an admin on the server), this will freeze your client for a little, and add any missing locations to your world (IN UNEXPLORED AREAS). Please keep in mind that genloc can move existing locations etc and is generally advised against running it on large existing servers.
 
 Q. I can't craft all of the pieces from this mod! They arn't visible in the hammer
 	A . You should install and use [SearsCatalog](https://valheim.thunderstore.io/package/ComfyMods/SearsCatalog/), this will allow the hammer panels to be resized/scrolled to fit any and all prefabs added.
@@ -313,7 +363,12 @@ Q. My game freezes, crashes or becomes very slow when the reward is spawned, wha
 Q. Rewards are too generous / rewards arn't rewarding enough!
 	A. You can configure all of the reward costs, and the bonuses that are applied to determine the pool for rewards. I suggest you read the main mods configuration file and look at the rewards config file.
 
+<!-- TOC --><a name="localizations-translations"></a>
+## Localizations - Translations
+I accept community translations! Existing localizations can be found [here](https://github.com/MidnightsFX/Valheim_Fortress/tree/master/JotunnModStub/Localizations). 
+I will keep the English translation up to date, if you would like to provide a translation feel free to reach out to me on discord or open up a github issue.
 
+<!-- TOC --><a name="future-features-incomplete-things"></a>
 ## Future Features / Incomplete things
 There are a number of things that I plan on adding in the future. Here is the current list.
 
@@ -327,11 +382,13 @@ There are a number of things that I plan on adding in the future. Here is the cu
 	* Lampost color variants
 	* Darkwood variant to aesthetically fit other tar coated wood pieces
 
+<!-- TOC --><a name="other-mods"></a>
 ## Other Mods
 If you like this mod maybe you'll like my other work
 
 [![Valheim Armory](https://i.imgur.com/GofTtar.png)](https://valheim.thunderstore.io/package/MidnightMods/ValheimArmory/)
 
+<!-- TOC --><a name="credits"></a>
 ## Credits
 - A big thank you to Margmas, Venture, Redseiko and Probablykory for providing some examples and answers to my silly questions (and continuing to do so!)
 - The valheim team for continuing to develop valheim, even after their initial roadmap!
@@ -339,15 +396,16 @@ If you like this mod maybe you'll like my other work
 - Unity Ultimate VFX for some or partial visual effects
 - Traslations credits to: Azathoth
 
+<!-- TOC --><a name="known-issues"></a>
 ## Known issues
 - Building pieces sometimes don't have destructable bits
 - Building pieces don't have wear and tear
-- Mobs can form a 'spawn tower' if they can't find someone to attack on spawn
+- Mobs can form a 'spawn tower' (especially common when using the Arena spawner with high spawn limits)
 - Automated turret likes to fire off into space instead of hitting its target occassionally (its aim isn't perfect, so sometimes this is intended)
 	- If you can reliably reproduce this issue please report it on the Github or Discord
 - Singleplayer logging out during a challenge will result in the challenge dissappearing (looking into improvements)
-- Multiplayer having the region host change during a challenge can break the challenge (looking into solutions)
 
+<!-- TOC --><a name="changelog"></a>
 ## Changelog
 
 **0.20.0**
