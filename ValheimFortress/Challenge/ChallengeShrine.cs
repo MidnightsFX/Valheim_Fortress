@@ -54,6 +54,7 @@ namespace ValheimFortress.Challenge
             if (challenge_active.Get() == false)
             {
                 RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations, gameObject.GetComponent<ChallengeShrine>());
+                currentPhase.Set(0); //ensure this is zero
                 challenge_active.Set(true);
                 spawn_controller.TrySpawningPhase(5f, false, wave_phases_definitions.hordePhases[currentPhase.Get()], gameObject, remote_spawn_locations);
                 phase_running = true;
@@ -135,7 +136,7 @@ namespace ValheimFortress.Challenge
                 {
                     List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
                     ChallengeLevelDefinition levelDefinition = clevels.ElementAt(selected_level.Get());
-                    wave_phases_definitions = Levels.generateRandomWaveWithOptions(levelDefinition, hard_mode.Get(), boss_mode.Get(), siege_mode.Get());
+                    wave_phases_definitions = Levels.generateRandomWaveWithOptions(levelDefinition, hard_mode.Get(), boss_mode.Get(), siege_mode.Get(), VFConfig.ChallengeShrineMaxCreaturesPerWave.Value);
                     wave_definition_ready.Set(true);
                     StartCoroutine(RemoteLocationPortals.DetermineRemoteSpawnLocations(gameObject, gameObject.GetComponent<ChallengeShrine>()));
                 }

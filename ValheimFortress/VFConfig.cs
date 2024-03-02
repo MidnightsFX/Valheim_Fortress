@@ -29,6 +29,8 @@ namespace ValheimFortress
         public static ConfigEntry<float> ShrineAnnouncementRange;
         public static ConfigEntry<float> DistanceBetweenShrines;
         public static ConfigEntry<short> NumberOfEachWildShrine;
+        public static ConfigEntry<short> ChallengeShrineMaxCreaturesPerWave;
+        public static ConfigEntry<short> ArenaShrineMaxCreaturesPerWave;
 
         private static CustomRPC monsterSyncRPC;
         private static CustomRPC rewardSyncRPC;
@@ -70,7 +72,7 @@ namespace ValheimFortress
         {
             monsterSyncRPC = NetworkManager.Instance.AddRPC("monsteryaml_rpc", OnServerRecieveConfigs, OnClientReceiveCreatureConfigs);
             rewardSyncRPC = NetworkManager.Instance.AddRPC("rewardsyaml_rpc", OnServerRecieveConfigs, OnClientReceiveRewardsConfigs);
-            WavesSyncRPC = NetworkManager.Instance.AddRPC("rewardsyaml_rpc", OnServerRecieveConfigs, OnClientReceiveWaveConfigs);
+            WavesSyncRPC = NetworkManager.Instance.AddRPC("wavestyleyaml_rpc", OnServerRecieveConfigs, OnClientReceiveWaveConfigs);
             LevelsSyncRPC = NetworkManager.Instance.AddRPC("levelsyaml_rpc", OnServerRecieveConfigs, OnClientReceiveLevelConfigs);
             WildShrineSyncRPC = NetworkManager.Instance.AddRPC("wildshrineyaml_rpc", OnServerRecieveConfigs, OnClientReceiveWildShrineConfigs);
 
@@ -312,7 +314,7 @@ namespace ValheimFortress
                 var levelsValues = CONST.yamldeserializer.Deserialize<ChallengeLevelDefinitionCollection>(LevelsConfigs);
                 Levels.UpdateLevelsDefinition(levelsValues);
             }
-            catch (Exception e) { Jotunn.Logger.LogWarning($"There was an error updating the rewards values, defaults will be used. Exception: {e}"); }
+            catch (Exception e) { Jotunn.Logger.LogWarning($"There was an error updating the levelDefinitions values, defaults will be used. Exception: {e}"); }
             try
             {
                 var wildshrinesValues = CONST.yamldeserializer.Deserialize<WildShrineConfigurationCollection>(WildShrineConfigs);
@@ -364,14 +366,14 @@ namespace ValheimFortress
             rewardsFSWatcher.SynchronizingObject = ThreadingHelper.SynchronizingObject;
             rewardsFSWatcher.EnableRaisingEvents = true;
 
-            // File watcher for the Rewards
+            // File watcher for the Wildshrines
             FileSystemWatcher wildShrineFSWatcher = new FileSystemWatcher();
             wildShrineFSWatcher.Path = externalConfigFolder;
             wildShrineFSWatcher.NotifyFilter = NotifyFilters.LastWrite;
             wildShrineFSWatcher.Filter = "WildShrines.yaml";
             wildShrineFSWatcher.Changed += new FileSystemEventHandler(UpdateWildShrineConfigFileOnChange);
-            wildShrineFSWatcher.Created += new FileSystemEventHandler(UpdateRewardsConfigFileOnChange);
-            wildShrineFSWatcher.Renamed += new RenamedEventHandler(UpdateRewardsConfigFileOnChange);
+            wildShrineFSWatcher.Created += new FileSystemEventHandler(UpdateWildShrineConfigFileOnChange);
+            wildShrineFSWatcher.Renamed += new RenamedEventHandler(UpdateWildShrineConfigFileOnChange);
             wildShrineFSWatcher.SynchronizingObject = ThreadingHelper.SynchronizingObject;
             wildShrineFSWatcher.EnableRaisingEvents = true;
         }
@@ -501,7 +503,7 @@ namespace ValheimFortress
             {
                 try
                 {
-                    monsterSyncRPC.SendPackage(ZNet.instance.m_peers, SendLevelsConfigs());
+                    LevelsSyncRPC.SendPackage(ZNet.instance.m_peers, SendLevelsConfigs());
                     if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sent levels configs to clients."); }
                 }
                 catch
@@ -582,7 +584,7 @@ namespace ValheimFortress
             {
                 try
                 {
-                    monsterSyncRPC.SendPackage(ZNet.instance.m_peers, SendWavesConfigs());
+                    WavesSyncRPC.SendPackage(ZNet.instance.m_peers, SendWavesConfigs());
                     if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sent WaveDefinition configs to clients."); }
                 }
                 catch
@@ -657,7 +659,7 @@ namespace ValheimFortress
             {
                 try
                 {
-                    rewardSyncRPC.SendPackage(ZNet.instance.m_peers, SendWildShrineConfigs());
+                    WildShrineSyncRPC.SendPackage(ZNet.instance.m_peers, SendWildShrineConfigs());
                     if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sent Wildshrine configs to clients."); }
                 }
                 catch (Exception)
@@ -786,6 +788,10 @@ namespace ValheimFortress
             ShrineAnnouncementRange = BindServerConfig("Shrine of Challenge", "ShrineAnnouncementRange", 150f, "Sets the range at which announcements will display for shrine of challenge related activities", true, 50f, 800f);
             DistanceBetweenShrines = BindServerConfig("Wild Shrines", "DistanceBetweenShrines", 1000f, "The mimum distance between shrines, setting this higher will result in fewer wild shrines, lower more.", true, 100f, 5000f);
             NumberOfEachWildShrine = BindServerConfig("Wild Shrines", "NumberOfEachWildShrine", 100, "Each wild shrine type will attempt to be placed this many times", true, 5, 200);
+
+            ChallengeShrineMaxCreaturesPerWave = BindServerConfig("Shrine of Challenge", "max_creatures_per_wave", (short)60, "The max number of creatures that a wave can generate with, creatures will attempt to upgrade and reduce counts based on this.",true, 12, 200);
+            ArenaShrineMaxCreaturesPerWave = BindServerConfig("Shrine of Arena", "max_creatures_per_wave", (short)25, "The max number of creatures that a wave can generate with, creatures will attempt to upgrade and reduce counts based on this.", true, 12, 200);
+
             // Client side configurations
 
             // Debugmode

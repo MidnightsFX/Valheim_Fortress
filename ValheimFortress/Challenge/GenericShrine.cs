@@ -62,7 +62,8 @@ namespace ValheimFortress.Challenge
                 Jotunn.Logger.LogInfo("Created Shrine Znet View Values.");
 
                 WaveDefinitionRPC = NetworkManager.Instance.AddRPC("levelsyaml_rpc", VFConfig.OnServerRecieveConfigs, OnClientReceivePhaseConfigs);
-                SynchronizationManager.Instance.AddInitialSynchronization(WaveDefinitionRPC, SendPhaseConfigs);
+                // Don't need to sync wave data to new clients connecting. There is a chance that if we swap owners during someone connecting to a region where a shrine challenge occurs that things could go wonky
+                // SynchronizationManager.Instance.AddInitialSynchronization(WaveDefinitionRPC, SendPhaseConfigs);
             }
             // Jotunn.Logger.LogInfo("Shrine Awake Finished");
         }

@@ -1061,19 +1061,12 @@ namespace ValheimFortress.Challenge
                 "The chance that a valid prior biome creature will be selected. Only 1 can be selected per wave. Setting to zero disables generating waves with previous biome creatures.",
                 false, 0.00f, 1.0f).Value;
 
-            max_creatures_per_wave = cfg.BindServerConfig(
-                "shine of challenge - levels",
-                "max_creatures_per_wave",
-                (short)60,
-                "The max number of creatures that a wave can generate with, creatures will attempt to upgrade and reduce counts based on this.",
-                true, 12, 200).Value;
-
             max_creature_stars = cfg.BindServerConfig(
                 "shine of challenge - levels",
                 "max_creature_stars",
                 (short)2,
                 "This is the max number of stars a creature can have. CLLC is required for anything over 2.",
-                true, 0, 5).Value;
+                true, 0, 10).Value;
         }
 
 
@@ -1471,7 +1464,7 @@ namespace ValheimFortress.Challenge
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Wave has more creatures than allowed from configuration to remove: {total_creatures_in_wave} > {max_per_wave}"); }
             short iterations = 0;
             // This won't scale up infinitely in reducing waves, but could produce waves up to 1/4th the size
-            while(iterations < 4)
+            while(iterations < max_creature_stars + 1)
             {
                 total_creatures_in_wave = EvaluateAndReduceWave(hoards, total_creatures_in_wave, max_per_wave);
                 if (total_creatures_in_wave <= max_per_wave) { break; }

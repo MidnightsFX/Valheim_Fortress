@@ -55,6 +55,7 @@ namespace ValheimFortress.Challenge
             if (challenge_active.Get() == false)
             {
                 challenge_active.Set(true);
+                currentPhase.Set(0); //ensure this is zero
                 spawn_controller.TrySpawningPhase(5f, false, wave_phases_definitions.hordePhases[currentPhase.Get()], gameObject, remote_spawn_locations);
                 phase_running = true;
                 Jotunn.Logger.LogInfo($"Challenge started. Level: {selected_level.Get()} Reward: {selected_reward.Get()}");
@@ -137,7 +138,7 @@ namespace ValheimFortress.Challenge
                 {
                     List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
                     ChallengeLevelDefinition levelDefinition = clevels.ElementAt(selected_level.Get());
-                    wave_phases_definitions = Levels.generateRandomWaveWithOptions(levelDefinition, hard_mode.Get(), boss_mode.Get(), siege_mode.Get());
+                    wave_phases_definitions = Levels.generateRandomWaveWithOptions(levelDefinition, hard_mode.Get(), boss_mode.Get(), siege_mode.Get(), VFConfig.ArenaShrineMaxCreaturesPerWave.Value);
                     wave_definition_ready.Set(true);
                 }
 
