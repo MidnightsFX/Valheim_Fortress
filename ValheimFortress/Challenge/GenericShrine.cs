@@ -83,19 +83,32 @@ namespace ValheimFortress.Challenge
         protected static ZPackage SendPhaseConfigs()
         {
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sending Hoard phase configs to peer clients."); }
-            // I really wanted to do this with JSON, but I already have YAML in here, and didn't want to pull another large dep package
-            availablePhases = wave_phases_definitions.hordePhases.Count;
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Set wave phases: {availablePhases}."); }
-            var yaml_string = CONST.yamlserializer.Serialize(wave_phases_definitions);
-            ZPackage package = new ZPackage();
-            package.Write(yaml_string);
-            return package;
+            try
+            {
+                if (VFConfig.EnableDebugMode.Value) {
+                    Jotunn.Logger.LogInfo($"Set wave phases: {wave_phases_definitions}.");
+                }
+                // I really wanted to do this with JSON, but I already have YAML in here, and didn't want to pull another large dep package
+                var yaml_string = CONST.yamlserializer.Serialize(wave_phases_definitions);
+                ZPackage package = new ZPackage();
+                package.Write(yaml_string);
+                return package;
+            } catch
+            {
+                PhasedWaveTemplate emptyTemplate = new PhasedWaveTemplate();
+                var yaml_string = CONST.yamlserializer.Serialize(emptyTemplate);
+                ZPackage package = new ZPackage();
+                package.Write(yaml_string);
+                return package;
+            }
         }
 
         protected static void SendUpdatedPhaseConfigs()
         {
             try
             {
+                // Bail if there are no configs to send
+                if (wave_phases_definitions == null) { return; }
                 WaveDefinitionRPC.SendPackage(ZNet.instance.m_peers, SendPhaseConfigs());
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sent Phase configs to clients."); }
             }

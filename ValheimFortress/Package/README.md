@@ -409,16 +409,27 @@ If you like this mod maybe you'll like my other work
 ## Changelog
 
 
-**0.20.2**
+**0.20.4**
 ```
+- Fixed an error where wildshrines could try to sync a null znet on client connect
+```
+
+
+<details>
+  <summary>Full Changelog</summary>
+
+  **0.20.3**
+```
+- Fixed an error where connecting to a world with a VF shrine within loading range would trigger a data sync of a null object
+```
+
+  **0.20.2**
+  ```
 - Fixed issue which would throw an error when starting a challenge at the Shrine of Challenge & Shrine of the Arena (error would not cause issues)
 - Deprecated and split out MaxCreaturesPerWave configuration to allow seperate configuration for the Challenge and Arena shrines (wildshrines already have seperate configs)
 - Increased the max stars that are allowed through the shrine to 10
 - Fixed some switched sychronization RPC channels
 ```
-
-<details>
-  <summary>Full Changelog</summary>
 
 **0.20.1**
 ```
