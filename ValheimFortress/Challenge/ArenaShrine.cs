@@ -1,5 +1,4 @@
 ﻿using Jotunn.Extensions;
-using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -165,6 +164,7 @@ namespace ValheimFortress.Challenge
                         {
                             // Start the next phase
                             should_add_creature_beacons.Set(false);
+                            force_next_phase.Set(false);
                             spawn_controller.TrySpawningPhase(10f, true, wave_phases_definitions.hordePhases[currentPhase.Get()], gameObject, remote_spawn_locations);
                             phase_running = true;
                             currentPhase.Set(currentPhase.Get() + 1);

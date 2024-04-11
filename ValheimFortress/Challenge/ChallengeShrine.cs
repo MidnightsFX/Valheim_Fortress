@@ -158,12 +158,13 @@ namespace ValheimFortress.Challenge
                 if (wave_phases_definitions.hordePhases.Count > 0)
                 {
                     // We need to A. have spawned creatures & there needs to be none of those spawned creatures remaining
-                    if (enemies.Count > 0 && spawned_creatures.Get() <= 0 && phase_running == false)
+                    if (force_next_phase.Get() || enemies.Count > 0 && spawned_creatures.Get() <= 0 && phase_running == false)
                     {
                         if (RemainingPhases())
                         {
                             // Start the next phase
                             should_add_creature_beacons.Set(false);
+                            force_next_phase.Set(false);
                             spawn_controller.TrySpawningPhase(10f, true, wave_phases_definitions.hordePhases[currentPhase.Get()], gameObject, remote_spawn_locations);
                             phase_running = true;
                             currentPhase.Set(currentPhase.Get() + 1);

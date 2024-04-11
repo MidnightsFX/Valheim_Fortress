@@ -330,8 +330,7 @@ Q. I am running an older version and do not see any of the wildshrines, what giv
 	A. You need to run `genloc` (as an admin on the server), this will freeze your client for a little, and add any missing locations to your world (IN UNEXPLORED AREAS). Please keep in mind that genloc can move existing locations etc and is generally advised against running it on large existing servers.
 
 Q. I can't craft all of the pieces from this mod! They arn't visible in the hammer
-	A . You should install and use [SearsCatalog](https://valheim.thunderstore.io/package/ComfyMods/SearsCatalog/), this will allow the hammer panels to be resized/scrolled to fit any and all prefabs added.
-		If you downloaded from Thunderstore sears catalog will be included automatically as a dependency. However VF does not have a hard dependency on SearsCatalog and can be used without it if desired.
+	A . You should install and use [SearsCatalog](https://valheim.thunderstore.io/package/ComfyMods/SearsCatalog/), this will allow the hammer panels to be resized/scrolled to fit any and all prefabs added. This may no longer be necessary on newer Valheim versions.
 
 Q. There are remaining creatures and I can't find them!?
 	A . Interacting with the shrine while the challenge is active gives you the option to summon fireworks on creatures or teleport them to the shrine (if there are only a few left, this is configurable)
@@ -409,14 +408,21 @@ If you like this mod maybe you'll like my other work
 ## Changelog
 
 
-**0.20.4**
+**0.20.5**
 ```
-- Fixed an error where wildshrines could try to sync a null znet on client connect
+- Fix for reference to missing dynamic linked library (dll)
+- Updated Jotunn to support Ashlands
+- Removed soft dependency listed for sears catalog
 ```
 
 
 <details>
   <summary>Full Changelog</summary>
+
+  **0.20.4**
+```
+- Fixed an error where wildshrines could try to sync a null znet on client connect
+```
 
   **0.20.3**
 ```

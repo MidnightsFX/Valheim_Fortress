@@ -26,6 +26,7 @@ namespace ValheimFortress.Challenge
         public IntZNetProperty currentPhase { get; protected set; }
         public BoolZNetProperty wave_definition_ready { get; protected set; }
         public BoolZNetProperty spawn_locations_ready { get; protected set; }
+        public BoolZNetProperty force_next_phase { get; protected set; }
 
         protected static bool client_set_creature_beacons = false;
         protected static bool shrine_portal_active = false;
@@ -59,6 +60,8 @@ namespace ValheimFortress.Challenge
                 currentPhase = new IntZNetProperty("shrine_current_phase", zNetView, 0);
                 wave_definition_ready = new BoolZNetProperty("wave_definition_ready", zNetView, false);
                 spawn_locations_ready = new BoolZNetProperty("spawn_locations_ready", zNetView, false);
+                force_next_phase = new BoolZNetProperty("force_next_phase", zNetView, false);
+                
                 Jotunn.Logger.LogInfo("Created Shrine Znet View Values.");
 
                 WaveDefinitionRPC = NetworkManager.Instance.AddRPC("levelsyaml_rpc", VFConfig.OnServerRecieveConfigs, OnClientReceivePhaseConfigs);
@@ -286,6 +289,15 @@ namespace ValheimFortress.Challenge
             wave_phases_definitions = new PhasedWaveTemplate(); // Got to clear the template
             wave_definition_ready.Set(false);
             spawn_locations_ready.Set(false);
+        }
+
+        public void ReconnectCreatureList()
+        {
+            if (enemies.Count == 0)
+            {
+                spawned_creatures.ForceSet(0);
+                force_next_phase.ForceSet(true);
+            }
         }
 
         public void NotifyRemainingCreatures()
