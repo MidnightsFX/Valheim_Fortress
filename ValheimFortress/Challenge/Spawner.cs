@@ -10,7 +10,6 @@ namespace ValheimFortress.Challenge
     class Spawner : MonoBehaviour
     {
         private static int CurrentCompletedHordes = 0;
-
         private static void CompleteHorde()
         {
             CurrentCompletedHordes ++;
@@ -134,6 +133,7 @@ namespace ValheimFortress.Challenge
                 // Add the rewards tracker, and set the reference shrine
                 creature.AddComponent<CreatureTracker>();
                 creature.GetComponent<CreatureTracker>().SetShrine(shrine);
+                creature.GetComponent<CreatureTracker>().setCreatureName(hoard.prefab);
                 try
                 {
                     shrine.addEnemy(creature);

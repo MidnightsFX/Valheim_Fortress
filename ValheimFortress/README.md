@@ -375,11 +375,10 @@ There are a number of things that I plan on adding in the future. Here is the cu
 	* Add ward support checking to ensure that the player interacting with the shrine is allowed
 	* Add a failsafe for waves to despawn after a long period of time (if the player is unable to kill them etc)
 
-* cosmetics
-	* Whitemarble cosmetic variant of blackmarble
-	* Torch color variants
-	* Lampost color variants
-	* Darkwood variant to aesthetically fit other tar coated wood pieces
+* defenses
+	* Another tier of trap for the plains
+	* Another tier of walls
+	* Improving creature targeting for ballistas
 
 <!-- TOC --><a name="other-mods"></a>
 ## Other Mods

@@ -15,6 +15,7 @@ namespace ValheimFortress
         public static ConfigFile cfg;
         public static ConfigEntry<bool> EnableDebugMode;
         public static ConfigEntry<bool> EnableTurretDebugMode;
+        public static ConfigEntry<bool> BallistaTargetsPassives;
         public static ConfigEntry<short> MaxSpawnRange;
         public static ConfigEntry<float> rewardsMultiplier;
         public static ConfigEntry<float> rewardsDifficultyScalar;
@@ -26,8 +27,10 @@ namespace ValheimFortress
         public static ConfigEntry<short> MaxRewardsPerSecond;
         public static ConfigEntry<short> NotifyCreatureThreshold;
         public static ConfigEntry<short> TeleportCreatureThreshold;
+        public static ConfigEntry<short> ShrineReconnectPauseBetweenAmount;
         public static ConfigEntry<float> ShrineAnnouncementRange;
         public static ConfigEntry<float> DistanceBetweenShrines;
+        public static ConfigEntry<float> ShrineReconnectRange;
         public static ConfigEntry<short> NumberOfEachWildShrine;
         public static ConfigEntry<short> ChallengeShrineMaxCreaturesPerWave;
         public static ConfigEntry<short> ArenaShrineMaxCreaturesPerWave;
@@ -786,11 +789,16 @@ namespace ValheimFortress
             NotifyCreatureThreshold = BindServerConfig("Shrine of Challenge", "NotifyCreatureThreshold", 10, "Sets the level at which interacting with the shrine will add notifier to remaining creatures.", true, 1, 50);
             TeleportCreatureThreshold = BindServerConfig("Shrine of Challenge", "TeleportCreatureThreshold", 3, "Sets the level at which interacting with the shrine teleport remaining creatures to the shrine.", true, 1, 50);
             ShrineAnnouncementRange = BindServerConfig("Shrine of Challenge", "ShrineAnnouncementRange", 150f, "Sets the range at which announcements will display for shrine of challenge related activities", true, 50f, 800f);
+            ShrineReconnectRange = BindServerConfig("Shrine of Challenge", "ShrineReconnectRange", 150f, "Sets the max range for the shrine to scan creatures for reconnection when an area is unloaded/reloaded (this includes exit/loading singleplayer).", true, 500f, 5000f);
+            ShrineReconnectPauseBetweenAmount = BindServerConfig("Shrine of Challenge", "ShrineReconnectPauseBetweenAmount", 30, "Sets the maximun number of creatures to process for reconnection in a singular second.", true, 1, 60);
             DistanceBetweenShrines = BindServerConfig("Wild Shrines", "DistanceBetweenShrines", 1000f, "The mimum distance between shrines, setting this higher will result in fewer wild shrines, lower more.", true, 100f, 5000f);
             NumberOfEachWildShrine = BindServerConfig("Wild Shrines", "NumberOfEachWildShrine", 100, "Each wild shrine type will attempt to be placed this many times", true, 5, 200);
 
-            ChallengeShrineMaxCreaturesPerWave = BindServerConfig("Shrine of Challenge", "max_creatures_per_wave", (short)60, "The max number of creatures that a wave can generate with, creatures will attempt to upgrade and reduce counts based on this.",true, 12, 200);
+            ChallengeShrineMaxCreaturesPerWave = BindServerConfig("Shrine of Challenge", "max_creatures_per_wave", (short)60, "The max number of creatures that a wave can generate with, creatures will attempt to upgrade and reduce counts based on this.", true, 12, 200);
             ArenaShrineMaxCreaturesPerWave = BindServerConfig("Shrine of Arena", "max_creatures_per_wave", (short)25, "The max number of creatures that a wave can generate with, creatures will attempt to upgrade and reduce counts based on this.", true, 12, 200);
+
+            // Ballista config
+            BallistaTargetsPassives = BindServerConfig("Auto Ballista", "EnableTargetingPassiveCreatures", false, "Whether or not the automated ballista will target passive creatures (like deer)", true);
 
             // Client side configurations
 

@@ -232,7 +232,7 @@ namespace ValheimFortress
                 EmbeddedResourceBundle,
                 cfg,
                 new Dictionary<string, string>() {
-                    { "name", "Magic Turret" },
+                    { "name", "Auto Ballista" },
                     { "catagory", "Misc" },
                     { "prefab", "VFpiece_turret" },
                     { "sprite", "modified_turret" },

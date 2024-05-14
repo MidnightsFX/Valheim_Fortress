@@ -11,10 +11,16 @@ namespace ValheimFortress.Challenge
     {
         private ZNetView zNetView;
         private GenericShrine shrineReference;
+        private String creature_name;
 
         public void SetShrine(GenericShrine shrine)
         {
             shrineReference = shrine;
+        }
+
+        public void setCreatureName(String cname)
+        {
+            creature_name = cname;
         }
 
         public void Awake()
@@ -24,7 +30,10 @@ namespace ValheimFortress.Challenge
         // When the object is destroyed, mention
         void OnDestroy()
         {
-            shrineReference.DecrementSpawned();
+            // if the znet is shutting down we don't want to or need to do this
+            if (!zNetView.IsValid()) {
+                shrineReference.DecrementSpecificCreatureSpawned(creature_name);
+            }
         }
 
         public void Update()
@@ -37,8 +46,6 @@ namespace ValheimFortress.Challenge
             {
                 DestroySelf();
             }
-
-
         }
 
         private void DestroySelf()

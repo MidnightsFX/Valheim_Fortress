@@ -139,8 +139,8 @@ namespace ValheimFortress.Challenge
             phase_running = true;
             RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations, gameObject.GetComponent<WildShrine>());
             spawn_controller.TrySpawningPhase(5f, false, wave_phases_definitions.hordePhases[currentPhase.Get()], gameObject, remote_spawn_locations);
-            
-            
+            SetCurrentCreatureList(wave_phases_definitions.hordePhases[currentPhase.Get()]);
+
             start_challenge.Set(false);
             currentPhase.Set(currentPhase.Get() + 1);
             Jotunn.Logger.LogInfo($"Challenge started. Level: {selected_level.Get()} Reward: {selected_reward.Get()}");
@@ -244,11 +244,10 @@ namespace ValheimFortress.Challenge
                 // Generally this mode is entered when the shrine does not have wave information, but has passed the generation phase
                 if (wave_phases_definitions == null)
                 {
-                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Wave Phase information is missing, reseting challenge."); }
-                    wave_definition_ready.Set(false);
-                    spawn_locations_ready.Set(false);
-                    challenge_active.ForceSet(false);
-                    Disableportal();
+                    Jotunn.Logger.LogInfo("Starting shrine reconnection to creatures, this will regenerate the wave definition.");
+                    StartCoroutine(ReconnectUnlinkedCreatures(shrine_spawnpoint.transform.position, gameObject.GetComponent<WildShrine>()));
+                    WildShrineLevelConfiguration wLevelDefinition = wildShrineConfiguration.wildShrineLevelsConfig.ElementAt(selected_level.Get());
+                    wave_phases_definitions = Levels.generateRandomWaveWithOptions(wLevelDefinition.wildLevelDefinition.ToChallengeLevelDefinition(), hard_mode.Get(), false, siege_mode.Get(), wLevelDefinition.wildLevelDefinition.maxCreaturesPerPhaseOverride);
                     return;
                 }
                 if (wave_phases_definitions.hordePhases.Count > 0)
@@ -257,16 +256,19 @@ namespace ValheimFortress.Challenge
                     if (VFConfig.EnableDebugMode.Value && log_slower == 60) { Jotunn.Logger.LogInfo($"Checking {enemies.Count} {spawned_creatures.Get()} {phase_running}"); }
 
 
-                    if (enemies.Count > 0 && spawned_creatures.Get() <= 0 && phase_running == false)
+                    if (force_next_phase.Get() || enemies.Count > 0 && spawned_creatures.Get() <= 0 && phase_running == false)
                     {
                         if (RemainingPhases())
                         {
                             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Starting next phase."); }
                             // Start the next phase
                             should_add_creature_beacons.Set(false);
-                            spawn_controller.TrySpawningPhase(10f, true, wave_phases_definitions.hordePhases[currentPhase.Get()], gameObject, remote_spawn_locations);
+                            force_next_phase.Set(false);
+                            var current_phase = currentPhase.Get();
+                            spawn_controller.TrySpawningPhase(10f, true, wave_phases_definitions.hordePhases[current_phase], gameObject, remote_spawn_locations);
+                            SetCurrentCreatureList(wave_phases_definitions.hordePhases[current_phase]);
                             phase_running = true;
-                            currentPhase.Set(currentPhase.Get() + 1);
+                            currentPhase.Set(current_phase + 1);
                         }
                         else
                         {
@@ -285,6 +287,7 @@ namespace ValheimFortress.Challenge
                             hard_mode.Set(false);
                             siege_mode.Set(false);
                             end_of_challenge.Set(true);
+                            force_next_phase.Set(false);
                             Disableportal();
                             wave_phases_definitions = new PhasedWaveTemplate() { hordePhases = new List<List<HoardConfig>> { } }; // Got to clear the template
                             SendUpdatedPhaseConfigs();

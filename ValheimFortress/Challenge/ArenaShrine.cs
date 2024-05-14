@@ -56,6 +56,7 @@ namespace ValheimFortress.Challenge
                 challenge_active.Set(true);
                 currentPhase.Set(0); //ensure this is zero
                 spawn_controller.TrySpawningPhase(5f, false, wave_phases_definitions.hordePhases[currentPhase.Get()], gameObject, remote_spawn_locations);
+                SetCurrentCreatureList(wave_phases_definitions.hordePhases[currentPhase.Get()]);
                 phase_running = true;
                 Jotunn.Logger.LogInfo($"Challenge started. Level: {selected_level.Get()} Reward: {selected_reward.Get()}");
                 start_challenge.Set(false);
@@ -155,19 +156,34 @@ namespace ValheimFortress.Challenge
 
             if (challenge_active.Get() == true)
             {
+                // the challenge should be running but there are no phase definitions. This happens when the shrine has become disconnected.
+                if (wave_phases_definitions == null)
+                {
+                    Jotunn.Logger.LogInfo("Starting shrine reconnection to creatures, this will regenerate the wave definition.");
+                    StartCoroutine(ReconnectUnlinkedCreatures(shrine_spawnpoint.transform.position, gameObject.GetComponent<ArenaShrine>()));
+                    List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
+                    ChallengeLevelDefinition levelDefinition = clevels.ElementAt(selected_level.Get());
+                    wave_phases_definitions = Levels.generateRandomWaveWithOptions(levelDefinition, hard_mode.Get(), boss_mode.Get(), siege_mode.Get(), VFConfig.ChallengeShrineMaxCreaturesPerWave.Value);
+                    wave_definition_ready.Set(true);
+                    return;
+                    // Ideally everything else is currently still correct since the last time this object was loaded
+                }
+
                 if (wave_phases_definitions.hordePhases.Count > 0)
                 {
                     // We need to A. have spawned creatures & there needs to be none of those spawned creatures remaining
-                    if (enemies.Count > 0 && spawned_creatures.Get() <= 0 && phase_running == false)
+                    if (force_next_phase.Get() || enemies.Count > 0 && spawned_creatures.Get() <= 0 && phase_running == false)
                     {
                         if (RemainingPhases())
                         {
                             // Start the next phase
                             should_add_creature_beacons.Set(false);
                             force_next_phase.Set(false);
-                            spawn_controller.TrySpawningPhase(10f, true, wave_phases_definitions.hordePhases[currentPhase.Get()], gameObject, remote_spawn_locations);
                             phase_running = true;
-                            currentPhase.Set(currentPhase.Get() + 1);
+                            var current_phase = currentPhase.Get();
+                            spawn_controller.TrySpawningPhase(10f, true, wave_phases_definitions.hordePhases[current_phase], gameObject, remote_spawn_locations);
+                            SetCurrentCreatureList(wave_phases_definitions.hordePhases[current_phase]);
+                            currentPhase.Set(current_phase + 1);
                         }
                         else
                         {
@@ -185,6 +201,7 @@ namespace ValheimFortress.Challenge
                             hard_mode.Set(false);
                             siege_mode.Set(false);
                             end_of_challenge.Set(true);
+                            force_next_phase.Set(false);
                             Disableportal();
                             wave_phases_definitions = new PhasedWaveTemplate() { hordePhases = new List<List<HoardConfig>> { } }; // Got to clear the template
                             SendUpdatedPhaseConfigs();

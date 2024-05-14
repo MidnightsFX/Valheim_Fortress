@@ -12,6 +12,9 @@ namespace ValheimFortress.Challenge
     {
         protected ZNetView zNetView;
         public IntZNetProperty spawned_creatures { get; protected set; }
+
+        public DictionaryZNetProperty alive_creature_list { get; protected set; }
+
         public BoolZNetProperty hard_mode { get; protected set; }
         public BoolZNetProperty boss_mode { get; protected set; }
         public BoolZNetProperty siege_mode { get; protected set; }
@@ -61,14 +64,150 @@ namespace ValheimFortress.Challenge
                 wave_definition_ready = new BoolZNetProperty("wave_definition_ready", zNetView, false);
                 spawn_locations_ready = new BoolZNetProperty("spawn_locations_ready", zNetView, false);
                 force_next_phase = new BoolZNetProperty("force_next_phase", zNetView, false);
-                
-                Jotunn.Logger.LogInfo("Created Shrine Znet View Values.");
 
+                Dictionary<String, short> default_creature_dictionary = new Dictionary<String, short>() { };
+                alive_creature_list = new DictionaryZNetProperty("alive_creature_list", zNetView, default_creature_dictionary);
+
+                if (VFConfig.EnableDebugMode.Value)
+                {
+                    Jotunn.Logger.LogInfo("Created Shrine Znet View Values.");
+                    Jotunn.Logger.LogInfo($"spawned_creatures={spawned_creatures.Get()}");
+                    Jotunn.Logger.LogInfo($"hard_mode={hard_mode.Get()}");
+                    Jotunn.Logger.LogInfo($"boss_mode={boss_mode.Get()}");
+                    Jotunn.Logger.LogInfo($"siege_mode={siege_mode.Get()}");
+                    Jotunn.Logger.LogInfo($"challenge_active={challenge_active.Get()}");
+                    Jotunn.Logger.LogInfo($"start_challenge={start_challenge.Get()}");
+                    Jotunn.Logger.LogInfo($"selected_level={selected_level.Get()}");
+                    Jotunn.Logger.LogInfo($"selected_reward={selected_reward.Get()}");
+                    Jotunn.Logger.LogInfo($"end_of_challenge={end_of_challenge.Get()}");
+                    Jotunn.Logger.LogInfo($"should_add_creature_beacons={should_add_creature_beacons.Get()}");
+                    Jotunn.Logger.LogInfo($"currentPhase={currentPhase.Get()}");
+                    Jotunn.Logger.LogInfo($"wave_definition_ready={wave_definition_ready.Get()}");
+                    Jotunn.Logger.LogInfo($"spawn_locations_ready={spawn_locations_ready.Get()}");
+                    Jotunn.Logger.LogInfo($"force_next_phase={force_next_phase.Get()}");
+
+                    //Jotunn.Logger.LogInfo($"alive_creature_list={alive_creature_list.Get()}");
+                    // Print the actual entries in the alive creature list
+                    string current_creature_entries = "";
+                    foreach (KeyValuePair<String, short> entry in alive_creature_list.Get())
+                    {
+                        current_creature_entries += $"\n{entry.Key}={entry.Value}";
+                    }
+                    Jotunn.Logger.LogInfo($"alive_creature_list size {alive_creature_list.Get().Count} values:{current_creature_entries}");
+                }
+                
                 WaveDefinitionRPC = NetworkManager.Instance.AddRPC("levelsyaml_rpc", VFConfig.OnServerRecieveConfigs, OnClientReceivePhaseConfigs);
                 // Don't need to sync wave data to new clients connecting. There is a chance that if we swap owners during someone connecting to a region where a shrine challenge occurs that things could go wonky
                 // SynchronizationManager.Instance.AddInitialSynchronization(WaveDefinitionRPC, SendPhaseConfigs);
             }
             // Jotunn.Logger.LogInfo("Shrine Awake Finished");
+        }
+
+        protected void SetCurrentCreatureList(List<HoardConfig> phase_hoard_configs)
+        {
+            Dictionary<String, short> new_creature_list = new Dictionary<String, short>() { };
+            foreach (HoardConfig hoard in phase_hoard_configs)
+            {
+                new_creature_list.Add(hoard.prefab, hoard.amount);
+            }
+            alive_creature_list.Set(new_creature_list);
+        }
+
+        protected IEnumerator ReconnectUnlinkedCreatures(Vector3 shrine_location, GenericShrine shrine_ref)
+        {
+            Dictionary<String, short> current_creature_list = alive_creature_list.Get();
+            Jotunn.Logger.LogInfo($"types of creatures to reconnect: {current_creature_list.Count}");
+            // Nothing to do
+            if (current_creature_list.Count == 0)
+            {
+                // No reconnection to do, but we should move to the next phase if there is one
+                force_next_phase.Set(true);
+                yield break;
+            }
+            string current_creature_entries = "";
+            foreach (KeyValuePair<String, short> entry in current_creature_list)
+            {
+                current_creature_entries += $"{entry.Key}={entry.Value}\n";
+            }
+            Jotunn.Logger.LogInfo($"Current creatures to reconnect: \n{current_creature_entries}");
+
+            enemies.Clear();
+
+            List<Character> potentialTargets = new List<Character> { };
+            Character.GetCharactersInRange(shrine_location, VFConfig.ShrineReconnectRange.Value, potentialTargets);
+            Dictionary<String, short> number_of_this_creature_added = new Dictionary<String, short>();
+            foreach(String cname in current_creature_list.Keys)
+            {
+                number_of_this_creature_added.Add(cname, 0);
+            }
+            short total_number_currently_added = 0;
+            short total_number_to_add = (short)current_creature_list.Sum(x => x.Value);
+            short current_pause_progress = 0;
+            short current_creature_add_iteration = 0;
+
+            foreach (Character pchar in potentialTargets)
+            {
+                if (current_pause_progress == VFConfig.ShrineReconnectPauseBetweenAmount.Value)
+                {
+                    Jotunn.Logger.LogInfo($"Pausing while reconnecting creatures {current_creature_add_iteration}/{potentialTargets.Count}");
+                    yield return new WaitForSeconds(1);
+                }
+                current_creature_add_iteration++;
+                current_pause_progress++;
+                string creature_name = pchar.name.Replace("(Clone)", "");
+                Jotunn.Logger.LogInfo($"checking reconnection for: {creature_name}");
+                
+                // we might need some of this entry
+                if (current_creature_list.ContainsKey(creature_name))
+                {
+                    // can merge this up with safe navigation
+                    // we do need this entry
+                    if(current_creature_list[creature_name] > 0)
+                    {
+                        // we need more of this entry
+                        if(number_of_this_creature_added[creature_name] < current_creature_list[creature_name])
+                        {
+                            Jotunn.Logger.LogInfo($"locating parent GO: {pchar.gameObject.name}");
+                            // Destroy item drop for this creature
+                            Destroy(pchar.gameObject.GetComponent<CharacterDrop>());
+                            pchar.m_onDeath = null;
+                            // Set faction to boss to avoid fighting other creatures
+                            pchar.m_faction = Character.Faction.Boss;
+                            // Set the AI to hunt the nearby player
+                            BaseAI ai = pchar.gameObject.GetComponent<BaseAI>();
+                            if (ai != null)
+                            {
+                                ai.SetHuntPlayer(true);
+                            }
+                            // Add the rewards tracker, and set the reference shrine
+                            pchar.gameObject.AddComponent<CreatureTracker>();
+                            pchar.gameObject.GetComponent<CreatureTracker>().SetShrine(shrine_ref);
+                            pchar.gameObject.GetComponent<CreatureTracker>().setCreatureName(creature_name);
+                            // Add the enemy to the locally tracked list for shrine operations
+                            enemies.Add(pchar.gameObject);
+                            // Increment the number of characters spawned
+                            number_of_this_creature_added[creature_name]++;
+                            total_number_currently_added++;
+
+                            // exit the loop if we now have enough creatures
+                            if (total_number_currently_added == total_number_to_add)
+                            {
+                                break;
+                            }
+                        }
+
+                    }
+                }
+            }
+
+            if (total_number_currently_added != total_number_to_add)
+            {
+                short unfound_creatures = (short)(total_number_to_add - total_number_currently_added);
+                Jotunn.Logger.LogInfo($"Could not locate: {unfound_creatures} reducing remaining creatures.");
+                DecrementSpawned(unfound_creatures);
+            }
+
+            yield break;
         }
 
         protected static IEnumerator OnClientReceivePhaseConfigs(long sender, ZPackage package)
@@ -250,18 +389,34 @@ namespace ValheimFortress.Challenge
             }
         }
 
-        public void DecrementSpawned()
+        public void DecrementSpawned(short decrease_value = 1)
+        {
+            // We don't want to try to decrease this past what is expected.
+            // The spawned creatures data could be lost at some point so lets avoid going negative.
+            if (spawned_creatures.Get() > 0)
+            {
+                spawned_creatures.Set(spawned_creatures.Get() - decrease_value);
+            }
+        }
+
+        public void DecrementSpecificCreatureSpawned(string creature_name, bool decrement_spawned = true)
         {
             if (!zNetView.IsOwner())
             {
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Not zview owner, not decrementing."); }
                 return;
             }
-            // We don't want to try to decrease this past what is expected.
-            // The spawned creatures data could be lost at some point so lets avoid going negative.
-            if (spawned_creatures.Get() > 0)
+            
+            if (decrement_spawned)
             {
-                spawned_creatures.Set(spawned_creatures.Get() - 1);
+                DecrementSpawned();
+            }
+            var active_creature_list = alive_creature_list.Get();
+            // can only modify the creature list key if it actually has it- otherwise decrementing it doesn't matter...
+            if (active_creature_list != null && active_creature_list.ContainsKey(creature_name))
+            {
+                active_creature_list[creature_name] = (short)(active_creature_list[creature_name] - 1);
+                alive_creature_list.Set(active_creature_list);
             }
 
         }

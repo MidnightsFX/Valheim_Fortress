@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 using YamlDotNet.Serialization.NamingConventions;
 using YamlDotNet.Serialization;
 using UnityEngine;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
+using System.Collections;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace ValheimFortress.Challenge
 {
@@ -82,6 +86,11 @@ namespace ValheimFortress.Challenge
         public List<List<HoardConfig>> hordePhases { get; set; }
 
         public PhasedWaveTemplate() {}
+
+        //public byte[] ToBinaryArray()
+        //{
+            
+        //}
     }
 
     [DataContract]
@@ -215,7 +224,7 @@ namespace ValheimFortress.Challenge
     {
         public static string SerializeObject<T>(T objectToSerialize)
         {
-            System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new BinaryFormatter();
             System.IO.MemoryStream memStr = new System.IO.MemoryStream();
 
             try
@@ -353,5 +362,50 @@ namespace ValheimFortress.Challenge
             zNetView.GetZDO().Set(Key, value);
         }
     }
+
+    public class DictionaryZNetProperty : ZNetProperty<Dictionary<String, short>>
+    {
+        BinaryFormatter binFormatter = new BinaryFormatter();
+        public DictionaryZNetProperty(string key, ZNetView zNetView, Dictionary<String, short> defaultValue) : base(key, zNetView, defaultValue)
+        {
+        }
+
+        public override Dictionary<String, short> Get()
+        {
+            var stored = zNetView.GetZDO().GetByteArray(Key);
+            // we can't deserialize a null buffer
+            if (stored == null) { return new Dictionary<string, short>(); }
+            var mStream = new MemoryStream(stored);
+            var deserializedDictionary = (Dictionary<String, short>)binFormatter.Deserialize(mStream);
+            return deserializedDictionary;
+        }
+
+        protected override void SetValue(Dictionary<String, short> value)
+        {
+            
+            var mStream = new MemoryStream();
+            binFormatter.Serialize(mStream, value);
+
+            zNetView.GetZDO().Set(Key, mStream.ToArray());
+        }
+    }
+
+    public class ZDOIDZNetProperty : ZNetProperty<ZDOID>
+    {
+        public ZDOIDZNetProperty(string key, ZNetView zNetView, ZDOID defaultValue) : base(key, zNetView, defaultValue)
+        {
+        }
+
+        public override ZDOID Get()
+        {
+            return zNetView.GetZDO().GetZDOID(Key);
+        }
+
+        protected override void SetValue(ZDOID value)
+        {
+            zNetView.GetZDO().Set(Key, value);
+        }
+    }
+
 
 }
