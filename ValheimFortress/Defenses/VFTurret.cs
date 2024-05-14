@@ -216,8 +216,10 @@ namespace ValheimFortress.Defenses
 		{
 			// Dead, tames and other players are not valid targets
 			if (ptarget.IsDead() || ptarget.IsTamed() || ptarget.IsPlayer()) { return false; }
-			// Faction 0 (player faction) and the local player is not a target either
-			if ((int)ptarget.GetFaction() == 0 || ptarget is Player) { return false; }
+			// Ballista does not automatically target passives
+            if (!VFConfig.BallistaTargetsPassives.Value && (int)ptarget.GetFaction() == 1) { return false; }
+            // Faction 0 (player faction) and the local player is not a target either
+            if ((int)ptarget.GetFaction() == 0 || ptarget is Player) { return false; }
 			//Jotunn.Logger.LogInfo("Found valid target");
 			return true;
 		}
