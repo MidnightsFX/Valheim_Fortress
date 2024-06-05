@@ -75,7 +75,6 @@
   "reward_tin": "Tin",
   "reward_iron": "Járn",
   "reward_silver": "Silfur",
-  "reward_darkmetal": "Svörtmálm",
   "reward_corewood": "Kjarnaviður",
   "reward_finewood": "Fíngerður viður",
   "reward_guck": "Guck",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Hofið þráir allt sem kemur úr þokunum.",
   "wild_seekers_attack": "Skjótandi endur í þokunum",
   "wild_seekers_defeated": "Þoka er hljóð",
-  "mistlands_warning_wilderness": "Formar breytast í þokunni"
+  "mistlands_warning_wilderness": "Formar breytast í þokunni",
+  "reward_blackmetal": "Svartmálmur"
 }

@@ -26,7 +26,7 @@ namespace ValheimFortress.Challenge
             { ValheimFortress.LocalizeOrDefault("$reward_tin", "Tin"), new RewardEntry { resourcePrefab = "TinOre", resouceCost = 40, requiredBoss = ELDER, enabled = true}},
             { ValheimFortress.LocalizeOrDefault("$reward_iron", "Iron"), new RewardEntry { resourcePrefab = "IronScrap", resouceCost = 60, requiredBoss = BONEMASS, enabled = true}},
             { ValheimFortress.LocalizeOrDefault("$reward_silver", "Silver"), new RewardEntry { resourcePrefab = "SilverOre", resouceCost = 70, requiredBoss = MODER, enabled = true}},
-            { ValheimFortress.LocalizeOrDefault("$reward_darkmetal", "Darkmetal"), new RewardEntry { resourcePrefab = "BlackMetalScrap", resouceCost = 80, requiredBoss = YAGLUTH, enabled = true}},
+            { ValheimFortress.LocalizeOrDefault("$reward_blackmetal", "Darkmetal"), new RewardEntry { resourcePrefab = "BlackMetalScrap", resouceCost = 80, requiredBoss = YAGLUTH, enabled = true}},
             { ValheimFortress.LocalizeOrDefault("$reward_tar", "Tar"), new RewardEntry { resourcePrefab = "Tar", resouceCost = 60, requiredBoss = YAGLUTH, enabled = true}},
             { ValheimFortress.LocalizeOrDefault("$reward_guck", "Guck"), new RewardEntry { resourcePrefab = "Guck", resouceCost = 40, requiredBoss = BONEMASS, enabled = false}},
             { ValheimFortress.LocalizeOrDefault("$reward_sap", "Sap"), new RewardEntry { resourcePrefab = "Sap", resouceCost = 100, requiredBoss = QUEEN, enabled = true}},

@@ -105,10 +105,22 @@ namespace ValheimFortress.Challenge
 
         protected void SetCurrentCreatureList(List<HoardConfig> phase_hoard_configs)
         {
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Updating current creature list."); }
             Dictionary<String, short> new_creature_list = new Dictionary<String, short>() { };
             foreach (HoardConfig hoard in phase_hoard_configs)
             {
-                new_creature_list.Add(hoard.prefab, hoard.amount);
+                if (new_creature_list.ContainsKey(hoard.prefab))
+                {
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Updating creature count for existing creature."); }
+                    short existing_creature_count = 0;
+                    new_creature_list.TryGetValue(hoard.prefab, out existing_creature_count);
+                    new_creature_list[$"{hoard.prefab}"] = (short)(existing_creature_count + hoard.amount);
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Updating {hoard.prefab} {existing_creature_count} + {hoard.amount} to existing creature list."); }
+                } else
+                {
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Adding {hoard.amount} {hoard.prefab} to existing creature list."); }
+                    new_creature_list.Add(hoard.prefab, hoard.amount);
+                }
             }
             alive_creature_list.Set(new_creature_list);
         }

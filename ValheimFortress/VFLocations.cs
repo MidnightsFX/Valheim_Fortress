@@ -46,9 +46,9 @@ namespace ValheimFortress
 
         public void AddWildShrineLocationWithWorldGen(VFConfig cfg, GameObject prefab, Heightmap.Biome biome)
         {
-            bool wildshrine_enabled = cfg.BindServerConfig($"Wild Shrines", $"{prefab}-Enable", true, $"Enable/Disable the {prefab} wildshrine.").Value;
+            bool wildshrine_enabled = cfg.BindServerConfig($"Wild Shrines", $"{prefab.name}-Enable", true, $"Enable/Disable the {prefab.name} wildshrine.").Value;
             if (wildshrine_enabled != true) {
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Skipped loading location {prefab}"); }
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Skipped loading location {prefab.name}"); }
                 return;
             }
 

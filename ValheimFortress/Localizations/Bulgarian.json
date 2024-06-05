@@ -75,7 +75,6 @@
   "reward_tin": "Калай",
   "reward_iron": "Желязо",
   "reward_silver": "Сребро",
-  "reward_darkmetal": "Черен метал",
   "reward_corewood": "Ядрено дърво",
   "reward_finewood": "Фин дърво",
   "reward_guck": "Гък",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Светилището желае всички, които идват от мъглите.",
   "wild_seekers_attack": "Скитащи се еха в мъглите",
   "wild_seekers_defeated": "Мъглите са тихи.",
-  "mistlands_warning_wilderness": "Формите се променят в мъглите"
+  "mistlands_warning_wilderness": "Формите се променят в мъглите",
+  "reward_blackmetal": "Блекметъл"
 }

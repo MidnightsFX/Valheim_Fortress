@@ -75,7 +75,6 @@
   "reward_tin": "Teneke",
   "reward_iron": "Demir",
   "reward_silver": "Gümüş",
-  "reward_darkmetal": "Siyah Metal",
   "reward_corewood": "Çekirdek Tahta",
   "reward_finewood": "İnce Tahta",
   "reward_guck": "Çamur",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Tapınak, sislerden gelen her şeyi arzular.",
   "wild_seekers_attack": "Sisler içinde tırtılların yankılanması",
   "wild_seekers_defeated": "Sisler sessizdir.",
-  "mistlands_warning_wilderness": "Şekiller sisler içinde değişir"
+  "mistlands_warning_wilderness": "Şekiller sisler içinde değişir",
+  "reward_blackmetal": "Siyah metal"
 }

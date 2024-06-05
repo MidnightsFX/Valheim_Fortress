@@ -75,7 +75,6 @@
   "reward_tin": "Tenn",
   "reward_iron": "Järn",
   "reward_silver": "Silver",
-  "reward_darkmetal": "Svartmetall",
   "reward_corewood": "Kärnträ",
   "reward_finewood": "Fint trä",
   "reward_guck": "Guck",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Helgedomen önskar allt som kommer från dimmorna.",
   "wild_seekers_attack": "Skrapande ekon i dimmorna",
   "wild_seekers_defeated": "Dimmorna är tysta.",
-  "mistlands_warning_wilderness": "Former förändras i dimmorna"
+  "mistlands_warning_wilderness": "Former förändras i dimmorna",
+  "reward_blackmetal": "Svartmetall"
 }

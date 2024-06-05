@@ -75,7 +75,6 @@
   "reward_tin": "錫",
   "reward_iron": "鉄",
   "reward_silver": "銀",
-  "reward_darkmetal": "黒い金属",
   "reward_corewood": "コアウッド",
   "reward_finewood": "上質な木材",
   "reward_guck": "グック",
@@ -125,7 +124,7 @@
   "wild_trolls_defeated": "森は再び静かです。",
   "wild_skeleton_attack": "骸骨が深淵から現れる",
   "wild_skeleton_defeated": "死者の骨は再び休む",
-  "wild_shrine_blackforest": "森の神社(I'm not sure what you would like me to respond with, can you provide more information?)",
+  "wild_shrine_blackforest": "森の神社",
   "wild_shrine_blackforest_request": "神社はブラックフォレストからの貢物を望んでいます。了解しました。",
   "wild_shrine_swamp": "湿地の神社Thank you for the translation.",
   "wild_shrine_swamp_request": "神社は腐敗して死んだ者から貢物を要求する。神社は腐敗して死んだ者から貢物を要求する。",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "神社は霧から来たもの全てを望んでいます。神社は霧から来たもの全てを望んでいます。",
   "wild_seekers_attack": "霧の中でさまよう反響霧の中でさまよう反響",
   "wild_seekers_defeated": "霧は静かです。",
-  "mistlands_warning_wilderness": "霧の中で形が変わる形は霧の中で変わる"
+  "mistlands_warning_wilderness": "霧の中で形が変わる形は霧の中で変わる",
+  "reward_blackmetal": "ブラックメタル"
 }

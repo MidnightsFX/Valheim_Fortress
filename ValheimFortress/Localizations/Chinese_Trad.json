@@ -75,7 +75,6 @@
   "reward_tin": "錫",
   "reward_iron": "鐵",
   "reward_silver": "銀",
-  "reward_darkmetal": "黑金屬",
   "reward_corewood": "核心木",
   "reward_finewood": "優質木",
   "reward_guck": "黏液",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "神龕渴望來自迷霧的一切。",
   "wild_seekers_attack": "在薄霧中迴盪的聲音",
   "wild_seekers_defeated": "迷霧寂靜",
-  "mistlands_warning_wilderness": "形狀在霧中變幻形狀在霧中變幻"
+  "mistlands_warning_wilderness": "形狀在霧中變幻形狀在霧中變幻",
+  "reward_blackmetal": "黑金屬"
 }

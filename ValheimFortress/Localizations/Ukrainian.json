@@ -75,7 +75,6 @@
   "reward_tin": "Олово",
   "reward_iron": "Залізо",
   "reward_silver": "Срібло",
-  "reward_darkmetal": "Чорнометал",
   "reward_corewood": "Ядряне дерево",
   "reward_finewood": "Якісне дерево",
   "reward_guck": "Гуцк",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Святиня бажає всіх, хто приходить з туманів.",
   "wild_seekers_attack": "Легке шаркання у туманах",
   "wild_seekers_defeated": "Тумани тихі.",
-  "mistlands_warning_wilderness": "Форми змінюються в туманах"
+  "mistlands_warning_wilderness": "Форми змінюються в туманах",
+  "reward_blackmetal": "Чорний метал"
 }

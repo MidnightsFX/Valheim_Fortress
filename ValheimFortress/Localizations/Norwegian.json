@@ -75,7 +75,6 @@
   "reward_tin": "Tinn",
   "reward_iron": "Jern",
   "reward_silver": "Sølv",
-  "reward_darkmetal": "Svartmetall",
   "reward_corewood": "Kjerneved",
   "reward_finewood": "Finved",
   "reward_guck": "Guck",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Skatt ønsker alt som kommer fra tåken.",
   "wild_seekers_attack": "Skjemmende ekko i tåken",
   "wild_seekers_defeated": "Tåken er stille",
-  "mistlands_warning_wilderness": "Former endres i tåken"
+  "mistlands_warning_wilderness": "Former endres i tåken",
+  "reward_blackmetal": "Svartmetall"
 }

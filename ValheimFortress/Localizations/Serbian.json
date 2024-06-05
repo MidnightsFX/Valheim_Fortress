@@ -75,7 +75,6 @@
   "reward_tin": "Олово",
   "reward_iron": "Гвожђе",
   "reward_silver": "Сребро",
-  "reward_darkmetal": "Црнометал",
   "reward_corewood": "Средње дрво",
   "reward_finewood": "Фино дрво",
   "reward_guck": "Гук",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Hram želi sve koji dolaze iz magle.",
   "wild_seekers_attack": "Klizeći odjeci u maglama",
   "wild_seekers_defeated": "Magle su tihe",
-  "mistlands_warning_wilderness": "Oblici se menjaju u maglama"
+  "mistlands_warning_wilderness": "Oblici se menjaju u maglama",
+  "reward_blackmetal": "Crni metal"
 }

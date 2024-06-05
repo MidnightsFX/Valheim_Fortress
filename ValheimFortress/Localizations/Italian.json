@@ -75,7 +75,6 @@
   "reward_tin": "Stagno",
   "reward_iron": "Ferro",
   "reward_silver": "Argento",
-  "reward_darkmetal": "Metallo Nero",
   "reward_corewood": "Legno di nucleo",
   "reward_finewood": "Legno pregiato",
   "reward_guck": "Fango",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Il santuario desidera tutto ciò che proviene dalle nebbie.",
   "wild_seekers_attack": "Scricchiolii echeggiano nella nebbia",
   "wild_seekers_defeated": "Le nebbie sono tranquille",
-  "mistlands_warning_wilderness": "Le forme si trasformano nelle nebbie"
+  "mistlands_warning_wilderness": "Le forme si trasformano nelle nebbie",
+  "reward_blackmetal": ""
 }

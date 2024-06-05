@@ -75,7 +75,6 @@
   "reward_tin": "Zinn",
   "reward_iron": "Eisen",
   "reward_silver": "Silber",
-  "reward_darkmetal": "Schwarzmetall",
   "reward_corewood": "Kernholz",
   "reward_finewood": "Edelholz",
   "reward_guck": "Schlamm",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Der Schrein wünscht sich alles, was aus den Nebeln kommt.",
   "wild_seekers_attack": "Schwirrende Echos in den Nebeln",
   "wild_seekers_defeated": "Die Nebel sind ruhig",
-  "mistlands_warning_wilderness": "Formen verschieben sich im Nebel"
+  "mistlands_warning_wilderness": "Formen verschieben sich im Nebel",
+  "reward_blackmetal": "Schwarzes Metall"
 }

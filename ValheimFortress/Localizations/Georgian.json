@@ -75,7 +75,6 @@
   "reward_tin": "თინ",
   "reward_iron": "რკინი",
   "reward_silver": "ვერცხლი",
-  "reward_darkmetal": "შავი მეტალი",
   "reward_corewood": "კორეუუდი",
   "reward_finewood": "ფარგლებული ხე",
   "reward_guck": "უფროსი",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "შრაინი სურს ყველას, რომელნიც წინის ღრმად მოვიდნენ.",
   "wild_seekers_attack": "სინჯის მეგრებში ქვაბები",
   "wild_seekers_defeated": "ნისლები სიყვარულია.",
-  "mistlands_warning_wilderness": "ფორმები ცრემლებში იცვლება"
+  "mistlands_warning_wilderness": "ფორმები ცრემლებში იცვლება",
+  "reward_blackmetal": "შავი მეტალი"
 }

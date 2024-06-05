@@ -75,7 +75,6 @@
   "reward_tin": "Калај",
   "reward_iron": "Железо",
   "reward_silver": "Сребро",
-  "reward_darkmetal": "Црно метал",
   "reward_corewood": "Основно дрво",
   "reward_finewood": "Фино дрво",
   "reward_guck": "Гук",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Светилиштето посакува сите кои доаѓаат од маглите.",
   "wild_seekers_attack": "Скитање ехои во маглата",
   "wild_seekers_defeated": "Маглите се тивки.",
-  "mistlands_warning_wilderness": "Облици се менуваат во маглите"
+  "mistlands_warning_wilderness": "Облици се менуваат во маглите",
+  "reward_blackmetal": "Црен метал"
 }

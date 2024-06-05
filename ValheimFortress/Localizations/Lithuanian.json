@@ -75,7 +75,6 @@
   "reward_tin": "Plienas",
   "reward_iron": "Geležis",
   "reward_silver": "Sidabras",
-  "reward_darkmetal": "Tamsus metalas",
   "reward_corewood": "Branduolinė mediena",
   "reward_finewood": "Gera mediena",
   "reward_guck": "Gysla",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Šventovė nori visų, kurie atkeliavo iš rūko.",
   "wild_seekers_attack": "Skriejančios atgarsiai rūsyse",
   "wild_seekers_defeated": "Rūkas tylus",
-  "mistlands_warning_wilderness": "Formos kinta rūkstant."
+  "mistlands_warning_wilderness": "Formos kinta rūkstant.",
+  "reward_blackmetal": "Juodasis metalas"
 }

@@ -75,7 +75,6 @@
   "reward_tin": "锡",
   "reward_iron": "铁",
   "reward_silver": "银",
-  "reward_darkmetal": "黑金属",
   "reward_corewood": "核心木材",
   "reward_finewood": "优质木材",
   "reward_guck": "黏滑物",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "神龛渴望来自迷雾的一切。神龛渴望来自迷雾的一切。",
   "wild_seekers_attack": "雾中悄悄的回声",
   "wild_seekers_defeated": "雾气静悄悄",
-  "mistlands_warning_wilderness": "形状在雾中变化"
+  "mistlands_warning_wilderness": "形状在雾中变化",
+  "reward_blackmetal": "黑金属"
 }

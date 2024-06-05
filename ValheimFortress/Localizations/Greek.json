@@ -75,7 +75,6 @@
   "reward_tin": "Κασσίτερος",
   "reward_iron": "Σίδηρος",
   "reward_silver": "Ασήμι",
-  "reward_darkmetal": "Μαύρο μέταλλο",
   "reward_corewood": "Πυρήνας Ξύλου",
   "reward_finewood": "Λεπτό Ξύλο",
   "reward_guck": "Πηλός",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Το ιερό επιθυμεί όλα όσα προέρχονται από τις ομίχλες.",
   "wild_seekers_attack": "Αναπήδηση ηχών στα ομίχλη",
   "wild_seekers_defeated": "Οι ομίχλες είναι ήσυχες",
-  "mistlands_warning_wilderness": "Οι μορφές μετατρέπονται στις ομίχλες"
+  "mistlands_warning_wilderness": "Οι μορφές μετατρέπονται στις ομίχλες",
+  "reward_blackmetal": "Μαύρο μέταλλο"
 }

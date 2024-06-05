@@ -75,7 +75,6 @@
   "reward_tin": "Tin",
   "reward_iron": "Jern",
   "reward_silver": "Sølv",
-  "reward_darkmetal": "Sortmetal",
   "reward_corewood": "Kernekød",
   "reward_finewood": "Fint træ",
   "reward_guck": "Guck",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Skænken ønsker alt, der kommer fra tågerne.",
   "wild_seekers_attack": "Skærende ekkoer i tågerne",
   "wild_seekers_defeated": "Tågerne er stille",
-  "mistlands_warning_wilderness": "Former ændrer sig i tågerne"
+  "mistlands_warning_wilderness": "Former ændrer sig i tågerne",
+  "reward_blackmetal": "Sortmetal"
 }

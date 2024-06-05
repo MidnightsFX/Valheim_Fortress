@@ -75,7 +75,6 @@
   "reward_tin": "주석",
   "reward_iron": "철",
   "reward_silver": "은",
-  "reward_darkmetal": "블랙메탈",
   "reward_corewood": "핵심 목재",
   "reward_finewood": "고급 목재",
   "reward_guck": "거크",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "사원은 안개에서 온 모든 것을 바랍니다.",
   "wild_seekers_attack": "안개 속에서 삐걱거리는 반향안개 속에서 삐걱거리는 반향",
   "wild_seekers_defeated": "안개는 조용합니다.",
-  "mistlands_warning_wilderness": "안개 속에서 모양이 변한다"
+  "mistlands_warning_wilderness": "안개 속에서 모양이 변한다",
+  "reward_blackmetal": "블랙메탈"
 }

@@ -16,6 +16,10 @@ namespace ValheimFortress
         public static ConfigEntry<bool> EnableDebugMode;
         public static ConfigEntry<bool> EnableTurretDebugMode;
         public static ConfigEntry<bool> BallistaTargetsPassives;
+        public static ConfigEntry<float> BallistaDamage;
+        public static ConfigEntry<float> BallistaRange;
+        public static ConfigEntry<float> BallistaAmmoAccuracyPenalty;
+        public static ConfigEntry<float> BallistaCooldownTime;
         public static ConfigEntry<short> MaxSpawnRange;
         public static ConfigEntry<float> rewardsMultiplier;
         public static ConfigEntry<float> rewardsDifficultyScalar;
@@ -791,7 +795,7 @@ namespace ValheimFortress
             ShrineAnnouncementRange = BindServerConfig("Shrine of Challenge", "ShrineAnnouncementRange", 150f, "Sets the range at which announcements will display for shrine of challenge related activities", true, 50f, 800f);
             ShrineReconnectRange = BindServerConfig("Shrine of Challenge", "ShrineReconnectRange", 150f, "Sets the max range for the shrine to scan creatures for reconnection when an area is unloaded/reloaded (this includes exit/loading singleplayer).", true, 500f, 5000f);
             ShrineReconnectPauseBetweenAmount = BindServerConfig("Shrine of Challenge", "ShrineReconnectPauseBetweenAmount", 30, "Sets the maximun number of creatures to process for reconnection in a singular second.", true, 1, 60);
-            DistanceBetweenShrines = BindServerConfig("Wild Shrines", "DistanceBetweenShrines", 1000f, "The mimum distance between shrines, setting this higher will result in fewer wild shrines, lower more.", true, 100f, 5000f);
+            DistanceBetweenShrines = BindServerConfig("Wild Shrines", "DistanceBetweenShrines", 750f, "The mimum distance between shrines, setting this higher will result in fewer wild shrines, lower more.", true, 100f, 5000f);
             NumberOfEachWildShrine = BindServerConfig("Wild Shrines", "NumberOfEachWildShrine", 100, "Each wild shrine type will attempt to be placed this many times", true, 5, 200);
 
             ChallengeShrineMaxCreaturesPerWave = BindServerConfig("Shrine of Challenge", "max_creatures_per_wave", (short)60, "The max number of creatures that a wave can generate with, creatures will attempt to upgrade and reduce counts based on this.", true, 12, 200);
@@ -799,7 +803,10 @@ namespace ValheimFortress
 
             // Ballista config
             BallistaTargetsPassives = BindServerConfig("Auto Ballista", "EnableTargetingPassiveCreatures", false, "Whether or not the automated ballista will target passive creatures (like deer)", true);
-
+            BallistaDamage = BindServerConfig("Auto Ballista", "BallistaDamage", 120f, "How much damage the automated ballista does per shot.", true, 10f, 5000f);
+            BallistaRange = BindServerConfig("Auto Ballista", "BallistaRange", 30f, "How far the ballista can aquire targets and shoot", true, 10f, 100f);
+            BallistaAmmoAccuracyPenalty = BindServerConfig("Auto Ballista", "BallistaAmmoAccuracyPenalty", 0.05f, "How inaccurate the ammo is for the ballista", true, 0.0f, 0.15f);
+            BallistaCooldownTime = BindServerConfig("Auto Ballista", "BallistaCooldownTime", 2f, "How long the ballista waits before another shot", true, 0.5f, 10f);
             // Client side configurations
 
             // Debugmode

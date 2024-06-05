@@ -1,11 +1,7 @@
 ﻿using Jotunn.Managers;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using ValheimFortress;
 
 namespace ValheimFortress.Defenses
 {
@@ -13,12 +9,12 @@ namespace ValheimFortress.Defenses
 	{
 		private static float m_turnRate = 80f;
 		private static float m_horizontalAngle = 85f;
-		private static float m_viewDistance = 25f;
+		private static float m_viewDistance = VFConfig.BallistaRange.Value;
 		private static float m_noTargetScanRate = 12f;
-		private static float m_attackCooldown = 2f;
+		private static float m_attackCooldown = VFConfig.BallistaCooldownTime.Value;
 		private static float m_hitNoise = 10f;
 		private static float m_shootWhenAimDiff = 0.99f; // 1 is perfect accuracy, we want to shoot when we are very close to dead center, leaving room for errors
-		private static float m_ammo_accuracy = 0.05f; // Ammo will be perfectly accurate minus this percent, right now 95% accuracy
+		private static float m_ammo_accuracy = VFConfig.BallistaAmmoAccuracyPenalty.Value; // Ammo will be perfectly accurate minus this percent, right now 95% accuracy
 		private static float m_predictionModifier = 1f;
 		private static float m_updateTargetIntervalNear = 2f;
 		private static float m_updateTargetIntervalFar = 8f;
@@ -84,9 +80,10 @@ namespace ValheimFortress.Defenses
 
 				m_Projectile = PrefabManager.Instance.GetPrefab("TurretBolt");
 				m_Ammo = m_Projectile.GetComponent<ItemDrop>().m_itemData;
-				//Jotunn.Logger.LogInfo($"Set projectile to {m_Projectile.name}");
-				//Jotunn.Logger.LogInfo($"Set projectile to {m_Ammo}");
-				areaMarker = transform.Find("AreaMarker").gameObject.GetComponent<CircleProjector>();
+				m_Ammo.m_shared.m_damages.m_pierce = VFConfig.BallistaDamage.Value;
+                //Jotunn.Logger.LogInfo($"Set projectile to {m_Projectile.name}");
+                //Jotunn.Logger.LogInfo($"Set projectile to {m_Ammo}");
+                areaMarker = transform.Find("AreaMarker").gameObject.GetComponent<CircleProjector>();
 
 				//Jotunn.Logger.LogInfo("Setting Effect Prefabs");
 				m_shootEffect = PrefabManager.Instance.GetPrefab("fx_turret_fire");
@@ -108,7 +105,7 @@ namespace ValheimFortress.Defenses
 				{
                     if (!turretBodyArmed.activeSelf)
                     {
-						UnityEngine.Object.Instantiate(m_reloadEffect, turretBodyArmed.transform.position, turretBodyArmed.transform.rotation);
+						Instantiate(m_reloadEffect, turretBodyArmed.transform.position, turretBodyArmed.transform.rotation);
 						turretBodyArmed.SetActive(true);
 						turretBodyArmedBolt.SetActive(true);
 						turretBodyUnarmed.SetActive(false);
@@ -195,11 +192,11 @@ namespace ValheimFortress.Defenses
 				{
 					if ((bool)selectedTarget)
 					{
-						UnityEngine.Object.Instantiate(m_newTargetEffect, base.transform.position, base.transform.rotation);
+						Instantiate(m_newTargetEffect, base.transform.position, base.transform.rotation);
 					}
 					else
 					{
-						UnityEngine.Object.Instantiate(m_lostTargetEffect, base.transform.position, base.transform.rotation);
+						Instantiate(m_lostTargetEffect, base.transform.position, base.transform.rotation);
 					}
 					m_nview.InvokeRPC(ZNetView.Everybody, "RPC_SetTarget", selectedTarget ? selectedTarget.GetZDOID() : ZDOID.None);
 				}
@@ -208,7 +205,7 @@ namespace ValheimFortress.Defenses
 			{
 				// Jotunn.Logger.LogInfo("Target is dead, clearing target.");
 				m_nview.InvokeRPC(ZNetView.Everybody, "RPC_SetTarget", ZDOID.None);
-				UnityEngine.Object.Instantiate(m_lostTargetEffect, base.transform.position, base.transform.rotation);
+				Instantiate(m_lostTargetEffect, base.transform.position, base.transform.rotation);
 			}
 		}
 
@@ -253,12 +250,20 @@ namespace ValheimFortress.Defenses
 			// We only fire a shot if we are ready to do so, aka has target, can aim at it, and is ready to fire
 			// Jotunn.Logger.LogInfo($"m_aimDiffToTarget {m_aimDiffToTarget} > m_shootWhenAimDiff {m_shootWhenAimDiff} ({!(m_aimDiffToTarget > m_shootWhenAimDiff)})");
 			if (!m_target || !(m_aimDiffToTarget > m_shootWhenAimDiff) || IsCoolingDown())
-			{
-				return;
+            {
+                return;
 			}
-			// This is really noisy
-			if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Turret target status:{!(bool)m_target} aimdiff:{m_aimDiffToTarget} > {m_shootWhenAimDiff} ({!(m_aimDiffToTarget > m_shootWhenAimDiff)}) cooldown:{IsCoolingDown()}"); }
-			UnityEngine.Object.Instantiate(m_shootEffect, turretBodyArmed.transform.position, eye.transform.rotation);
+            RaycastHit rayhit;
+			bool did_raycast_hit = Physics.Raycast(eye.transform.position, eye.transform.forward, out rayhit, m_viewDistance);
+			float raycast_distance_to_hit = Vector3.Distance(eye.transform.position, m_target.transform.position);
+            bool rayshot_hit_distance = rayhit.distance > (raycast_distance_to_hit - 1) && rayhit.distance < (raycast_distance_to_hit + 1);
+            if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($" distance to target: {raycast_distance_to_hit}, raycast distance test: {rayhit.distance}, can hit distance: {rayshot_hit_distance} hit bool: {did_raycast_hit}"); }
+            if (!rayshot_hit_distance) { return; }
+			if (!did_raycast_hit) { return; }
+
+            // This is really noisy
+            if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Turret target status:{!(bool)m_target} aimdiff:{m_aimDiffToTarget} > {m_shootWhenAimDiff} ({!(m_aimDiffToTarget > m_shootWhenAimDiff)}) cooldown:{IsCoolingDown()}"); }
+			Instantiate(m_shootEffect, turretBodyArmed.transform.position, eye.transform.rotation);
 			m_nview.GetZDO().Set("lastAttack", (float)ZNet.instance.GetTimeSeconds());
 			{
 				Vector3 forward = eye.transform.forward;
@@ -267,7 +272,7 @@ namespace ValheimFortress.Defenses
 				Quaternion quaternion = Quaternion.AngleAxis(UnityEngine.Random.Range(0f - projectileAccuracy, projectileAccuracy), Vector3.up);
 				forward = Quaternion.AngleAxis(UnityEngine.Random.Range(0f - projectileAccuracy, projectileAccuracy), axis) * forward;
 				forward = quaternion * forward;
-				GameObject projectile = UnityEngine.Object.Instantiate(m_Ammo.m_shared.m_attack.m_attackProjectile, eye.transform.position, eye.transform.rotation);
+				GameObject projectile = Instantiate(m_Ammo.m_shared.m_attack.m_attackProjectile, eye.transform.position, eye.transform.rotation);
 				HitData hitData = new HitData();
 				hitData.m_pushForce = m_Ammo.m_shared.m_attackForce;
 				hitData.m_backstabBonus = m_Ammo.m_shared.m_backstabBonus;

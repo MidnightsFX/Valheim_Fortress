@@ -103,7 +103,6 @@
   "$shrine_phase_warning22": "Prepárate, vendrán más.",
   "$shrine_phase_warning23": "Munin aprueba.",
   "$shrine_phase_warning24": "Hugin está preocupado de que se acerquen más.",
-  "reward_darkmetal": " Metal negro",
   "shrine_warning_trolls": "¡El suelo está temblando!",
   "shrine_menu_troll_level": "",
   "piece_shrine_of_gladiator": "Santuario de la Arena",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "El santuario desea todo lo que viene de las brumas.",
   "wild_seekers_attack": "Ecos que se deslizan en la niebla",
   "wild_seekers_defeated": "Las nieblas están tranquilas",
-  "mistlands_warning_wilderness": "Las formas cambian en la niebla"
+  "mistlands_warning_wilderness": "Las formas cambian en la niebla",
+  "reward_blackmetal": "Metal negro"
 }

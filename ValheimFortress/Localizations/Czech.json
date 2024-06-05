@@ -75,7 +75,6 @@
   "reward_tin": "Cín",
   "reward_iron": "Železo",
   "reward_silver": "Stříbro",
-  "reward_darkmetal": "Černý kov",
   "reward_corewood": "Jádrové dřevo",
   "reward_finewood": "Jemné dřevo",
   "reward_guck": "Želé",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Votivní místo touží po všech, kteří přicházejí z mlh.",
   "wild_seekers_attack": "Šplouchání ozvěn ve mlze",
   "wild_seekers_defeated": "Mlhy jsou tiché",
-  "mistlands_warning_wilderness": "Tvary se mění v mlze"
+  "mistlands_warning_wilderness": "Tvary se mění v mlze",
+  "reward_blackmetal": "Černý metal"
 }

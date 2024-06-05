@@ -75,7 +75,6 @@
   "reward_tin": "Tērauds",
   "reward_iron": "Dzelzs",
   "reward_silver": "Sudrabs",
-  "reward_darkmetal": "Melnametāls",
   "reward_corewood": "Kodols",
   "reward_finewood": "Smalkais koks",
   "reward_guck": "Guck",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Svētnīca vēlas visu, kas nāk no miglas.",
   "wild_seekers_attack": "Brukšķojoši atbalss miglās",
   "wild_seekers_defeated": "Rūkas ir klusas",
-  "mistlands_warning_wilderness": "Formas mainās miglās"
+  "mistlands_warning_wilderness": "Formas mainās miglās",
+  "reward_blackmetal": "Melna metāla"
 }

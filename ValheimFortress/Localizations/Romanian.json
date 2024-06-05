@@ -75,7 +75,6 @@
   "reward_tin": "Staniu",
   "reward_iron": "Fier",
   "reward_silver": "Argint",
-  "reward_darkmetal": "Metal Negru",
   "reward_corewood": "Lemn de bază",
   "reward_finewood": "Lemn fin",
   "reward_guck": "Guck",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Locașul sfânt își dorește tot ceea ce vine din ceață.",
   "wild_seekers_attack": "Ecouri scrâșnind în ceață",
   "wild_seekers_defeated": "Cețurile sunt liniștite",
-  "mistlands_warning_wilderness": "Formele se transformă în ceață"
+  "mistlands_warning_wilderness": "Formele se transformă în ceață",
+  "reward_blackmetal": "Metal negru"
 }

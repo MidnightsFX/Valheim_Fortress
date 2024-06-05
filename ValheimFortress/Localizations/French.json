@@ -75,7 +75,6 @@
   "reward_tin": "Étain",
   "reward_iron": "Fer",
   "reward_silver": "Argent",
-  "reward_darkmetal": "Métal noir",
   "reward_corewood": "Bois de cœur",
   "reward_finewood": "Bois noble",
   "reward_guck": "Guck",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Le sanctuaire désire tout ce qui vient des brumes.",
   "wild_seekers_attack": "Échos qui glissent dans les brumes",
   "wild_seekers_defeated": "Les brumes sont calmes",
-  "mistlands_warning_wilderness": "Les formes changent dans les brumes"
+  "mistlands_warning_wilderness": "Les formes changent dans les brumes",
+  "reward_blackmetal": " "
 }

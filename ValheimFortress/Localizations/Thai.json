@@ -75,7 +75,6 @@
   "reward_tin": "ดีบุก",
   "reward_iron": "เหล็ก",
   "reward_silver": "เงิน",
-  "reward_darkmetal": "โลหะดำ",
   "reward_corewood": "ไม้แกน",
   "reward_finewood": "ไม้ดี",
   "reward_guck": "กัก",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "ศาลต้องการทุกสิ่งที่มาจากหมองหมายเลยครับ( ศาลต้องการทุกสิ่งที่มาจากหมอง)",
   "wild_seekers_attack": "เสียงแห่กระทบในหมอก เสียงกระทบในหมอก",
   "wild_seekers_defeated": "เมฆเงียบ",
-  "mistlands_warning_wilderness": "รูปร่างเปลี่ยนแปลงในหมอก"
+  "mistlands_warning_wilderness": "รูปร่างเปลี่ยนแปลงในหมอก",
+  "reward_blackmetal": "เบล็คเมทัล"
 }

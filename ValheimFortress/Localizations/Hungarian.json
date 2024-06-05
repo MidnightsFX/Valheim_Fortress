@@ -75,7 +75,6 @@
   "reward_tin": "Ón",
   "reward_iron": "Vas",
   "reward_silver": "Ezüst",
-  "reward_darkmetal": "Feketefém",
   "reward_corewood": "Magfa",
   "reward_finewood": "Finomfa",
   "reward_guck": "Lé",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "A szentély mindent kíván, ami a ködökből érkezik.",
   "wild_seekers_attack": " Hegyekben zizegő visszhangok",
   "wild_seekers_defeated": "A köd csendes",
-  "mistlands_warning_wilderness": "A formák változnak a ködben"
+  "mistlands_warning_wilderness": "A formák változnak a ködben",
+  "reward_blackmetal": "Fekete fém"
 }

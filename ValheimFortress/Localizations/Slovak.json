@@ -75,7 +75,6 @@
   "reward_tin": "Cín",
   "reward_iron": "Železo",
   "reward_silver": "Striebro",
-  "reward_darkmetal": "Čierny kov",
   "reward_corewood": "Jadrovo drevo",
   "reward_finewood": "Jemné drevo",
   "reward_guck": "Živica",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Oltár túži po všetkých, ktorí prichádzajú z hmly.",
   "wild_seekers_attack": "Šúchajúce ozveny v hmle",
   "wild_seekers_defeated": "Opary sú tiché",
-  "mistlands_warning_wilderness": "Tvary sa menia v hmle"
+  "mistlands_warning_wilderness": "Tvary sa menia v hmle",
+  "reward_blackmetal": "Čierny metal"
 }

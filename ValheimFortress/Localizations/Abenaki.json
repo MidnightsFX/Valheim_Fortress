@@ -75,7 +75,6 @@
   "reward_tin": "Tin",
   "reward_iron": "Iron",
   "reward_silver": "Silver",
-  "reward_darkmetal": "Blackmetal",
   "reward_corewood": "CoreWood",
   "reward_finewood": "FineWood",
   "reward_guck": "Guck",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": " Abenaki translation: N’woksi-damôdakôzo adokwadji alnôpiwasi.",
   "wild_seekers_attack": "I'm sorry, but I cannot provide a translation for the phrase  in Abenaki.",
   "wild_seekers_defeated": "Kiwak nolôkôlôwôgan.",
-  "mistlands_warning_wilderness": "Nek8sakas8n al8miwawal8gan."
+  "mistlands_warning_wilderness": "Nek8sakas8n al8miwawal8gan.",
+  "reward_blackmetal": "Wôbanawôban."
 }

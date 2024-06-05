@@ -55,7 +55,11 @@ namespace ValheimFortress.Challenge
             currentPhase = new IntZNetProperty("shrine_current_phase", zNetView, 0);
             wave_definition_ready = new BoolZNetProperty("wave_definition_ready", zNetView, false);
             spawn_locations_ready = new BoolZNetProperty("spawn_locations_ready", zNetView, false);
+            force_next_phase = new BoolZNetProperty("force_next_phase", zNetView, false);
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Created shrine znet values."); }
+
+            Dictionary<String, short> default_creature_dictionary = new Dictionary<String, short>() { };
+            alive_creature_list = new DictionaryZNetProperty("alive_creature_list", zNetView, default_creature_dictionary);
 
             WaveDefinitionRPC = NetworkManager.Instance.AddRPC("levelsyaml_rpc", VFConfig.OnServerRecieveConfigs, OnClientReceivePhaseConfigs);
             SynchronizationManager.Instance.AddInitialSynchronization(WaveDefinitionRPC, SendPhaseConfigs);
@@ -140,7 +144,6 @@ namespace ValheimFortress.Challenge
             RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations, gameObject.GetComponent<WildShrine>());
             spawn_controller.TrySpawningPhase(5f, false, wave_phases_definitions.hordePhases[currentPhase.Get()], gameObject, remote_spawn_locations);
             SetCurrentCreatureList(wave_phases_definitions.hordePhases[currentPhase.Get()]);
-
             start_challenge.Set(false);
             currentPhase.Set(currentPhase.Get() + 1);
             Jotunn.Logger.LogInfo($"Challenge started. Level: {selected_level.Get()} Reward: {selected_reward.Get()}");
@@ -193,20 +196,19 @@ namespace ValheimFortress.Challenge
                 Disableportal();
                 end_of_challenge.ForceSet(false);
             }
-            // if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Checked portal status."); }
+            //if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Checked portal status."); }
 
             // Everything past here should only be run once, by whatever main thread is controlling the ticks in this region.
             if (!zNetView.IsOwner())
             {
                 return;
             }
-
-            // Jotunn.Logger.LogInfo("Entering ZnetOwner States.");
-            // if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Entering ZnetOwner states."); }
+            //if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Entering ZnetOwner States."); }
 
             // Kick off the challenge- even if it was trigger by a non-znet owner
             if (start_challenge.Get() == true)
             {
+                //if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Kicking off wave start."); }
                 if (wave_definition_ready.Get() == false && spawn_locations_ready.Get() == false)
                 {
                     if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Build spawn locations & wave definition."); }
@@ -253,8 +255,8 @@ namespace ValheimFortress.Challenge
                 if (wave_phases_definitions.hordePhases.Count > 0)
                 {
                     // We need to A. have spawned creatures & there needs to be none of those spawned creatures remaining
-                    if (VFConfig.EnableDebugMode.Value && log_slower == 60) { Jotunn.Logger.LogInfo($"Checking {enemies.Count} {spawned_creatures.Get()} {phase_running}"); }
-
+                    if (VFConfig.EnableDebugMode.Value && log_slower == 60) { Jotunn.Logger.LogInfo($"Checking enemies: {enemies.Count} spawned_creatures: {spawned_creatures.Get()} phase_running: {phase_running}"); }
+                    ///if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Checking start for next phase"); }
 
                     if (force_next_phase.Get() || enemies.Count > 0 && spawned_creatures.Get() <= 0 && phase_running == false)
                     {
@@ -268,7 +270,16 @@ namespace ValheimFortress.Challenge
                             spawn_controller.TrySpawningPhase(10f, true, wave_phases_definitions.hordePhases[current_phase], gameObject, remote_spawn_locations);
                             SetCurrentCreatureList(wave_phases_definitions.hordePhases[current_phase]);
                             phase_running = true;
-                            currentPhase.Set(current_phase + 1);
+                            int max_wave_phase = wave_phases_definitions.hordePhases.Count;
+                            int expected_next_phase = currentPhase.Get() + 1;
+                            if (max_wave_phase <= expected_next_phase)
+                            {
+                                currentPhase.Set(max_wave_phase);
+                            }
+                            else
+                            {
+                                currentPhase.Set(expected_next_phase);
+                            }
                         }
                         else
                         {

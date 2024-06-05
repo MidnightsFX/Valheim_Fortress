@@ -75,7 +75,6 @@
   "reward_tin": "टिन",
   "reward_iron": "लोहा",
   "reward_silver": "चांदी",
-  "reward_darkmetal": "काली धातु",
   "reward_corewood": "कोर लकड़ी",
   "reward_finewood": "फाइन लकड़ी",
   "reward_guck": "गक",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "श्राइन की इच्छा है कि जो भी धुंध से आते हैं, सबकुछ मांग लें।",
   "wild_seekers_attack": "धुंध में छिपी गतिशील गूंज।",
   "wild_seekers_defeated": "कोहरे शांत हैं।",
-  "mistlands_warning_wilderness": "धुंध में आकार बदलते हैं"
+  "mistlands_warning_wilderness": "धुंध में आकार बदलते हैं",
+  "reward_blackmetal": "कालाधातु"
 }

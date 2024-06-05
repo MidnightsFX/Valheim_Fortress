@@ -75,7 +75,6 @@
   "reward_tin": "Estanho",
   "reward_iron": "Ferro",
   "reward_silver": "Prata",
-  "reward_darkmetal": "Metal preto",
   "reward_corewood": "Madeira de núcleo",
   "reward_finewood": "Madeira fina",
   "reward_guck": "Gosma",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "O santuário deseja todos que vêm das brumas.",
   "wild_seekers_attack": "Ruídos de arrastar-se nas brumas",
   "wild_seekers_defeated": "Os nevoeiros estão calmos",
-  "mistlands_warning_wilderness": "As formas mudam nas névoas"
+  "mistlands_warning_wilderness": "As formas mudam nas névoas",
+  "reward_blackmetal": " Metal negro"
 }

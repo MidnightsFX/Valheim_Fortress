@@ -75,7 +75,6 @@
   "reward_tin": "Cyna",
   "reward_iron": "Żelazo",
   "reward_silver": "Srebro",
-  "reward_darkmetal": "Czarny metal",
   "reward_corewood": "Drewno rdzeniowe",
   "reward_finewood": "Drewno szlachetne",
   "reward_guck": "Śluz",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "Sanktuarium pragnie wszystkich, którzy pochodzą z mgieł.",
   "wild_seekers_attack": "Skubnięcia echa we mgle",
   "wild_seekers_defeated": "Opary są ciche",
-  "mistlands_warning_wilderness": "Kształty zmieniają się we mgle"
+  "mistlands_warning_wilderness": "Kształty zmieniają się we mgle",
+  "reward_blackmetal": "Czarny metal"
 }

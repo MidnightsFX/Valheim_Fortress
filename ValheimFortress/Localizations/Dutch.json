@@ -75,7 +75,6 @@
   "reward_tin": "Tin",
   "reward_iron": "IJzer",
   "reward_silver": "Zilver",
-  "reward_darkmetal": "Zwartmetaal",
   "reward_corewood": "Kernhout",
   "reward_finewood": "Fijnhout",
   "reward_guck": "Guck",
@@ -152,5 +151,6 @@
   "wild_shrine_mistlands_request": "De heiligdom verlangt naar alles wat uit de mist komt.",
   "wild_seekers_attack": "Schitterende echo's in de nevels",
   "wild_seekers_defeated": "De misten zijn stil",
-  "mistlands_warning_wilderness": "Vormen verschuiven in de mist"
+  "mistlands_warning_wilderness": "Vormen verschuiven in de mist",
+  "reward_blackmetal": "Zwarte metal"
 }

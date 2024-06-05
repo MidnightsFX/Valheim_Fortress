@@ -84,6 +84,7 @@
     <EmbeddedResource Include="AssetsEmbedded\vfbundle" />
     <EmbeddedResource Include="Localizations\English.json" />
     <EmbeddedResource Include="Localizations\Spanish.json" />
+    <None Include="Package\CHANGELOG.md" />
     <None Include="ILRepack.targets" />
     <EmbeddedResource Include="Localizations\Abenaki.json" />
     <EmbeddedResource Include="Localizations\Bulgarian.json" />
@@ -134,7 +135,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="JotunnLib">
-      <Version>2.20.0</Version>
+      <Version>2.20.1</Version>
     </PackageReference>
     <PackageReference Include="Mono.Cecil">
       <Version>0.11.5</Version>
