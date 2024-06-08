@@ -168,7 +168,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <PostBuildEvent>xcopy "$(ProjectDir)\README.md" "$(ProjectDir)\Package\README.md" /q /y /i
-
 </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>

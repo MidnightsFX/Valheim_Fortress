@@ -686,7 +686,7 @@ namespace ValheimFortress
 
         private static void UpdateMainConfigFile(object sender, FileSystemEventArgs e)
         {
-            if (!File.Exists(creatureFilePath)) { return; }
+            if (!File.Exists(Paths.ConfigPath)) { return; }
             try
             {
                 cfg.SaveOnConfigSet = false;

@@ -42,6 +42,8 @@ namespace ValheimFortress.Defenses
 		private static float m_aimDiffToTarget = -1f; // This needs to start out as a greater than zero value otherwise the turret will always immediately fire when it locks its first target
 		private static float m_updateTargetTimer = 0f;
 		private static float m_scan = 0f;
+		private static int selected_update_tick = 0;
+		private static int current_tick = 0;
 
 		protected void Awake()
 		{
@@ -90,14 +92,24 @@ namespace ValheimFortress.Defenses
 				m_reloadEffect = PrefabManager.Instance.GetPrefab("fx_turret_reload");
 				m_newTargetEffect = PrefabManager.Instance.GetPrefab("fx_turret_newtarget");
 				m_lostTargetEffect = PrefabManager.Instance.GetPrefab("fx_turret_notarget");
-			}
+
+				// Randomize which tick this turret uses for its update
+                selected_update_tick = UnityEngine.Random.Range(0, 60);
+
+            }
 		}
 
 		private void FixedUpdate()
 		{
+			// Reduce fixed update usage to once per frame at a minimum
+			if (current_tick != selected_update_tick) {
+				current_tick += 1;
+				if (current_tick >= 60) { current_tick = 0; }
+				return;
+			}
 			//Jotunn.Logger.LogInfo("Starting turret fixed update");
 			float fixedDeltaTime = Time.fixedDeltaTime;
-			UpdateMarker(fixedDeltaTime);
+			UpdateMarker();
 			if (m_nview.IsValid())
 			{
 				UpdateTurretRotation();
@@ -359,7 +371,7 @@ namespace ValheimFortress.Defenses
 			}
 		}
 
-		private void UpdateMarker(float dt)
+		private void UpdateMarker()
 		{
 			if ((bool)areaMarker && areaMarker.isActiveAndEnabled)
 			{
