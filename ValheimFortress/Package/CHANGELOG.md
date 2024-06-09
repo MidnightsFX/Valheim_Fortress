@@ -1,3 +1,10 @@
+  **0.22.1**
+---
+```
+- Desyncronizes turret scanning and rotation
+- Variable turret scanning frequency
+```
+
   **0.22.0**
 ---
 ```

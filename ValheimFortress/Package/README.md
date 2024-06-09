@@ -21,7 +21,7 @@ Got a bug to report or just want to chat about the mod? Drop by the discord or g
    * [The shrine of challenge](#the-shrine-of-challenge)
    * [Shrine of the Arena](#shrine-of-the-arena)
    * [Wild Shrines](#wild-shrines)
-   * [Cosmetics](#cosmetics)
+   * [Defensive Structures](#defenses)
    * [How to adjust the difficulty](#how-to-adjust-the-difficulty)
 - [Configuration](#configuration)
    * [Adding Rewards](#adding-rewards)
@@ -77,26 +77,10 @@ Each wild shrine will ask for different tribute, from their respective biome.
 Upon providing the shrine with the required tribute it will spawn an easy wave of similar creatures, which will then reward you with resources from that biome upon completion.
 This is all configurable!
 
-<!-- TOC --><a name="cosmetics"></a>
-### Cosmetics
-The secondary goal of this mod is to help in providing cosmetics and functional base building pieces!
+<!-- TOC --><a name="defenses"></a>
+### Defensive Structures
 
-These pieces likely need better color balancing, and might have other oddities at this point. I've got a slew of cosmetics that I would like to add. It will take time though.
-
-<details>
-<summary>Cosmetics</summary>
-
-|Name|Icon|
-|--|--|
-|Green Circle Rug| ![Green circle rug](https://i.imgur.com/59WStBA.png)|
-|Red Circle Rug| ![Red circle rug](https://i.imgur.com/lpGMbPz.png)|
-|Yellow Circle Rug| ![Yellow circle rug](https://i.imgur.com/BDuAfcO.png)|
-|Green Crystal wall| ![Green crystal wall](https://i.imgur.com/7uC5Td1.png)|
-|Blue Crystal wall| ![Blue crystal wall](https://i.imgur.com/2XjuTHZ.png)|
-|Red Crystal wall| ![Red crystal wall](https://i.imgur.com/ESTRoai.png)|
-|Yellow Crystal wall| ![Yellow crystal wall](https://i.imgur.com/28FaMnE.png)|
-
-</details>
+This mod also adds a few defensive structures to help you with dealing with massive invasions.
 
 <details>
 <summary>Defensive Structures</summary>

@@ -10,7 +10,6 @@ namespace ValheimFortress.Defenses
 		private static float m_turnRate = 80f;
 		private static float m_horizontalAngle = 85f;
 		private static float m_viewDistance = VFConfig.BallistaRange.Value;
-		private static float m_noTargetScanRate = 12f;
 		private static float m_attackCooldown = VFConfig.BallistaCooldownTime.Value;
 		private static float m_hitNoise = 10f;
 		private static float m_shootWhenAimDiff = 0.99f; // 1 is perfect accuracy, we want to shoot when we are very close to dead center, leaving room for errors
@@ -18,8 +17,8 @@ namespace ValheimFortress.Defenses
 		private static float m_predictionModifier = 1f;
 		private static float m_updateTargetIntervalNear = 2f;
 		private static float m_updateTargetIntervalFar = 8f;
-		// private CircleProjector areaMarker;
-		public static float m_markerHideTime = 0.5f;
+        private static float m_aimDiffToTarget = -1f; // This needs to start out as a greater than zero value otherwise the turret will always immediately fire when it locks its first target
+        public static float m_markerHideTime = 0.5f;
 		// These are all set later in time
 		private GameObject m_Projectile;
 		private ItemDrop.ItemData m_Ammo;
@@ -38,14 +37,14 @@ namespace ValheimFortress.Defenses
 		private CircleProjector areaMarker;
 		Quaternion m_baseBodyRotation;
 		Quaternion m_baseNeckRotation;
-		private static bool m_haveTarget = false;
-		private static float m_aimDiffToTarget = -1f; // This needs to start out as a greater than zero value otherwise the turret will always immediately fire when it locks its first target
-		private static float m_updateTargetTimer = 0f;
-		private static float m_scan = 0f;
-		private static int selected_update_tick = 0;
-		private static int current_tick = 0;
 
-		protected void Awake()
+		// These must be instanced
+		private bool m_haveTarget = false;
+		private float m_updateTargetTimer = 0f;
+		private float m_scan = 0f;
+        private float m_noTargetScanRate = 12f;
+
+        protected void Awake()
 		{
 			// Jotunn.Logger.LogInfo("Setting ZNetView");
 			m_nview = GetComponent<ZNetView>();
@@ -93,46 +92,43 @@ namespace ValheimFortress.Defenses
 				m_newTargetEffect = PrefabManager.Instance.GetPrefab("fx_turret_newtarget");
 				m_lostTargetEffect = PrefabManager.Instance.GetPrefab("fx_turret_notarget");
 
-				// Randomize which tick this turret uses for its update
-                selected_update_tick = UnityEngine.Random.Range(0, 60);
+                // Randomize which tick this turret uses for its update
+                m_noTargetScanRate = (float)UnityEngine.Random.Range(9, 18);
 
             }
 		}
 
 		private void FixedUpdate()
 		{
-			// Reduce fixed update usage to once per frame at a minimum
-			if (current_tick != selected_update_tick) {
-				current_tick += 1;
-				if (current_tick >= 60) { current_tick = 0; }
-				return;
-			}
 			//Jotunn.Logger.LogInfo("Starting turret fixed update");
 			float fixedDeltaTime = Time.fixedDeltaTime;
 			UpdateMarker();
 			if (m_nview.IsValid())
 			{
-				UpdateTurretRotation();
+				UpdateTurretRotation(fixedDeltaTime);
 				if (m_nview.IsOwner() && !IsCoolingDown())
 				{
-                    if (!turretBodyArmed.activeSelf)
-                    {
-						Instantiate(m_reloadEffect, turretBodyArmed.transform.position, turretBodyArmed.transform.rotation);
-						turretBodyArmed.SetActive(true);
-						turretBodyArmedBolt.SetActive(true);
-						turretBodyUnarmed.SetActive(false);
-					}
+					TurretRearmAnimate();
 
-					UpdateTarget(fixedDeltaTime);
+                    UpdateTarget(fixedDeltaTime);
 					ShootProjectile(fixedDeltaTime);
-				}
+                }
 			}
 		}
 
-		private void UpdateTurretRotation()
+		private void TurretRearmAnimate()
 		{
-			// Jotunn.Logger.LogInfo("Updating Turret rotation");
-			float fixedDeltaTime = Time.fixedDeltaTime;
+            if (!turretBodyArmed.activeSelf)
+            {
+                Instantiate(m_reloadEffect, turretBodyArmed.transform.position, turretBodyArmed.transform.rotation);
+                turretBodyArmed.SetActive(true);
+                turretBodyArmedBolt.SetActive(true);
+                turretBodyUnarmed.SetActive(false);
+            }
+        }
+
+		private void UpdateTurretRotation(float fixedDeltaTime)
+		{
 			bool has_target = (bool)m_target;
 			Vector3 forward;
 			if (has_target)
@@ -200,7 +196,7 @@ namespace ValheimFortress.Defenses
 				// Id much prefer to get characters in range, but we need a complete list of all valid targets, instead of just avoiding the things we don't want to hit
 				Character selectedTarget = selectTarget();
 
-				if (selectedTarget != m_target)
+				if (selectedTarget != null && selectedTarget != m_target)
 				{
 					if ((bool)selectedTarget)
 					{
@@ -235,9 +231,10 @@ namespace ValheimFortress.Defenses
 
 		private Character selectTarget()
 		{
-			//Jotunn.Logger.LogInfo("selecting target");
-			List<Character> potentialTargets = Character.GetAllCharacters();
-			Character selectedTarget = null;
+            // if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Selecting Target"); }
+            //Jotunn.Logger.LogInfo("selecting target");
+            List<Character> potentialTargets = Character.GetAllCharacters();
+            Character selectedTarget = null;
 			foreach (Character ptarget in potentialTargets)
 			{
 				if (!IsValidTarget(ptarget))
@@ -249,7 +246,19 @@ namespace ValheimFortress.Defenses
 				float distance_to_ptarget = Vector3.Distance(base.transform.position, ptarget.transform.position);
 				if (distance_to_ptarget < m_viewDistance)
 				{
-					selectedTarget = ptarget;
+                    // if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Checking for target visual."); }
+                    // This raycast is only triggered if the target is within range.
+                    // This verifies if the target is VISUALLY targetable aka no more psychic ballista
+                    // RaycastHit rayhit;
+                    // bool did_raycast_hit = Physics.Raycast(eye.transform.position, eye.transform.forward, out rayhit, m_viewDistance);
+                    // float raycast_distance_to_hit = Vector3.Distance(eye.transform.position, ptarget.transform.position);
+                    // bool rayshot_hit_distance = rayhit.distance > (raycast_distance_to_hit - 1) && rayhit.distance < (raycast_distance_to_hit + 1);
+                    // if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($" distance to target: {raycast_distance_to_hit}, raycast distance test: {rayhit.distance}, can hit distance: {rayshot_hit_distance} hit bool: {did_raycast_hit}"); }
+                    // rayshot traveled too far or not far enough
+                    // if (!rayshot_hit_distance) { continue; }
+					// rayshot did not collide during the distance window
+                    // if (!did_raycast_hit) { continue; }
+                    selectedTarget = ptarget;
 					break;
 				}
 			}
@@ -259,9 +268,9 @@ namespace ValheimFortress.Defenses
 
 		public void ShootProjectile(float dt)
 		{
-			// We only fire a shot if we are ready to do so, aka has target, can aim at it, and is ready to fire
-			// Jotunn.Logger.LogInfo($"m_aimDiffToTarget {m_aimDiffToTarget} > m_shootWhenAimDiff {m_shootWhenAimDiff} ({!(m_aimDiffToTarget > m_shootWhenAimDiff)})");
-			if (!m_target || !(m_aimDiffToTarget > m_shootWhenAimDiff) || IsCoolingDown())
+            // We only fire a shot if we are ready to do so, aka has target, can aim at it, and is ready to fire
+            // Jotunn.Logger.LogInfo($"m_aimDiffToTarget {m_aimDiffToTarget} > m_shootWhenAimDiff {m_shootWhenAimDiff} ({!(m_aimDiffToTarget > m_shootWhenAimDiff)})");
+            if (!m_target || !(m_aimDiffToTarget > m_shootWhenAimDiff) || IsCoolingDown())
             {
                 return;
 			}
@@ -280,9 +289,9 @@ namespace ValheimFortress.Defenses
 			{
 				Vector3 forward = eye.transform.forward;
 				Vector3 axis = Vector3.Cross(forward, Vector3.up);
-				float projectileAccuracy = m_ammo_accuracy;
-				Quaternion quaternion = Quaternion.AngleAxis(UnityEngine.Random.Range(0f - projectileAccuracy, projectileAccuracy), Vector3.up);
-				forward = Quaternion.AngleAxis(UnityEngine.Random.Range(0f - projectileAccuracy, projectileAccuracy), axis) * forward;
+
+				Quaternion quaternion = Quaternion.AngleAxis(UnityEngine.Random.Range(0f - m_ammo_accuracy, m_ammo_accuracy), Vector3.up);
+				forward = Quaternion.AngleAxis(UnityEngine.Random.Range(0f - m_ammo_accuracy, m_ammo_accuracy), axis) * forward;
 				forward = quaternion * forward;
 				GameObject projectile = Instantiate(m_Ammo.m_shared.m_attack.m_attackProjectile, eye.transform.position, eye.transform.rotation);
 				HitData hitData = new HitData();
