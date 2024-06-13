@@ -361,7 +361,6 @@ There are a number of things that I plan on adding in the future. Here is the cu
 * defenses
 	* Another tier of trap for the plains
 	* Another tier of walls
-	* Improving creature targeting for ballistas
 
 <!-- TOC --><a name="other-mods"></a>
 ## Other Mods

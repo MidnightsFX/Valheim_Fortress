@@ -19,6 +19,8 @@ namespace ValheimFortress
         public static ConfigEntry<float> BallistaDamage;
         public static ConfigEntry<float> BallistaRange;
         public static ConfigEntry<float> BallistaAmmoAccuracyPenalty;
+        public static ConfigEntry<short> BallistaTargetUpdateCacheInterval;
+        public static ConfigEntry<bool> BallistaEnableShotSafetyCheck;
         public static ConfigEntry<float> BallistaCooldownTime;
         public static ConfigEntry<short> MaxSpawnRange;
         public static ConfigEntry<float> rewardsMultiplier;
@@ -807,6 +809,8 @@ namespace ValheimFortress
             BallistaRange = BindServerConfig("Auto Ballista", "BallistaRange", 30f, "How far the ballista can aquire targets and shoot", true, 10f, 100f);
             BallistaAmmoAccuracyPenalty = BindServerConfig("Auto Ballista", "BallistaAmmoAccuracyPenalty", 0.05f, "How inaccurate the ammo is for the ballista", true, 0.0f, 0.15f);
             BallistaCooldownTime = BindServerConfig("Auto Ballista", "BallistaCooldownTime", 2f, "How long the ballista waits before another shot", true, 0.5f, 10f);
+            BallistaTargetUpdateCacheInterval = BindServerConfig("Auto Ballista", "BallistaTargetUpdateCacheInterval", 5, "How many ticks until the ballista updates its cache of nearby enemies.", true, 1, 10);
+            BallistaEnableShotSafetyCheck = BindServerConfig("Auto Ballista", "BallistaEnableShotSafetyCheck", true, "Whether or not the ballista will verify it won't hit other things before shooting.", true);
             // Client side configurations
 
             // Debugmode

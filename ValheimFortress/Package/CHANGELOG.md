@@ -1,3 +1,21 @@
+  **0.22.3**
+---
+```
+- Fixed non-CPU addressable meshes for physics calculations
+```
+
+  **0.22.2**
+---
+```
+- Disabled network synchronization of turret targets
+- Encouraged turrets to think for themselves
+- Turrets prefer closer targets
+- Exposed configuration for toggling on/off the shot safety checks
+- Reduced turret collider size to help prevent it from shooting itself/neighbors
+- Added target cacheing with variable refresh settings
+- Improved checks for targets to only be active when characters besides the player are around
+```
+
   **0.22.1**
 ---
 ```

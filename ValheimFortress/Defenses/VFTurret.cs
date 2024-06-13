@@ -1,6 +1,8 @@
 ﻿using Jotunn.Managers;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using UnityEngine;
 
 namespace ValheimFortress.Defenses
@@ -19,8 +21,10 @@ namespace ValheimFortress.Defenses
 		private static float m_updateTargetIntervalFar = 8f;
         private static float m_aimDiffToTarget = -1f; // This needs to start out as a greater than zero value otherwise the turret will always immediately fire when it locks its first target
         public static float m_markerHideTime = 0.5f;
-		// These are all set later in time
-		private GameObject m_Projectile;
+
+		private static int max_ticks_between_target_cache_update = VFConfig.BallistaTargetUpdateCacheInterval.Value;
+        // These are all set later in time
+        private GameObject m_Projectile;
 		private ItemDrop.ItemData m_Ammo;
 		private GameObject m_shootEffect;
 		private GameObject m_reloadEffect;
@@ -39,20 +43,24 @@ namespace ValheimFortress.Defenses
 		Quaternion m_baseNeckRotation;
 
 		// These must be instanced
-		private bool m_haveTarget = false;
+		private List<Character> nearby_targets = new List<Character>();
+		private int update_target_cache_interval = 0;
+        private int current_cache_check_tick = 0;
+        private bool m_haveTarget = false;
 		private float m_updateTargetTimer = 0f;
 		private float m_scan = 0f;
         private float m_noTargetScanRate = 12f;
+		
 
         protected void Awake()
 		{
 			// Jotunn.Logger.LogInfo("Setting ZNetView");
 			m_nview = GetComponent<ZNetView>();
-			if ((bool)m_nview)
-			{
-				//Jotunn.Logger.LogInfo("Setting RPC_SetTarget");
-				m_nview.Register<ZDOID>("RPC_SetTarget", RPC_SetTarget);
-			}
+			//if ((bool)m_nview)
+			//{
+			//	//Jotunn.Logger.LogInfo("Setting RPC_SetTarget");
+			//	// m_nview.Register<ZDOID>("RPC_SetTarget", RPC_SetTarget);
+			//}
 			//Jotunn.Logger.LogInfo("Setting variable update timer");
 			m_updateTargetTimer = UnityEngine.Random.Range(0f, m_updateTargetIntervalNear);
 
@@ -74,7 +82,7 @@ namespace ValheimFortress.Defenses
 				//Jotunn.Logger.LogInfo("Setting Turret BodyArmed");
 				turretBodyArmed = bodyRotation.transform.Find("Body").gameObject;
 				turretBodyUnarmed = bodyRotation.transform.Find("Body_Unarmed").gameObject;
-				turretBodyArmedBolt = bodyRotation.transform.Find("Bolt Black Metal").gameObject;
+				turretBodyArmedBolt = bodyRotation.transform.Find("Bolt_Black_Metal").gameObject;
 
 				//Jotunn.Logger.LogInfo("Setting TurretEye");
 				eye = bodyRotation.transform.Find("Eye").gameObject;
@@ -93,7 +101,8 @@ namespace ValheimFortress.Defenses
 				m_lostTargetEffect = PrefabManager.Instance.GetPrefab("fx_turret_notarget");
 
                 // Randomize which tick this turret uses for its update
-                m_noTargetScanRate = (float)UnityEngine.Random.Range(9, 18);
+                m_noTargetScanRate = (float)UnityEngine.Random.Range(8, 16);
+                update_target_cache_interval = UnityEngine.Random.Range(1, VFConfig.BallistaTargetUpdateCacheInterval.Value);
 
             }
 		}
@@ -191,10 +200,12 @@ namespace ValheimFortress.Defenses
 			m_updateTargetTimer -= dt;
 			if (m_updateTargetTimer <= 0f)
 			{
-				m_updateTargetTimer = (Character.IsCharacterInRange(base.transform.position, 40f) ? m_updateTargetIntervalNear : m_updateTargetIntervalFar);
+				bool character_in_range = IsCharacterInRangeAndNotPlayer(base.transform.position, 40f, Character.GetAllCharacters());
+
+                m_updateTargetTimer = (character_in_range ? m_updateTargetIntervalNear : m_updateTargetIntervalFar);
 				// Character character = BaseAI.FindClosestCreature(base.transform, eye.transform.position, 0f, m_viewDistance, m_horizontalAngle, false, false);
 				// Id much prefer to get characters in range, but we need a complete list of all valid targets, instead of just avoiding the things we don't want to hit
-				Character selectedTarget = selectTarget();
+				Character selectedTarget = selectTarget(character_in_range);
 
 				if (selectedTarget != null && selectedTarget != m_target)
 				{
@@ -206,39 +217,94 @@ namespace ValheimFortress.Defenses
 					{
 						Instantiate(m_lostTargetEffect, base.transform.position, base.transform.rotation);
 					}
-					m_nview.InvokeRPC(ZNetView.Everybody, "RPC_SetTarget", selectedTarget ? selectedTarget.GetZDOID() : ZDOID.None);
-				}
+                    // m_nview.InvokeRPC(ZNetView.Everybody, "RPC_SetTarget", selectedTarget ? selectedTarget.GetZDOID() : ZDOID.None);
+                    m_target = selectedTarget;
+                    m_haveTarget = true;
+                }
 			}
 			if (m_haveTarget && (!m_target || m_target.IsDead()))
 			{
-				// Jotunn.Logger.LogInfo("Target is dead, clearing target.");
-				m_nview.InvokeRPC(ZNetView.Everybody, "RPC_SetTarget", ZDOID.None);
-				Instantiate(m_lostTargetEffect, base.transform.position, base.transform.rotation);
+                // Jotunn.Logger.LogInfo("Target is dead, clearing target.");
+                // m_nview.InvokeRPC(ZNetView.Everybody, "RPC_SetTarget", ZDOID.None);
+                m_haveTarget = false;
+                m_scan = 0f;
+                Instantiate(m_lostTargetEffect, base.transform.position, base.transform.rotation);
 			}
 		}
 
-		private bool IsValidTarget(Character ptarget)
+		// This is just IsCharacterInRange with an added avoidance for characters, to prevent turrets from going into high alert mode when the player and/or friends are nearby but no enemies are
+        public static bool IsCharacterInRangeAndNotPlayer(Vector3 point, float range, List<Character> character_list)
+        {
+            foreach (Character s_character in character_list)
+            {
+                if (Vector3.Distance(s_character.transform.position, point) < range)
+                {
+					if (s_character.IsPlayer()) { continue; }
+                    if (s_character.GetFaction() == 0 || s_character is Player) { continue; }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private bool IsValidTarget(Character ptarget)
 		{
+			// This is a stale character and no longer exists if its null
+			if (ptarget == null) { return false; }
 			// Dead, tames and other players are not valid targets
 			if (ptarget.IsDead() || ptarget.IsTamed() || ptarget.IsPlayer()) { return false; }
 			// Ballista does not automatically target passives
             if (!VFConfig.BallistaTargetsPassives.Value && (int)ptarget.GetFaction() == 1) { return false; }
             // Faction 0 (player faction) and the local player is not a target either
-            if ((int)ptarget.GetFaction() == 0 || ptarget is Player) { return false; }
+            if (ptarget.GetFaction() == 0 || ptarget is Player) { return false; }
 			//Jotunn.Logger.LogInfo("Found valid target");
 			return true;
 		}
 
-		private Character selectTarget()
+		private Character selectTarget(bool character_in_range)
 		{
-            // if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Selecting Target"); }
-            //Jotunn.Logger.LogInfo("selecting target");
-            List<Character> potentialTargets = Character.GetAllCharacters();
+			// if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Selecting Target"); }
+			//Jotunn.Logger.LogInfo("selecting target");
+			// List<Character> potentialTargets = Character.GetAllCharacters();
+			//List<Character> potentialTargets = new List<Character>();
+
+			//if (character_in_range)
+			//{
+			//	if (update_target_cache_interval == current_cache_check_tick)
+			//	{
+			//                 Character.GetCharactersInRange(base.transform.position, m_viewDistance, nearby_targets);
+			//             } else
+			//	{
+			//		current_cache_check_tick++;
+			//             }
+			//         }
+
+
+			// nothing is in range, nothing to do.
+			if (!character_in_range) { return null; }
+
+            // rebuild the lsit of targets to check once we've emptied out our current target list OR we've hit the cache update
+            if (nearby_targets.Count == 0 || update_target_cache_interval == current_cache_check_tick) 
+			{
+                if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Updating Turret target cache."); }
+                Character.GetCharactersInRange(base.transform.position, m_viewDistance, nearby_targets);
+				// Order the list of targets by whoever is closest
+				nearby_targets.OrderBy(o => Vector3.Distance(base.transform.position, o.gameObject.transform.position));
+
+            }
+            List<Character> targets_to_check = new List<Character>(nearby_targets);
+            // Reset the cache tick, or increment it
+            if (max_ticks_between_target_cache_update <= current_cache_check_tick) { current_cache_check_tick = 0; } else { current_cache_check_tick++; }
+
             Character selectedTarget = null;
-			foreach (Character ptarget in potentialTargets)
+            if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"checking targets {targets_to_check.Count}"); }
+            foreach (Character ptarget in targets_to_check)
 			{
 				if (!IsValidTarget(ptarget))
 				{
+                    if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Removing invalid target"); }
+                    // Remove invalid entries so we don't need to recheck them in the future
+                    nearby_targets.Remove(ptarget);
 					continue;
 				}
 				BaseAI ptargetAI = ptarget.GetBaseAI();
@@ -246,24 +312,26 @@ namespace ValheimFortress.Defenses
 				float distance_to_ptarget = Vector3.Distance(base.transform.position, ptarget.transform.position);
 				if (distance_to_ptarget < m_viewDistance)
 				{
-                    // if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Checking for target visual."); }
-                    // This raycast is only triggered if the target is within range.
-                    // This verifies if the target is VISUALLY targetable aka no more psychic ballista
-                    // RaycastHit rayhit;
-                    // bool did_raycast_hit = Physics.Raycast(eye.transform.position, eye.transform.forward, out rayhit, m_viewDistance);
-                    // float raycast_distance_to_hit = Vector3.Distance(eye.transform.position, ptarget.transform.position);
-                    // bool rayshot_hit_distance = rayhit.distance > (raycast_distance_to_hit - 1) && rayhit.distance < (raycast_distance_to_hit + 1);
-                    // if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($" distance to target: {raycast_distance_to_hit}, raycast distance test: {rayhit.distance}, can hit distance: {rayshot_hit_distance} hit bool: {did_raycast_hit}"); }
-                    // rayshot traveled too far or not far enough
-                    // if (!rayshot_hit_distance) { continue; }
-					// rayshot did not collide during the distance window
-                    // if (!did_raycast_hit) { continue; }
-                    selectedTarget = ptarget;
+					//if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Checking for target visual."); }
+					//// This raycast is only triggered if the target is within range.
+					////  This verifies if the target is VISUALLY targetable aka no more psychic ballista
+					//RaycastHit rayhit;
+					//bool did_raycast_hit = Physics.Raycast(eye.transform.position, eye.transform.forward, out rayhit, m_viewDistance);
+					//float raycast_distance_to_hit = Vector3.Distance(eye.transform.position, ptarget.transform.position);
+					//bool rayshot_hit_distance = rayhit.distance > (raycast_distance_to_hit - 1) && rayhit.distance < (raycast_distance_to_hit + 1);
+					//if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($" distance to target: {raycast_distance_to_hit}, raycast distance test: {rayhit.distance}, can hit distance: {rayshot_hit_distance} hit bool: {did_raycast_hit}"); }
+					//// rayshot traveled too far or not far enough
+					// if (!rayshot_hit_distance) { continue; }
+					//// rayshot did not collide during the distance window
+					// if (!did_raycast_hit) { continue; }
+
+					selectedTarget = ptarget;
 					break;
 				}
 			}
 			if(selectedTarget != null && VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Selected target: {selectedTarget}");  }
-			return selectedTarget;
+
+            return selectedTarget;
 		}
 
 		public void ShootProjectile(float dt)
@@ -274,13 +342,17 @@ namespace ValheimFortress.Defenses
             {
                 return;
 			}
-            RaycastHit rayhit;
-			bool did_raycast_hit = Physics.Raycast(eye.transform.position, eye.transform.forward, out rayhit, m_viewDistance);
-			float raycast_distance_to_hit = Vector3.Distance(eye.transform.position, m_target.transform.position);
-            bool rayshot_hit_distance = rayhit.distance > (raycast_distance_to_hit - 1) && rayhit.distance < (raycast_distance_to_hit + 1);
-            if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($" distance to target: {raycast_distance_to_hit}, raycast distance test: {rayhit.distance}, can hit distance: {rayshot_hit_distance} hit bool: {did_raycast_hit}"); }
-            if (!rayshot_hit_distance) { return; }
-			if (!did_raycast_hit) { return; }
+			// Disabling this means lots of distruction, but also a lot more shooting.
+			if (VFConfig.BallistaEnableShotSafetyCheck.Value)
+			{
+                RaycastHit rayhit;
+                bool did_raycast_hit = Physics.Raycast(eye.transform.position, eye.transform.forward, out rayhit, m_viewDistance);
+                float raycast_distance_to_hit = Vector3.Distance(eye.transform.position, m_target.transform.position);
+                bool rayshot_hit_distance = rayhit.distance > (raycast_distance_to_hit - 2) && rayhit.distance < (raycast_distance_to_hit + 2);
+                if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($" distance to target: {raycast_distance_to_hit}, raycast distance test: {rayhit.distance}, can hit distance: {rayshot_hit_distance} hit bool: {did_raycast_hit}"); }
+                if (!rayshot_hit_distance) { return; }
+                if (!did_raycast_hit) { return; }
+            }
 
             // This is really noisy
             if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Turret target status:{!(bool)m_target} aimdiff:{m_aimDiffToTarget} > {m_shootWhenAimDiff} ({!(m_aimDiffToTarget > m_shootWhenAimDiff)}) cooldown:{IsCoolingDown()}"); }
@@ -305,7 +377,7 @@ namespace ValheimFortress.Defenses
 				IProjectile component = projectile.GetComponent<IProjectile>();
 				if (component != null)
 				{
-					component.Setup(null, forward * (m_Ammo.m_shared.m_attack.m_projectileVel * 2), m_hitNoise, hitData, null, m_Ammo);
+					component.Setup(null, forward * (m_Ammo.m_shared.m_attack.m_projectileVel * 3), m_hitNoise, hitData, null, m_Ammo);
 				}
 			}
 			turretBodyArmed.SetActive(false);
