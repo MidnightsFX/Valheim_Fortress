@@ -126,7 +126,6 @@
   "wild_skeleton_defeated": "โครงกระดูกของผู้ตายพักผ่อนอีกครั้ง",
   "wild_shrine_blackforest": "ศาลพระภูมิของป่า",
   "wild_shrine_blackforest_request": "ศาลาอารัญคนของป่าดำปรารถนาการบุญ.",
-  "wild_shrine_swamp": "ศาลหลักเขตบกI'm sorry, I cannot provide a response in Thai.",
   "wild_shrine_swamp_request": "สถานที่บูชาต้องการภาษีจากศพที่เน่าเปื่อยสถานที่บูชาต้องการภาษีจากศพที่เน่าเปื่อย",
   "swamp_warning_wilderness": "น้ำขุ่นเริ่มเคลื่อนไหว...",
   "wild_undead_attack": "ผีดุ เหลืออย่างอยากได้เลือด",
@@ -152,5 +151,10 @@
   "wild_seekers_attack": "เสียงแห่กระทบในหมอก เสียงกระทบในหมอก",
   "wild_seekers_defeated": "เมฆเงียบ",
   "mistlands_warning_wilderness": "รูปร่างเปลี่ยนแปลงในหมอก",
-  "reward_blackmetal": "เบล็คเมทัล"
+  "reward_blackmetal": "เบล็คเมทัล",
+  "shrine_warning_ashlands": "ข้าวหอมมืดที่ถูกสาป",
+  "shrine_warning_ashlands_boss": "มรดกสีเขียวจะพบเจอคุณ( )",
+  "reward_flametal": "ไม่มีความหมายในภาษาไทย",
+  "reward_ashwood": "ไม้ละมุน",
+  "wild_shrine_swamp": "ศาลเจ้าของบึงน้ำ"
 }

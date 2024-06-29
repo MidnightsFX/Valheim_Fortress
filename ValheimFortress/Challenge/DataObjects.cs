@@ -34,6 +34,7 @@ namespace ValheimFortress.Challenge
         public const String MODER = "Moder";
         public const String YAGLUTH = "Yagluth";
         public const String QUEEN = "TheQueen";
+        public const String FADER = "Fader";
 
         public static IDeserializer yamldeserializer = new DeserializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build();
         public static ISerializer yamlserializer = new SerializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).DisableAliases().Build();

@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Скитащи се еха в мъглите",
   "wild_seekers_defeated": "Мъглите са тихи.",
   "mistlands_warning_wilderness": "Формите се променят в мъглите",
-  "reward_blackmetal": "Блекметъл"
+  "reward_blackmetal": "Блекметъл",
+  "shrine_warning_ashlands": "Проклетият изгорелият издигане.Translated response: Проклето изгорелото издигане.",
+  "shrine_warning_ashlands_boss": "Изумруденият ще те намери.",
+  "reward_flametal": "Фламетъл",
+  "reward_ashwood": "Ашууд"
 }

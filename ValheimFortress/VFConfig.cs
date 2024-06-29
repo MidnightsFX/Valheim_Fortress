@@ -186,7 +186,7 @@ namespace ValheimFortress
 
             if (hasLevelsConfig == false)
             {
-                Jotunn.Logger.LogInfo("CreatureConfig file missing, recreating.");
+                Jotunn.Logger.LogInfo("LevelsConfig file missing, recreating.");
                 using (StreamWriter writetext = new StreamWriter(levelDefinitionsFilePath))
                 {
                     // ValheimFortress.ReadEmbeddedResourceFile("SpawnableCreatures.yaml")

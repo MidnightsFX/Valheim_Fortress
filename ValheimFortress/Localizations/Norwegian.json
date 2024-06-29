@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Skjemmende ekko i tåken",
   "wild_seekers_defeated": "Tåken er stille",
   "mistlands_warning_wilderness": "Former endres i tåken",
-  "reward_blackmetal": "Svartmetall"
+  "reward_blackmetal": "Svartmetall",
+  "shrine_warning_ashlands": "Den forbannede svidde oppstigningen.",
+  "shrine_warning_ashlands_boss": "Den smaragdgrønne vil finne deg.",
+  "reward_ashwood": "Asketre",
+  "reward_flametal": "Flammende metall"
 }

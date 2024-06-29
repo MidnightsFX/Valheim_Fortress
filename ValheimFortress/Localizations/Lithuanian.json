@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Skriejančios atgarsiai rūsyse",
   "wild_seekers_defeated": "Rūkas tylus",
   "mistlands_warning_wilderness": "Formos kinta rūkstant.",
-  "reward_blackmetal": "Juodasis metalas"
+  "reward_blackmetal": "Juodasis metalas",
+  "shrine_warning_ashlands": "Prakeiktas, sudūžęs pakilimas.",
+  "shrine_warning_ashlands_boss": "Jūs būsite surasti smaragdo.",
+  "reward_flametal": "Plieno ugnies",
+  "reward_ashwood": "Beržas"
 }

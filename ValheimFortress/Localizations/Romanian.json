@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Ecouri scrâșnind în ceață",
   "wild_seekers_defeated": "Cețurile sunt liniștite",
   "mistlands_warning_wilderness": "Formele se transformă în ceață",
-  "reward_blackmetal": "Metal negru"
+  "reward_blackmetal": "Metal negru",
+  "shrine_warning_ashlands": "Înălțarea blestemată carbonizată.",
+  "shrine_warning_ashlands_boss": "Smaraldul te va găsi.",
+  "reward_ashwood": "Fagul de cenușă",
+  "reward_flametal": "Flametal"
 }

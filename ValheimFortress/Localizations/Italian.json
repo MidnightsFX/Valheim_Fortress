@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Scricchiolii echeggiano nella nebbia",
   "wild_seekers_defeated": "Le nebbie sono tranquille",
   "mistlands_warning_wilderness": "Le forme si trasformano nelle nebbie",
-  "reward_blackmetal": ""
+  "shrine_warning_ashlands": "Il maledetto aumento bruciato.",
+  "shrine_warning_ashlands_boss": "L'Emeraldo ti troverà.",
+  "reward_ashwood": " Frassino",
+  "reward_blackmetal": "Metal nero",
+  "reward_flametal": "Metallofla"
 }

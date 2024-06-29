@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Šúchajúce ozveny v hmle",
   "wild_seekers_defeated": "Opary sú tiché",
   "mistlands_warning_wilderness": "Tvary sa menia v hmle",
-  "reward_blackmetal": "Čierny metal"
+  "reward_blackmetal": "Čierny metal",
+  "shrine_warning_ashlands": "Prekliata, uhladená stúpaj.",
+  "shrine_warning_ashlands_boss": "Zelený ťa nájde.",
+  "reward_flametal": "Flamatálny",
+  "reward_ashwood": "Jaseň"
 }

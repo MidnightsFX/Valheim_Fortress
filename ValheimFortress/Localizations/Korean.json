@@ -152,5 +152,9 @@
   "wild_seekers_attack": "안개 속에서 삐걱거리는 반향안개 속에서 삐걱거리는 반향",
   "wild_seekers_defeated": "안개는 조용합니다.",
   "mistlands_warning_wilderness": "안개 속에서 모양이 변한다",
-  "reward_blackmetal": "블랙메탈"
+  "reward_blackmetal": "블랙메탈",
+  "shrine_warning_ashlands": "저주받은 숯 탄 상승.",
+  "shrine_warning_ashlands_boss": "에메랄드가 당신을 찾을 거에요.",
+  "reward_flametal": "플라메탈",
+  "reward_ashwood": "잣나무 숲"
 }

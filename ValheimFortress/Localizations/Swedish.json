@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Skrapande ekon i dimmorna",
   "wild_seekers_defeated": "Dimmorna är tysta.",
   "mistlands_warning_wilderness": "Former förändras i dimmorna",
-  "reward_blackmetal": "Svartmetall"
+  "reward_blackmetal": "Svartmetall",
+  "shrine_warning_ashlands": " Den förbannade svedda stiger.",
+  "shrine_warning_ashlands_boss": "Den smaragdgröna kommer att hitta dig.",
+  "reward_ashwood": "Askträ",
+  "reward_flametal": "Flametall"
 }

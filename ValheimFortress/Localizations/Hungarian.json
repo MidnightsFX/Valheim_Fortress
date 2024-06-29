@@ -152,5 +152,9 @@
   "wild_seekers_attack": " Hegyekben zizegő visszhangok",
   "wild_seekers_defeated": "A köd csendes",
   "mistlands_warning_wilderness": "A formák változnak a ködben",
-  "reward_blackmetal": "Fekete fém"
+  "reward_blackmetal": "Fekete fém",
+  "shrine_warning_ashlands": "A megátkozott megégett emelkedik.",
+  "shrine_warning_ashlands_boss": "Az Smaragd megtalál téged.",
+  "reward_ashwood": "Kőrisfa",
+  "reward_flametal": "Flammétal"
 }

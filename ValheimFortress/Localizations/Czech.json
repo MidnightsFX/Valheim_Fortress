@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Šplouchání ozvěn ve mlze",
   "wild_seekers_defeated": "Mlhy jsou tiché",
   "mistlands_warning_wilderness": "Tvary se mění v mlze",
-  "reward_blackmetal": "Černý metal"
+  "reward_blackmetal": "Černý metal",
+  "shrine_warning_ashlands": "Prokletý popel vzestupu.",
+  "shrine_warning_ashlands_boss": "Emerald tě najde.",
+  "reward_ashwood": "Jasanový",
+  "reward_flametal": "Flakov"
 }

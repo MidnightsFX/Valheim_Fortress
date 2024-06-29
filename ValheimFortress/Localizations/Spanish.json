@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Ecos que se deslizan en la niebla",
   "wild_seekers_defeated": "Las nieblas están tranquilas",
   "mistlands_warning_wilderness": "Las formas cambian en la niebla",
-  "reward_blackmetal": "Metal negro"
+  "reward_blackmetal": "Metal negro",
+  "shrine_warning_ashlands": "El ascenso maldito y chamuscado.",
+  "shrine_warning_ashlands_boss": "El Esmeralda te encontrará.",
+  "reward_ashwood": "Ceniza de madera",
+  "reward_flametal": "Flametal"
 }

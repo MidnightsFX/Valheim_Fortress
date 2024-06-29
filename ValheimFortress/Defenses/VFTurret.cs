@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using UnityEngine;
+using ValheimFortress.Challenge;
+using static UnityEngine.GraphicsBuffer;
 
 namespace ValheimFortress.Defenses
 {
@@ -22,7 +24,9 @@ namespace ValheimFortress.Defenses
         private static float m_aimDiffToTarget = -1f; // This needs to start out as a greater than zero value otherwise the turret will always immediately fire when it locks its first target
         public static float m_markerHideTime = 0.5f;
 
-		private static int max_ticks_between_target_cache_update = VFConfig.BallistaTargetUpdateCacheInterval.Value;
+		private static LayerMask lmsk = 1;
+
+        private static int max_ticks_between_target_cache_update = VFConfig.BallistaTargetUpdateCacheInterval.Value;
         // These are all set later in time
         private GameObject m_Projectile;
 		private ItemDrop.ItemData m_Ammo;
@@ -50,17 +54,20 @@ namespace ValheimFortress.Defenses
 		private float m_updateTargetTimer = 0f;
 		private float m_scan = 0f;
         private float m_noTargetScanRate = 12f;
-		
+
+        private ZDOIDZNetProperty target { get; set; }
+
 
         protected void Awake()
 		{
 			// Jotunn.Logger.LogInfo("Setting ZNetView");
 			m_nview = GetComponent<ZNetView>();
-			//if ((bool)m_nview)
-			//{
-			//	//Jotunn.Logger.LogInfo("Setting RPC_SetTarget");
-			//	// m_nview.Register<ZDOID>("RPC_SetTarget", RPC_SetTarget);
-			//}
+			if ((bool)m_nview)
+			{
+                //Jotunn.Logger.LogInfo("Setting RPC_SetTarget");
+                // m_nview.Register<ZDOID>("RPC_SetTarget", RPC_SetTarget);
+                target = new ZDOIDZNetProperty("VFTurret_Target", m_nview, ZDOID.None);
+            }
 			//Jotunn.Logger.LogInfo("Setting variable update timer");
 			m_updateTargetTimer = UnityEngine.Random.Range(0f, m_updateTargetIntervalNear);
 
@@ -104,6 +111,9 @@ namespace ValheimFortress.Defenses
                 m_noTargetScanRate = (float)UnityEngine.Random.Range(8, 16);
                 update_target_cache_interval = UnityEngine.Random.Range(1, VFConfig.BallistaTargetUpdateCacheInterval.Value);
 
+				// Invert bit mask to target all things but characters
+				lmsk = lmsk << LayerMask.GetMask("default"); // Bit shift default
+                lmsk = ~lmsk; // Invert default bitshift to avoid colliding with default layer, but still collide with everything else
             }
 		}
 
@@ -114,18 +124,20 @@ namespace ValheimFortress.Defenses
 			UpdateMarker();
 			if (m_nview.IsValid())
 			{
-				UpdateTurretRotation(fixedDeltaTime);
-				if (m_nview.IsOwner() && !IsCoolingDown())
-				{
-					TurretRearmAnimate();
+                ConnectTargetIfSetAndInRange();
+                UpdateTurretRotation(fixedDeltaTime);
+                if (m_nview.IsOwner() && !IsCoolingDown())
+                {
+                    TurretRearmAnimate();
 
                     UpdateTarget(fixedDeltaTime);
-					ShootProjectile(fixedDeltaTime);
+                    ShootProjectile(fixedDeltaTime);
                 }
 			}
 		}
 
-		private void TurretRearmAnimate()
+
+        private void TurretRearmAnimate()
 		{
             if (!turretBodyArmed.activeSelf)
             {
@@ -138,9 +150,9 @@ namespace ValheimFortress.Defenses
 
 		private void UpdateTurretRotation(float fixedDeltaTime)
 		{
-			bool has_target = (bool)m_target;
-			Vector3 forward;
-			if (has_target)
+            // if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Rotation Towards target? {(bool)m_target}"); }
+            Vector3 forward;
+			if ((bool)m_target)
 			{
 				float num = Vector2.Distance(m_target.transform.position, eye.transform.position) / (m_Ammo.m_shared.m_attack.m_projectileVel * 2);
 				Vector3 vector = m_target.GetVelocity() * num * m_predictionModifier;
@@ -191,17 +203,20 @@ namespace ValheimFortress.Defenses
 			//Jotunn.Logger.LogInfo($"Turret Rotation {turretBody.transform.rotation}.");
 			turretNeck.transform.rotation = m_baseNeckRotation * Quaternion.Euler(0f, turretBody.transform.rotation.eulerAngles.y, turretBody.transform.rotation.eulerAngles.z);
 			//Jotunn.Logger.LogInfo($"has_target:{has_target} {Quaternion.Dot(quaternion2, quaternion)} or 2f");
-			m_aimDiffToTarget = (has_target ? Math.Abs(Quaternion.Dot(quaternion2, quaternion)) : -1f);
+			m_aimDiffToTarget = (m_haveTarget ? Math.Abs(Quaternion.Dot(quaternion2, quaternion)) : -1f);
 		}
 
 		private void UpdateTarget(float dt)
 		{
+            // No need to update our target if we already have a target
+            // if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Already has target? {m_haveTarget}"); }
+			// This gets cleared out when the target dies, since the object reference will break
+            if ((bool)m_target) { return; }
 			//Jotunn.Logger.LogInfo("Updating Target");
 			m_updateTargetTimer -= dt;
 			if (m_updateTargetTimer <= 0f)
 			{
 				bool character_in_range = IsCharacterInRangeAndNotPlayer(base.transform.position, 40f, Character.GetAllCharacters());
-
                 m_updateTargetTimer = (character_in_range ? m_updateTargetIntervalNear : m_updateTargetIntervalFar);
 				// Character character = BaseAI.FindClosestCreature(base.transform, eye.transform.position, 0f, m_viewDistance, m_horizontalAngle, false, false);
 				// Id much prefer to get characters in range, but we need a complete list of all valid targets, instead of just avoiding the things we don't want to hit
@@ -217,15 +232,18 @@ namespace ValheimFortress.Defenses
 					{
 						Instantiate(m_lostTargetEffect, base.transform.position, base.transform.rotation);
 					}
+                    if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"set target {selectedTarget}"); }
                     // m_nview.InvokeRPC(ZNetView.Everybody, "RPC_SetTarget", selectedTarget ? selectedTarget.GetZDOID() : ZDOID.None);
+                    target.Set(selectedTarget ? selectedTarget.GetZDOID() : ZDOID.None);
                     m_target = selectedTarget;
                     m_haveTarget = true;
                 }
 			}
 			if (m_haveTarget && (!m_target || m_target.IsDead()))
 			{
-                // Jotunn.Logger.LogInfo("Target is dead, clearing target.");
-                // m_nview.InvokeRPC(ZNetView.Everybody, "RPC_SetTarget", ZDOID.None);
+				// Jotunn.Logger.LogInfo("Target is dead, clearing target.");
+				// m_nview.InvokeRPC(ZNetView.Everybody, "RPC_SetTarget", ZDOID.None);
+				target.Set(ZDOID.None);
                 m_haveTarget = false;
                 m_scan = 0f;
                 Instantiate(m_lostTargetEffect, base.transform.position, base.transform.rotation);
@@ -283,8 +301,8 @@ namespace ValheimFortress.Defenses
 			// nothing is in range, nothing to do.
 			if (!character_in_range) { return null; }
 
-            // rebuild the lsit of targets to check once we've emptied out our current target list OR we've hit the cache update
-            if (nearby_targets.Count == 0 || update_target_cache_interval == current_cache_check_tick) 
+            // rebuild the list of targets to check once we've emptied out our current target list OR we've hit the cache update
+            if (nearby_targets.Count == 0 || update_target_cache_interval == current_cache_check_tick)
 			{
                 if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Updating Turret target cache."); }
                 Character.GetCharactersInRange(base.transform.position, m_viewDistance, nearby_targets);
@@ -302,7 +320,7 @@ namespace ValheimFortress.Defenses
 			{
 				if (!IsValidTarget(ptarget))
 				{
-                    if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Removing invalid target"); }
+                    // if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Removing invalid target"); }
                     // Remove invalid entries so we don't need to recheck them in the future
                     nearby_targets.Remove(ptarget);
 					continue;
@@ -312,18 +330,17 @@ namespace ValheimFortress.Defenses
 				float distance_to_ptarget = Vector3.Distance(base.transform.position, ptarget.transform.position);
 				if (distance_to_ptarget < m_viewDistance)
 				{
-					//if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Checking for target visual."); }
-					//// This raycast is only triggered if the target is within range.
-					////  This verifies if the target is VISUALLY targetable aka no more psychic ballista
-					//RaycastHit rayhit;
-					//bool did_raycast_hit = Physics.Raycast(eye.transform.position, eye.transform.forward, out rayhit, m_viewDistance);
-					//float raycast_distance_to_hit = Vector3.Distance(eye.transform.position, ptarget.transform.position);
-					//bool rayshot_hit_distance = rayhit.distance > (raycast_distance_to_hit - 1) && rayhit.distance < (raycast_distance_to_hit + 1);
-					//if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($" distance to target: {raycast_distance_to_hit}, raycast distance test: {rayhit.distance}, can hit distance: {rayshot_hit_distance} hit bool: {did_raycast_hit}"); }
-					//// rayshot traveled too far or not far enough
-					// if (!rayshot_hit_distance) { continue; }
-					//// rayshot did not collide during the distance window
-					// if (!did_raycast_hit) { continue; }
+					// if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Checking for target visual."); }
+					// This raycast is only triggered if the target is within range.
+					//  This verifies if the target is VISUALLY targetable aka no more psychic ballista
+					RaycastHit rayhit;
+					Vector3 direction = (ptarget.transform.position - eye.transform.position).normalized;
+					bool did_raycast_hit = Physics.Raycast(eye.transform.position, direction, out rayhit, m_viewDistance, lmsk);
+					float raycast_distance_to_hit = Vector3.Distance(eye.transform.position, ptarget.transform.position);
+					bool rayshot_hit_distance = rayhit.distance > (raycast_distance_to_hit - 2);
+					if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"TargetCheck: distance to target: {raycast_distance_to_hit}, raycast distance test: {rayhit.distance}, can hit distance: {rayshot_hit_distance}"); }
+					// rayshot did not travel far enough to potentially hit the target, it collided with something before hitting the target
+					if (!rayshot_hit_distance) { continue; }
 
 					selectedTarget = ptarget;
 					break;
@@ -346,12 +363,12 @@ namespace ValheimFortress.Defenses
 			if (VFConfig.BallistaEnableShotSafetyCheck.Value)
 			{
                 RaycastHit rayhit;
-                bool did_raycast_hit = Physics.Raycast(eye.transform.position, eye.transform.forward, out rayhit, m_viewDistance);
+                bool did_raycast_hit = Physics.Raycast(eye.transform.position, eye.transform.forward, out rayhit, m_viewDistance, lmsk);
                 float raycast_distance_to_hit = Vector3.Distance(eye.transform.position, m_target.transform.position);
                 bool rayshot_hit_distance = rayhit.distance > (raycast_distance_to_hit - 2) && rayhit.distance < (raycast_distance_to_hit + 2);
                 if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($" distance to target: {raycast_distance_to_hit}, raycast distance test: {rayhit.distance}, can hit distance: {rayshot_hit_distance} hit bool: {did_raycast_hit}"); }
                 if (!rayshot_hit_distance) { return; }
-                if (!did_raycast_hit) { return; }
+				if (!did_raycast_hit) { return; }
             }
 
             // This is really noisy
@@ -409,25 +426,54 @@ namespace ValheimFortress.Defenses
 			return Localization.instance.Localize("$piece_vfturret");
 		}
 
-		private void RPC_SetTarget(long sender, ZDOID character)
-		{
-			GameObject gameObject = ZNetScene.instance.FindInstance(character);
-			if ((bool)gameObject)
+        private void ConnectTargetIfSetAndInRange()
+        {
+			if (target.Get() != ZDOID.None && m_haveTarget == false)
 			{
-				Character component = gameObject.GetComponent<Character>();
-				if ((object)component != null)
+                // Jotunn.Logger.LogInfo("Recieving target from ZDO");
+                GameObject gameObject = ZNetScene.instance.FindInstance(target.Get());
+                // Jotunn.Logger.LogInfo($"Found target in the scene? {(bool)gameObject}");
+                if ((bool)gameObject) {
+					bool target_within_range = Vector3.Distance(eye.transform.position, gameObject.transform.position) > m_viewDistance;
+                    // Jotunn.Logger.LogInfo($"ZDO target is within range? ({target_within_range})");
+                    // We don't take the group target if its outside of our shooting range
+                    if (target_within_range)
+					{
+                        Character component = gameObject.GetComponent<Character>();
+                        // Jotunn.Logger.LogInfo($"Target is a valid character? {(object)component != null}");
+                        if ((object)component != null)
+                        {
+                            // Jotunn.Logger.LogInfo("Setting Target From ZDO");
+                            m_target = component;
+                            m_haveTarget = true;
+                            return;
+                        }
+                    }
+                } else
 				{
-					m_target = component;
-					m_haveTarget = true;
-					return;
-				}
-			}
-			m_target = null;
-			m_haveTarget = false;
-			m_scan = 0f;
-		}
+                    // Jotunn.Logger.LogInfo("Clear target due to being unable to find the target in the scene");
+                    target.ForceSet(ZDOID.None);
+                    m_target = null;
+                    m_haveTarget = false;
+                    m_scan = 0f;
+                }
+            } 
+			//else {
+			//	// No target is available to target
+			//	// Its possible that we get here and have a target but ZDOID is none
+			//	// In that case we want to clear out our target, as its likely dead.
+			//	if (target.Get() == ZDOID.None)
+			//	{
+   //                 Jotunn.Logger.LogInfo("Clear target due to empty ZDO");
+   //                 m_target = null;
+   //                 m_haveTarget = false;
+   //                 m_scan = 0f;
+   //             }
+   //         }
+            
+        }
 
-		private void OnDestroyed()
+        private void OnDestroyed()
 		{
 			GetComponent<WearNTear>().m_onDestroyed();
 		}

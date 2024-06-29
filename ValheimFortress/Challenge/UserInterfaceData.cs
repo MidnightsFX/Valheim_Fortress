@@ -121,6 +121,12 @@ namespace ValheimFortress.Challenge
                     if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Killed TheQueen, enabling rewards {entry.Key}."); }
                     continue;
                 }
+                if (entry.Value.requiredBoss == "Fader" && zs.GetGlobalKey("defeated_fader"))
+                {
+                    availableRewards.Add(entry.Key);
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Killed Fader, enabling rewards {entry.Key}."); }
+                    continue;
+                }
             }
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Rewards Updated."); }
             return availableRewards;

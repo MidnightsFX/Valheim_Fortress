@@ -152,5 +152,9 @@
   "wild_seekers_attack": "霧の中でさまよう反響霧の中でさまよう反響",
   "wild_seekers_defeated": "霧は静かです。",
   "mistlands_warning_wilderness": "霧の中で形が変わる形は霧の中で変わる",
-  "reward_blackmetal": "ブラックメタル"
+  "reward_blackmetal": "ブラックメタル",
+  "shrine_warning_ashlands": "呪われた焦げた上昇。()",
+  "shrine_warning_ashlands_boss": "「エメラルドの者があなたを見つけるでしょう。」",
+  "reward_flametal": "フラメタルありがとうございます",
+  "reward_ashwood": " アッシュウッド"
 }

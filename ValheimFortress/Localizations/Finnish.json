@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Hämärässä kaiut kaikuvat",
   "wild_seekers_defeated": "Sumu on hiljainen",
   "mistlands_warning_wilderness": "Muodot muuttuvat sumuissa",
-  "reward_blackmetal": "Mustametalli"
+  "reward_blackmetal": "Mustametalli",
+  "shrine_warning_ashlands": "Kirottu hiiltyy nousee.",
+  "shrine_warning_ashlands_boss": "Emeraldin löytää sinut.",
+  "reward_ashwood": "Harmaapuu",
+  "reward_flametal": "Flametalli"
 }

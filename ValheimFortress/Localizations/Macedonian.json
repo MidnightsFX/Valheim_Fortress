@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Скитање ехои во маглата",
   "wild_seekers_defeated": "Маглите се тивки.",
   "mistlands_warning_wilderness": "Облици се менуваат во маглите",
-  "reward_blackmetal": "Црен метал"
+  "reward_blackmetal": "Црен метал",
+  "shrine_warning_ashlands": "Проклетата изгорена воскресни.Thank you for your request.",
+  "shrine_warning_ashlands_boss": "Изумителното ќе те најде.",
+  "reward_flametal": "Фламетал",
+  "reward_ashwood": "Дрвена гора"
 }

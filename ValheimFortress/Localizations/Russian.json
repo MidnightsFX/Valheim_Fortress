@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Шуршание эх в тумане",
   "wild_seekers_defeated": "Туманы тихи",
   "mistlands_warning_wilderness": "Формы меняются в тумане",
-  "reward_blackmetal": "Черный металл"
+  "reward_blackmetal": "Черный металл",
+  "shrine_warning_ashlands": "Проклятый обугленный подъем.",
+  "shrine_warning_ashlands_boss": "Изумрудный найдет тебя.",
+  "reward_flametal": "Фламетал",
+  "reward_ashwood": "Ясень"
 }

@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Skjótandi endur í þokunum",
   "wild_seekers_defeated": "Þoka er hljóð",
   "mistlands_warning_wilderness": "Formar breytast í þokunni",
-  "reward_blackmetal": "Svartmálmur"
+  "reward_blackmetal": "Svartmálmur",
+  "shrine_warning_ashlands": "Það bölvaða brennir hækkun.",
+  "shrine_warning_ashlands_boss": "Smaragðurinn mun finna þig.",
+  "reward_flametal": "Eldmál",
+  "reward_ashwood": "Askviður"
 }

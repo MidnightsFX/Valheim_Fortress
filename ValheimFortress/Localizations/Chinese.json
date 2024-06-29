@@ -152,5 +152,9 @@
   "wild_seekers_attack": "雾中悄悄的回声",
   "wild_seekers_defeated": "雾气静悄悄",
   "mistlands_warning_wilderness": "形状在雾中变化",
-  "reward_blackmetal": "黑金属"
+  "reward_blackmetal": "黑金属",
+  "shrine_warning_ashlands": "被诅咒的烧焦上升。",
+  "shrine_warning_ashlands_boss": "翡翠之物会找到你。",
+  "reward_flametal": "弗拉梅塔尔",
+  "reward_ashwood": "灰木"
 }

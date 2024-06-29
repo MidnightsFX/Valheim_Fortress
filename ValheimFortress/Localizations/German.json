@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Schwirrende Echos in den Nebeln",
   "wild_seekers_defeated": "Die Nebel sind ruhig",
   "mistlands_warning_wilderness": "Formen verschieben sich im Nebel",
-  "reward_blackmetal": "Schwarzes Metall"
+  "reward_blackmetal": "Schwarzes Metall",
+  "shrine_warning_ashlands": "Der verfluchte verkohlte Aufstieg.",
+  "shrine_warning_ashlands_boss": "Der Smaragd wird dich finden.",
+  "reward_ashwood": "Eschenholz",
+  "reward_flametal": "Flachmetall"
 }

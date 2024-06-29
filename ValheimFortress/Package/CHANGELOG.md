@@ -1,3 +1,14 @@
+  **0.22.4**
+---
+```
+- Changed rewards to drop as stacks
+- Improved Turret enemy detection to ignore enemies they cant see, but are in range
+- Added a hybrid ZDO turret sync to fix turret turning/look direction being out of sync for the chunk owner vs others
+- Updated default rewards with Ashlands rewards
+- Updated default levels with Ashlands levels
+- Added safety checks to ensure that Challenges do not attempt to spawn waves they do not have.
+```
+
   **0.22.3**
 ---
 ```

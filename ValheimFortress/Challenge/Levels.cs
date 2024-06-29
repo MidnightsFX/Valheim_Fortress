@@ -1,21 +1,7 @@
-﻿using BepInEx.Configuration;
-using Jotunn.Managers;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-using YamlDotNet.Serialization.NamingConventions;
-using YamlDotNet.Serialization;
-using static Heightmap;
-using System.Net;
-using System.Runtime.Serialization;
-using YamlDotNet.Core.Tokens;
-using static UnityEngine.EventSystems.EventTrigger;
-using UnityEngine.InputSystem;
+
 
 namespace ValheimFortress.Challenge
 {
@@ -849,9 +835,134 @@ namespace ValheimFortress.Challenge
             },
             new ChallengeLevelDefinition
             {
-                levelIndex = 9,
+                levelIndex = 31,
                 levelForShrineTypes = new Dictionary<string, bool> {
                     { "challenge", true },
+                    { "arena", true }
+                },
+                levelMenuLocalization = "$shrine_menu_ashland",
+                requiredGlobalKey = "defeated_fader",
+                biome = "Ashlands",
+                waveFormat = "Hard",
+                bossWaveFormat = "DynamicBoss",
+                maxCreatureFromPreviousBiomes = 1,
+                levelWarningLocalization = "$shrine_warning_ashlands",
+                bossLevelWarningLocalization = "$shrine_warning_ashlands_boss",
+                commonSpawnModifiers = new Dictionary<string, bool> {
+                    { "linearDecreaseRandomWaveAdjustment", true },
+                },
+                rareSpawnModifiers = new Dictionary<string, bool> {
+                    { "linearIncreaseRandomWaveAdjustment", true },
+                },
+                eliteSpawnModifiers = new Dictionary<string, bool> {
+                    { "onlyGenerateInSecondHalf", true }
+                }
+            },
+            new ChallengeLevelDefinition
+            {
+                levelIndex = 32,
+                levelForShrineTypes = new Dictionary<string, bool> {
+                    { "challenge", true },
+                    { "arena", true }
+                },
+                levelMenuLocalization = "$shrine_menu_ashland",
+                requiredGlobalKey = "defeated_fader",
+                biome = "Ashlands",
+                waveFormat = "VeryHard",
+                bossWaveFormat = "DynamicBoss",
+                maxCreatureFromPreviousBiomes = 1,
+                levelWarningLocalization = "$shrine_warning_ashlands",
+                bossLevelWarningLocalization = "$shrine_warning_ashlands_boss",
+                commonSpawnModifiers = new Dictionary<string, bool> {
+                    { "linearDecreaseRandomWaveAdjustment", true },
+                },
+                rareSpawnModifiers = new Dictionary<string, bool> {
+                    { "linearIncreaseRandomWaveAdjustment", true },
+                },
+                eliteSpawnModifiers = new Dictionary<string, bool> {
+                    { "onlyGenerateInSecondHalf", true }
+                }
+            },
+            new ChallengeLevelDefinition
+            {
+                levelIndex = 33,
+                levelForShrineTypes = new Dictionary<string, bool> {
+                    { "challenge", true },
+                    { "arena", true }
+                },
+                levelMenuLocalization = "$shrine_menu_ashland",
+                requiredGlobalKey = "defeated_fader",
+                biome = "Ashlands",
+                waveFormat = "Expert",
+                bossWaveFormat = "DynamicBoss",
+                maxCreatureFromPreviousBiomes = 1,
+                levelWarningLocalization = "$shrine_warning_ashlands",
+                bossLevelWarningLocalization = "$shrine_warning_ashlands_boss",
+                commonSpawnModifiers = new Dictionary<string, bool> {
+                    { "linearDecreaseRandomWaveAdjustment", true },
+                },
+                rareSpawnModifiers = new Dictionary<string, bool> {
+                    { "linearIncreaseRandomWaveAdjustment", true },
+                },
+                eliteSpawnModifiers = new Dictionary<string, bool> {
+                    { "onlyGenerateInSecondHalf", true }
+                }
+            },
+            new ChallengeLevelDefinition
+            {
+                levelIndex = 34,
+                levelForShrineTypes = new Dictionary<string, bool> {
+                    { "challenge", true },
+                    { "arena", true }
+                },
+                levelMenuLocalization = "$shrine_menu_ashland",
+                requiredGlobalKey = "defeated_fader",
+                biome = "Ashlands",
+                waveFormat = "Extreme",
+                bossWaveFormat = "DynamicBoss",
+                maxCreatureFromPreviousBiomes = 1,
+                levelWarningLocalization = "$shrine_warning_ashlands",
+                bossLevelWarningLocalization = "$shrine_warning_ashlands_boss",
+                commonSpawnModifiers = new Dictionary<string, bool> {
+                    { "linearDecreaseRandomWaveAdjustment", true },
+                },
+                rareSpawnModifiers = new Dictionary<string, bool> {
+                    { "linearIncreaseRandomWaveAdjustment", true },
+                },
+                eliteSpawnModifiers = new Dictionary<string, bool> {
+                    { "onlyGenerateInSecondHalf", true }
+                }
+            },
+            new ChallengeLevelDefinition
+            {
+                levelIndex = 35,
+                levelForShrineTypes = new Dictionary<string, bool> {
+                    { "challenge", true },
+                    { "arena", true }
+                },
+                levelMenuLocalization = "$shrine_menu_ashland",
+                requiredGlobalKey = "defeated_fader",
+                biome = "Ashlands",
+                waveFormat = "Dynamic",
+                bossWaveFormat = "DynamicBoss",
+                maxCreatureFromPreviousBiomes = 1,
+                levelWarningLocalization = "$shrine_warning_ashlands",
+                bossLevelWarningLocalization = "$shrine_warning_ashlands_boss",
+                commonSpawnModifiers = new Dictionary<string, bool> {
+                    { "linearDecreaseRandomWaveAdjustment", true },
+                },
+                rareSpawnModifiers = new Dictionary<string, bool> {
+                    { "linearIncreaseRandomWaveAdjustment", true },
+                },
+                eliteSpawnModifiers = new Dictionary<string, bool> {
+                    { "onlyGenerateInSecondHalf", true }
+                }
+            },
+            new ChallengeLevelDefinition
+            {
+                levelIndex = 9,
+                levelForShrineTypes = new Dictionary<string, bool> {
+                    { "challenge", false },
                     { "arena", true }
                 },
                 levelMenuLocalization = "$shrine_menu_troll_level",
@@ -991,6 +1102,16 @@ namespace ValheimFortress.Challenge
             {"DvergerMageFire", new CreatureValues {spawnCost = 75, prefabName = "DvergerMageFire", spawnType = RARE, biome = MISTLANDS, enabled = false, dropsEnabled = false } },
             {"DvergerMageIce", new CreatureValues {spawnCost = 75, prefabName = "DvergerMageIce", spawnType = RARE, biome = MISTLANDS, enabled = false, dropsEnabled = false } },
             {"DvergerMageSupport", new CreatureValues {spawnCost = 75, prefabName = "DvergerMageSupport", spawnType = ELITE, biome = MISTLANDS, enabled = true, dropsEnabled = false} },
+            // Ashlands Creatures
+            {"Asksvin", new CreatureValues {spawnCost = 70, prefabName = "Asksvin", spawnType = RARE, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
+            {"Charred_Archer", new CreatureValues {spawnCost = 60, prefabName = "Charred_Archer", spawnType = COMMON, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
+            {"Charred_Twitcher", new CreatureValues {spawnCost = 45, prefabName = "Charred_Twitcher", spawnType = COMMON, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
+            {"Charred_Mage", new CreatureValues {spawnCost = 100, prefabName = "Charred_Mage", spawnType = ELITE, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
+            {"Charred_Melee", new CreatureValues {spawnCost = 75, prefabName = "Charred_Melee", spawnType = RARE, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
+            {"FallenValkyrie", new CreatureValues {spawnCost = 100, prefabName = "FallenValkyrie", spawnType = ELITE, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
+            {"BlobLava", new CreatureValues {spawnCost = 75, prefabName = "BlobLava", spawnType = RARE, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
+            {"Morgen", new CreatureValues {spawnCost = 85, prefabName = "Morgen", spawnType = ELITE, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
+            {"Volture", new CreatureValues {spawnCost = 30, prefabName = "Volture", spawnType = COMMON, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
             // Boss Creatures
             {"Eikthyr", new CreatureValues {spawnCost = 40, prefabName = "Eikthyr", spawnType = UNIQUE, biome = MEADOWS, enabled = true, dropsEnabled = false} },
             {"TheElder", new CreatureValues {spawnCost = 180, prefabName = "gd_king", spawnType = UNIQUE, biome = BLACKFOREST, enabled = true, dropsEnabled = false} },
@@ -998,6 +1119,7 @@ namespace ValheimFortress.Challenge
             {"Moder", new CreatureValues {spawnCost = 320, prefabName = "Dragon", spawnType = UNIQUE, biome = MOUNTAIN, enabled = true, dropsEnabled = false} },
             {"Yagluth", new CreatureValues {spawnCost = 450, prefabName = "GoblinKing", spawnType = UNIQUE, biome = PLAINS, enabled = true, dropsEnabled = false} },
             {"TheQueen", new CreatureValues {spawnCost = 600, prefabName = "SeekerQueen", spawnType = UNIQUE, biome = MISTLANDS, enabled = true, dropsEnabled = false} },
+            {"Fader", new CreatureValues {spawnCost = 800, prefabName = "Fader", spawnType = UNIQUE, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
         };
 
         public static void UpdateSpawnableCreatures(SpawnableCreatureCollection spawnables)

@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Échos qui glissent dans les brumes",
   "wild_seekers_defeated": "Les brumes sont calmes",
   "mistlands_warning_wilderness": "Les formes changent dans les brumes",
-  "reward_blackmetal": " "
+  "reward_blackmetal": " ",
+  "shrine_warning_ashlands": "La montée maudite carbonisée.",
+  "shrine_warning_ashlands_boss": "La personne émeraude te trouvera.",
+  "reward_ashwood": "Bois de frêne",
+  "reward_flametal": "Flamétal"
 }

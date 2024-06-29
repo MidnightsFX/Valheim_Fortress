@@ -274,6 +274,12 @@ namespace ValheimFortress.Challenge
 
         protected bool RemainingPhases()
         {
+            if (availablePhases > wave_phases_definitions.hordePhases.Count)
+            {
+                availablePhases = wave_phases_definitions.hordePhases.Count;
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Phases Available was undefined too large and was reset to: {availablePhases}."); }
+            }
+
             if (availablePhases == 0)
             {
                 availablePhases = wave_phases_definitions.hordePhases.Count;
@@ -456,6 +462,8 @@ namespace ValheimFortress.Challenge
             wave_phases_definitions = new PhasedWaveTemplate(); // Got to clear the template
             wave_definition_ready.Set(false);
             spawn_locations_ready.Set(false);
+            availablePhases = 0;
+            currentPhase.ForceSet(0);
         }
 
         public void ReconnectCreatureList()

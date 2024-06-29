@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Легке шаркання у туманах",
   "wild_seekers_defeated": "Тумани тихі.",
   "mistlands_warning_wilderness": "Форми змінюються в туманах",
-  "reward_blackmetal": "Чорний метал"
+  "reward_blackmetal": "Чорний метал",
+  "shrine_warning_ashlands": "Проклятий вугільний підйом.",
+  "shrine_warning_ashlands_boss": "Знайде вас Зелений.",
+  "reward_flametal": "Фламетал",
+  "reward_ashwood": "Ясен"
 }

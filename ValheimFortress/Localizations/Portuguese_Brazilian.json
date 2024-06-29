@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Ruídos de arrastar-se nas brumas",
   "wild_seekers_defeated": "Os nevoeiros estão calmos",
   "mistlands_warning_wilderness": "As formas mudam nas névoas",
-  "reward_blackmetal": " Metal negro"
+  "reward_blackmetal": " Metal negro",
+  "shrine_warning_ashlands": "A subida amaldiçoada carbonizada.",
+  "shrine_warning_ashlands_boss": "O Esmeralda irá encontrá-lo.",
+  "reward_ashwood": "Madeira de cinzas",
+  "reward_flametal": "Flametal"
 }

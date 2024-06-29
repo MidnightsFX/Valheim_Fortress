@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Skærende ekkoer i tågerne",
   "wild_seekers_defeated": "Tågerne er stille",
   "mistlands_warning_wilderness": "Former ændrer sig i tågerne",
-  "reward_blackmetal": "Sortmetal"
+  "reward_blackmetal": "Sortmetal",
+  "shrine_warning_ashlands": "Den forbandet forkullede stigning.",
+  "shrine_warning_ashlands_boss": "Den Smaragd vil finde dig.",
+  "reward_flametal": "Flammende metal",
+  "reward_ashwood": "Asketræ"
 }

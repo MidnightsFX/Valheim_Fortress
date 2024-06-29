@@ -22,6 +22,8 @@
   "shrine_warning_plains_boss": "Yagluth rises for revenge.",
   "shrine_warning_mistlands": "The Mists part to a skittering horde.",
   "shrine_warning_mistlands_boss": "The Queen stalks her prey.",
+  "shrine_warning_ashlands": "The cursed charred rise.",
+  "shrine_warning_ashlands_boss": "The Emerald one will find you.",
   "shrine_warning_trolls": "The ground is shaking!",
   "shrine_cancel_challenge": "Forfeit Challenge",
   "shrine_cancel_challenge_desc": "Cancel the challenge, kills all remaining creatures. No reward.",
@@ -83,6 +85,8 @@
   "reward_guck": "Guck",
   "reward_tar": "Tar",
   "reward_sap": "Sap",
+  "reward_flametal": "Flametal",
+  "reward_ashwood": "Ashwood",
   "reward_softtissue": "SoftTissue",
   "shrine_header": "Face Odins Enemies",
   "shrine_description": "Face an overwhelming challenge in return for a desired reward.\nMore rewards can be unlocked by defeating the world bosses.\nHigher levels give larger rewards.",
@@ -152,5 +156,5 @@
   "wild_shrine_mistlands_request": "The shrine desires all that come from the mists.",
   "wild_seekers_attack": "Skittering echos in the mists",
   "wild_seekers_defeated": "The mists are quiet",
-  "mistlands_warning_wilderness":  "Shapes shift in the mists"
+  "mistlands_warning_wilderness": "Shapes shift in the mists"
 }

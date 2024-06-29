@@ -152,5 +152,9 @@
   "wild_seekers_attack": "Αναπήδηση ηχών στα ομίχλη",
   "wild_seekers_defeated": "Οι ομίχλες είναι ήσυχες",
   "mistlands_warning_wilderness": "Οι μορφές μετατρέπονται στις ομίχλες",
-  "reward_blackmetal": "Μαύρο μέταλλο"
+  "reward_blackmetal": "Μαύρο μέταλλο",
+  "shrine_warning_ashlands": "Η καταραμένη καμένη ανάσταση.",
+  "shrine_warning_ashlands_boss": "Το Σμαραγδένιο θα σε βρει.",
+  "reward_flametal": "Φλάμεταλ",
+  "reward_ashwood": "Ξύλο σανδαλόξυλου"
 }
