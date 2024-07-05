@@ -1,3 +1,10 @@
+  **0.22.5**
+---
+```
+- Disabled Leech by default for swamp waves
+- Fixed reward spawning with multiple stacks spawning more than intended
+```
+
   **0.22.4**
 ---
 ```

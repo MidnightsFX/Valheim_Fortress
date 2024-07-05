@@ -1068,7 +1068,7 @@ namespace ValheimFortress.Challenge
             {"Troll", new CreatureValues {spawnCost = 20, prefabName = "Troll", spawnType = ELITE, biome = BLACKFOREST, enabled = true, dropsEnabled = false } },
             // Swamp Creatures
             {"Surtling", new CreatureValues {spawnCost = 6, prefabName = "Surtling", spawnType = RARE, biome = SWAMP, enabled = true, dropsEnabled = false} },
-            {"Leech", new CreatureValues {spawnCost = 8, prefabName = "Leech", spawnType = COMMON, biome = SWAMP, enabled = true, dropsEnabled = false} },
+            {"Leech", new CreatureValues {spawnCost = 8, prefabName = "Leech", spawnType = COMMON, biome = SWAMP, enabled = false, dropsEnabled = false} },
             {"Wraith", new CreatureValues {spawnCost = 10, prefabName = "Wraith", spawnType = RARE, biome = SWAMP, enabled = true, dropsEnabled = false} },
             {"Abomination", new CreatureValues {spawnCost = 30, prefabName = "Abomination", spawnType = ELITE, biome = SWAMP, enabled = true, dropsEnabled = false} },
             {"Draugr", new CreatureValues {spawnCost = 10, prefabName = "Draugr", spawnType = COMMON, biome = SWAMP, enabled = true, dropsEnabled = false} },

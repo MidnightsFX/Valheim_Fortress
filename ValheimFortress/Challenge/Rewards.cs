@@ -41,7 +41,7 @@ namespace ValheimFortress.Challenge
                     remaining_or_max_stack_size = max_stack_size;
                 } else
                 {
-                    remaining_or_max_stack_size = number_of_rewards;
+                    remaining_or_max_stack_size = (number_of_rewards - i);
                 }
                 i = i + remaining_or_max_stack_size;
                 if (enable_pausing)
