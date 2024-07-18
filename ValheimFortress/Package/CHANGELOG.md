@@ -1,3 +1,10 @@
+  **0.22.6**
+---
+```
+- Updated localization to be very literal about what kind of tribute is required for shrines by default
+- Increased allowable tribute sizes for wildshrines
+```
+
   **0.22.5**
 ---
 ```

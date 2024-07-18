@@ -3,7 +3,7 @@
 require "json"
 
 language_files = Dir["ValheimFortress/Localizations/*"]
-keys_to_remove = %w[reward_darkmetal]
+keys_to_remove = %w[wild_shrine_mistlands_request wild_shrine_plains_request wild_shrine_mountain_request wild_shrine_swamp_request wild_shrine_blackforest_request wild_shrine_green_request]
 
 language_files.each do |lang_file|
   next if lang_file == "ValheimFortress/Localizations/English.json"

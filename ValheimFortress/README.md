@@ -77,6 +77,20 @@ Each wild shrine will ask for different tribute, from their respective biome.
 Upon providing the shrine with the required tribute it will spawn an easy wave of similar creatures, which will then reward you with resources from that biome upon completion.
 This is all configurable!
 
+#### Help! What is the tribute for the wildshrine?!
+<details>
+<summary>Wildshrine Tribute Spoiler</summary>
+
+The default tribute for wildshrines will be biome specific trophies.
+For example, the meadows wildshrine will accept boar trophies, deer trophies and neck trophies.
+- The blackforest shrine accepts trophies from the black forest.
+- The swamp shrine accepts trophies from the swamp.
+- The mountain shrine accepts trophies from the mountain.
+- The plains shrine accepts trophies from the plains.
+- The mistland shrine accepts trophies from the mistlands.
+
+</details>
+
 <!-- TOC --><a name="defenses"></a>
 ### Defensive Structures
 

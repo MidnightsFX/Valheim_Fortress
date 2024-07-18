@@ -99,32 +99,50 @@ namespace ValheimFortress.Challenge
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Checking tribute: {wlevelcfg.tributeName} == {item.m_dropPrefab.name} ({(wlevelcfg.tributeName == item.m_dropPrefab.name)})"); }
                 if (wlevelcfg.tributeName == item.m_dropPrefab.name)
                 {
-                    List<ItemDrop.ItemData> user_inventory = user.m_inventory.GetAllItems();
+                    List<ItemDrop.ItemData> user_inventory = user.m_inventory.GetAllItemsSorted();
                     if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"User Inventory contains {user_inventory.Count} items."); }
-                    short inventory_index = 0;
+                    int user_tribute_count = 0;
+                    Dictionary<ItemDrop.ItemData, int> user_tribute_indexes = new Dictionary<ItemDrop.ItemData, int>();
                     foreach (ItemDrop.ItemData user_item in user_inventory)
                     {
                         if (user_item.m_dropPrefab.name == wlevelcfg.tributeName)
                         {
-                            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Item count {user_item.m_stack}."); }
-                            if (user_item.m_stack > wlevelcfg.tributeAmount)
+                            user_tribute_indexes.Add(user_item, user_item.m_stack);
+                            user_tribute_count += user_item.m_stack;
+                        }
+                        
+                    }
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"User Inventory contains {user_tribute_count} of {wlevelcfg.tributeAmount} required tribute type {wlevelcfg.tributeName}."); }
+                    if (user_tribute_count >= wlevelcfg.tributeAmount)
+                    {
+                        int tribute_required_remaining = wlevelcfg.tributeAmount;
+                        foreach (KeyValuePair<ItemDrop.ItemData, int> tribute_entries in user_tribute_indexes)
+                        {
+                            int tribute_index = user_inventory.IndexOf(tribute_entries.Key);
+                            if (tribute_required_remaining > tribute_entries.Value)
                             {
-                                user_item.m_stack = user_item.m_stack - wlevelcfg.tributeAmount;
-                                hard_mode.ForceSet(wlevelcfg.hardMode);
-                                siege_mode.ForceSet(wlevelcfg.siegeMode);
-                                selected_level.ForceSet(wild_level_index);
-                                start_challenge.ForceSet(true);
-                                user.Message(MessageHud.MessageType.Center, Localization.instance.Localize(wlevelcfg.wildshrine_wave_start_localization));
-                                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Deducted {wlevelcfg.tributeAmount} {user_item.m_stack} and enabling challenge setup."); }
-                                return true;
+                                tribute_required_remaining -= tribute_entries.Value;
+                                user_inventory.Remove(tribute_entries.Key);
                             } else
                             {
-                                user.Message(MessageHud.MessageType.Center, Localization.instance.Localize(wildShrineConfiguration.shrine_larger_tribute_required_localization));
-                                return true;
+                                user_inventory[tribute_index].m_stack -= tribute_required_remaining;
+                                if (user_inventory[tribute_index].m_stack == 0)
+                                {
+                                    user_inventory.Remove(tribute_entries.Key);
+                                } 
                             }
-                            
                         }
-                        inventory_index++;
+                        hard_mode.ForceSet(wlevelcfg.hardMode);
+                        siege_mode.ForceSet(wlevelcfg.siegeMode);
+                        selected_level.ForceSet(wild_level_index);
+                        start_challenge.ForceSet(true);
+                        user.Message(MessageHud.MessageType.Center, Localization.instance.Localize(wlevelcfg.wildshrine_wave_start_localization));
+                        if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Deducted {wlevelcfg.tributeAmount} {wlevelcfg.tributeName} and enabling challenge setup."); }
+                        return true;
+                    } else
+                    {
+                        user.Message(MessageHud.MessageType.Center, Localization.instance.Localize(wildShrineConfiguration.shrine_larger_tribute_required_localization));
+                        return true;
                     }
                 }
                 wild_level_index++;
