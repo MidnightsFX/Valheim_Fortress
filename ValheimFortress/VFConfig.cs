@@ -162,7 +162,10 @@ namespace ValheimFortress
 #    enabled: true                       |- Whether or not the reward is enabled, you can use this to disable any vanilla rewards you do not want. At least 1 reward must be available at ALL times.
 #    resource_cost: 5                    |- This is the cost to gain 1 of the particular reward. Points are generated based on how many monsters are spawned.
 #    resource_prefab: ""Coins""            |- This is the unity prefab name for a resource, you will often see mods list the prefabs they have added. Prefabs are also listed on the valheim wiki.
-#    required_boss: ""None""               |- This must be one of the following values: ""None"" ""Eikythr"" ""TheElder"" ""BoneMass"" ""Moder"" ""Yagluth"" ""TheQueen""";
+#    required_boss: ""None""               |- This must be one of the following values: ""None"" ""Eikythr"" ""TheElder"" ""BoneMass"" ""Moder"" ""Yagluth"" ""TheQueen""
+#    rewardMinLevelIndex: 0                |- (OPTIONAL) This will require that a wave is of a certain strength in order to allow selecting this reward, disabled when set to 0.
+#    rewardMaxLevelIndex: 0                |- (OPTIONAL) This reward will not be available on waves above a certain difficulty, disabled when set to 0.
+";
                     writetext.WriteLine(header);
                     writetext.WriteLine(RewardsData.YamlRewardsDefinition());
                 }

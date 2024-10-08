@@ -1,3 +1,11 @@
+  **0.23.4**
+---
+```
+- Adds support to limit rewards to a lower and upper level bound
+- Adds support to gate rewards by arbitrary global keys
+- Massively reduced the shiny-ness of the shrine of the arena
+```
+
   **0.23.3**
 ---
 ```

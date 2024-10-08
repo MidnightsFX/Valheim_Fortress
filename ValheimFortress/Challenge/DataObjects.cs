@@ -114,6 +114,8 @@ namespace ValheimFortress.Challenge
         public short resouceCost { get; set; }
         public String requiredBoss { get; set; }
         public String resourcePrefab { get; set; }
+        public int rewardMinLevelIndex { get; set; }
+        public int rewardMaxLevelIndex { get; set; }
         public bool enabled { get; set; }
         // required for serialization, since this used to have a custom init
         public RewardEntry() { }

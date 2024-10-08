@@ -77,7 +77,7 @@ namespace ValheimFortress.Challenge
                 string[] level_pieces = levelSelector.GetComponent<Dropdown>().options[levelSelector.GetComponent<Dropdown>().value].text.Split('-');
                 string text_level = ValheimFortress.ReplaceWhitespace(level_pieces[0], "");
                 short level_definition_lookup_index = (short)(short.Parse(text_level) - 1);
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Looking up level definition with index of text-{text_level} (1 based) int-{level_definition_lookup_index} (zero based)"); }
+                // if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Looking up level definition with index of text-{text_level} (1 based) int-{level_definition_lookup_index} (zero based)"); }
                 List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
                 short level_difficulty = clevels.ElementAt(level_definition_lookup_index).levelIndex;
                 bool hardmode_status = false;
@@ -121,6 +121,21 @@ namespace ValheimFortress.Challenge
             GUIManager.BlockInput(false);
         }
 
+        public void UpdatePossibleRewards(Dropdown reward_dropdown, Dropdown level_dropdown)
+        {
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Retrieving level from level dropdown value: {level_dropdown.value}"); }
+            string[] level_pieces = level_dropdown.options[level_dropdown.value].text.Split('-');
+            string text_level = ValheimFortress.ReplaceWhitespace(level_pieces[0], "");
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Leveltext: {text_level}"); }
+            short level_definition_lookup_index = (short)(short.Parse(text_level) - 1);
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"level index: {level_definition_lookup_index}"); }
+            List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
+            short levelIndex = clevels.ElementAt(level_definition_lookup_index).levelIndex;
+            availableRewards = UserInterfaceData.UpdateRewards(levelIndex);
+            reward_dropdown.ClearOptions();
+            reward_dropdown.AddOptions(availableRewards);
+        }
+
         public void CreateStaticUIObjects()
         {
             // This was supposed to allow this is not need to be recreated much/at all
@@ -144,8 +159,8 @@ namespace ValheimFortress.Challenge
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
                 position: new Vector2(0, 0),
-                width: 550,
-                height: 550,
+                width: 600,
+                height: 600,
                 draggable: true);
             // This hides the panel immediately
             ChallengePanel.SetActive(false);
@@ -202,7 +217,7 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(-60f, 50f),
+                position: new Vector2(-60f, -5f),
                 font: GUIManager.Instance.AveriaSerifBold,
                 fontSize: 16,
                 color: GUIManager.Instance.ValheimBeige,
@@ -218,7 +233,7 @@ namespace ValheimFortress.Challenge
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(-60f, -5f),
+                position: new Vector2(-60f, 50f),
                 font: GUIManager.Instance.AveriaSerifBold,
                 fontSize: 16,
                 color: GUIManager.Instance.ValheimBeige,
@@ -292,20 +307,39 @@ namespace ValheimFortress.Challenge
         public void CreateChallengeUI(string shrine_type)
         {
             // Always want to update the rewards and challenge levels
-            availableRewards = UserInterfaceData.UpdateRewards();
             currentLevels = UserInterfaceData.UpdateLevels(shrine_type);
             // We specifically want to be able to completely rebuild the UI when this is called again to update the levels and rewards dynamically
+
+            // create the wave selector dropdown
+            levelSelector = GUIManager.Instance.CreateDropDown(
+                parent: ChallengePanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(45f, 60f),
+                
+                fontSize: 16,
+                width: 200f,
+                height: 40f);
+            levelSelector.GetComponent<Dropdown>().AddOptions(currentLevels);
+
+            // Always want to update the rewards and challenge levels
+            // The first update is always for level 1 because that is the default that will be selected
+            availableRewards = UserInterfaceData.UpdateRewards(1);
+            
 
             // Create the rewards selector dropdown
             rewardSelector = GUIManager.Instance.CreateDropDown(
                 parent: ChallengePanel.transform,
                 anchorMin: new Vector2(0.5f, 0.5f),
                 anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(45f, 60f),
+                position: new Vector2(45f, 5f),
                 fontSize: 16,
                 width: 200f,
                 height: 40f);
             rewardSelector.GetComponent<Dropdown>().AddOptions(availableRewards);
+
+            // Add a listener which will update the available rewards choices when we change the selected level
+            levelSelector.GetComponent<Dropdown>().onValueChanged.AddListener(delegate { UpdatePossibleRewards(rewardSelector.GetComponent<Dropdown>(), levelSelector.GetComponent<Dropdown>()); });
 
 
             if (VFConfig.EnableRewardsEstimate.Value)
@@ -348,17 +382,6 @@ namespace ValheimFortress.Challenge
                 if (estimate_symbol != null) { Destroy(estimate_symbol.gameObject); estimate_symbol = null; }
                 if (estimate_text != null) { Destroy(estimate_text.gameObject); estimate_text = null; }
             }
-
-            // create the wave selector dropdown
-            levelSelector = GUIManager.Instance.CreateDropDown(
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(45f, 5f),
-                fontSize: 16,
-                width: 200f,
-                height: 40f);
-            levelSelector.GetComponent<Dropdown>().AddOptions(currentLevels);
 
             if (VFConfig.EnableHardModifier.Value)
             {
@@ -603,20 +626,6 @@ namespace ValheimFortress.Challenge
                 width: 200f,
                 height: 40f,
             addContentSizeFitter: false);
-            //GUIManager.Instance.CreateText(
-            //    text: Localization.instance.Localize($"{Shrine.EnemiesRemaining()}"),
-            //    parent: CancelPanel.transform,
-            //    anchorMin: new Vector2(0.5f, 0.5f),
-            //    anchorMax: new Vector2(0.5f, 0.5f),
-            //    position: new Vector2(85f, 115f),
-            //    font: GUIManager.Instance.AveriaSerifBold,
-            //    fontSize: 16,
-            //    color: GUIManager.Instance.ValheimBeige,
-            //    outline: true,
-            //    outlineColor: Color.black,
-            //    width: 40f,
-            //    height: 40f,
-            //addContentSizeFitter: false);
 
             // Create cancel challenge button
             GameObject cancelChallengeObj = GUIManager.Instance.CreateButton(

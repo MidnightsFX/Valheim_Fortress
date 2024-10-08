@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace ValheimFortress.Challenge
 {
@@ -65,21 +67,35 @@ namespace ValheimFortress.Challenge
         }
 
 
-        public static List<String> UpdateRewards() {
+        public static List<String> UpdateRewards(short level_index) {
             Dictionary<String, RewardEntry> possible_rewards = RewardsData.resourceRewards;
             List<String> availableRewards = new List<String> { };
             var zs = ZoneSystem.instance;
             foreach (KeyValuePair<string, RewardEntry> entry in possible_rewards)
             {
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Checking reward:{entry.Key} required key: {entry.Value.requiredBoss} min level: {entry.Value.rewardMinLevelIndex} max level: {entry.Value.rewardMaxLevelIndex}"); }
+                if ((entry.Value.rewardMinLevelIndex != 0 && entry.Value.rewardMinLevelIndex > level_index) || (entry.Value.rewardMaxLevelIndex != 0 && entry.Value.rewardMaxLevelIndex < level_index))
+                {
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Reward {entry.Key} skipped due to level requirement not being met: {entry.Value.rewardMinLevelIndex} > {level_index} or {entry.Value.rewardMaxLevelIndex} < {level_index}."); }
+                    continue;
+                }
                 if (entry.Value.requiredBoss == "None")
                 {
                     availableRewards.Add(entry.Key);
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Reward that does not require any kills, enabling reward {entry.Key}."); }
                     continue;
                 }
                 if (!zs)
                 {
                     Jotunn.Logger.LogInfo("Zone system not available, skipping checks for global keys to set rewards options.");
                     // We can only add items that do not require a global key check if there is no zone system.
+                    continue;
+                }
+                // Support literal global keys
+                if (zs.GetGlobalKey(entry.Value.requiredBoss))
+                {
+                    availableRewards.Add(entry.Key);
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Global key {entry.Value.requiredBoss} found, enabling reward {entry.Key}."); }
                     continue;
                 }
                 if (entry.Value.requiredBoss == "Eikythr" && zs.GetGlobalKey(Jotunn.Utils.GameConstants.GlobalKey.KilledEikthyr))
