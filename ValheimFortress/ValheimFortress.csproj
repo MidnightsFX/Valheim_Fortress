@@ -71,6 +71,8 @@
     <Compile Include="Challenge\UserInterfaceData.cs" />
     <Compile Include="Challenge\WildShrine.cs" />
     <Compile Include="Challenge\WildShrineData.cs" />
+    <Compile Include="Common\Compression.cs" />
+    <Compile Include="Common\JotunnPiece.cs" />
     <Compile Include="Defenses\VFTurret.cs" />
     <Compile Include="ValheimPiece.cs" />
     <Compile Include="Properties\IgnoreAccessModifiers.cs" />

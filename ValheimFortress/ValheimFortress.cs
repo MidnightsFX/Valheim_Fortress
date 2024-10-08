@@ -21,9 +21,9 @@ namespace ValheimFortress
     {
         public const string PluginGUID = "MidnightsFX.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.22.6";
+        public const string PluginVersion = "0.23.3";
 
-        AssetBundle EmbeddedResourceBundle;
+        public static AssetBundle EmbeddedResourceBundle;
         public VFConfig cfg;
         public static GameObject spawnPortal;
         public static GameObject creatureNotifier;
@@ -34,10 +34,8 @@ namespace ValheimFortress
             cfg = new VFConfig(Config);
             cfg.SetupConfigRPCs();
             EmbeddedResourceBundle = AssetUtils.LoadAssetBundleFromResources("ValheimFortress.AssetsEmbedded.vfbundle", typeof(ValheimFortress).Assembly);
-            // For debug logging, not working right now, again
-            // Logger.LogInfo($"Embedded resources: {string.Join(",", typeof(ValheimFortress).Assembly.GetManifestResourceNames())}");
             AddLocalizations();
-            new ValheimFortressPieces(EmbeddedResourceBundle, cfg);
+            new ValheimFortressPieces();
             SetupVFXObjects(EmbeddedResourceBundle);
             new VFLocations(EmbeddedResourceBundle, cfg);
 

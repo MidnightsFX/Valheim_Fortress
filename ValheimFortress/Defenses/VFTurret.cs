@@ -13,23 +13,24 @@ namespace ValheimFortress.Defenses
 	{
 		private static float m_turnRate = 80f;
 		private static float m_horizontalAngle = 85f;
-		private static float m_viewDistance = VFConfig.BallistaRange.Value;
-		private static float m_attackCooldown = VFConfig.BallistaCooldownTime.Value;
 		private static float m_hitNoise = 10f;
 		private static float m_shootWhenAimDiff = 0.99f; // 1 is perfect accuracy, we want to shoot when we are very close to dead center, leaving room for errors
-		private static float m_ammo_accuracy = VFConfig.BallistaAmmoAccuracyPenalty.Value; // Ammo will be perfectly accurate minus this percent, right now 95% accuracy
 		private static float m_predictionModifier = 1f;
 		private static float m_updateTargetIntervalNear = 2f;
 		private static float m_updateTargetIntervalFar = 8f;
         private static float m_aimDiffToTarget = -1f; // This needs to start out as a greater than zero value otherwise the turret will always immediately fire when it locks its first target
         public static float m_markerHideTime = 0.5f;
 
-		private static LayerMask lmsk = 1;
-
+        public float m_viewDistance = VFConfig.BallistaRange.Value;
+        public float m_attackCooldown = VFConfig.BallistaCooldownTime.Value;
+        public float m_ammo_accuracy = VFConfig.BallistaAmmoAccuracyPenalty.Value; // Ammo will be perfectly accurate minus this percent, right now 95% accuracy
         private static int max_ticks_between_target_cache_update = VFConfig.BallistaTargetUpdateCacheInterval.Value;
+
+        private static LayerMask lmsk = 1;
+
         // These are all set later in time
         private GameObject m_Projectile;
-		private ItemDrop.ItemData m_Ammo;
+		public ItemDrop.ItemData m_Ammo;
 		private GameObject m_shootEffect;
 		private GameObject m_reloadEffect;
 		private GameObject m_newTargetEffect;

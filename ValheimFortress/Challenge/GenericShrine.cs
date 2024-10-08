@@ -518,7 +518,7 @@ namespace ValheimFortress.Challenge
 
         public void SpawnMultiRewardsDirectly(Dictionary<String, short> rewards_and_costs, short level, Vector3 spawn_position, bool hard_mode, bool boss_mode, bool siege_mode)
         {
-            float total_reward_points = RewardsData.DetermineRewardPoints(level, hard_mode, boss_mode, siege_mode);
+            float total_reward_points = RewardsData.DetermineRewardPoints(level, hard_mode, boss_mode, siege_mode, DetermineMultiplayerBonus());
             float equal_split_rewards_total = total_reward_points / rewards_and_costs.Count;
             foreach (KeyValuePair<String, short> reward_entry in rewards_and_costs)
             {
@@ -530,9 +530,28 @@ namespace ValheimFortress.Challenge
 
         public void SpawnReward(String reward_resource, short level, Vector3 spawn_position, bool hard_mode, bool boss_mode, bool siege_mode)
         {
-            short number_of_rewards = RewardsData.DetermineRewardAmount(reward_resource, level, hard_mode, boss_mode, siege_mode);
+            short number_of_rewards = RewardsData.DetermineRewardAmount(reward_resource, level, hard_mode, boss_mode, siege_mode, DetermineMultiplayerBonus());
             string reward_prefab = RewardsData.resourceRewards[reward_resource].resourcePrefab;
             StartCoroutine(reward_controller.InitReward(reward_prefab, number_of_rewards, spawn_position));
+        }
+
+        public float DetermineMultiplayerBonus()
+        {
+            List<Player> nearby_players = new List<Player> { };
+            Player.GetPlayersInRange(this.transform.position, VFConfig.ShrineAnnouncementRange.Value, nearby_players);
+            float player_bonus = (nearby_players.Count * VFConfig.ShrineRewardPlayerBonus.Value);
+            // If we have fractional reward bonuses lets ensure that people are at least getting 100% of the rewards, then provide the multiplayer bonus afterwards.
+            if (VFConfig.ShrineRewardPlayerBonus.Value < 1f) { player_bonus += 1f; }
+            // Only apply to multiplayer scenarios
+            if (nearby_players.Count == 1) { return 1; }
+            // Only going to return bonuses here and not maluses
+            if (player_bonus > 1f)
+            {
+                return player_bonus;
+            } else
+            {
+                return 1f;
+            }
         }
     }
 }

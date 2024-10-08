@@ -54,14 +54,14 @@ namespace ValheimFortress.Challenge
             }
         }
 
-        public static short DetermineRewardAmount(String reward_resource, short level, bool hard_mode, bool boss_mode, bool siege_mode)
+        public static short DetermineRewardAmount(String reward_resource, short level, bool hard_mode, bool boss_mode, bool siege_mode, float multiplayer_bonus = 1f)
         {
-            float base_rewards_points = DetermineRewardPoints(level, hard_mode, boss_mode, siege_mode);
+            float base_rewards_points = DetermineRewardPoints(level, hard_mode, boss_mode, siege_mode, multiplayer_bonus);
             short number_of_rewards = (short)(base_rewards_points / RewardsData.resourceRewards[reward_resource].resouceCost);
             return number_of_rewards;
         }
 
-        public static float DetermineRewardPoints(short level, bool hard_mode, bool boss_mode, bool siege_mode)
+        public static float DetermineRewardPoints(short level, bool hard_mode, bool boss_mode, bool siege_mode, float multiplayer_bonus)
         {
             float total_reward_points = VFConfig.rewardsMultiplier.Value * Levels.ComputeChallengePoints(level);
             float reward_bonus = VFConfig.rewardsDifficultyScalar.Value * level;
@@ -81,6 +81,8 @@ namespace ValheimFortress.Challenge
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Siege Mode was enabled, reward multiplied by x1.5"); }
                 total_reward_points = total_reward_points * 1.5f;
             }
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Modifying reward based on multiplayer bonus of {multiplayer_bonus}"); }
+            total_reward_points *= multiplayer_bonus;
             return total_reward_points;
         }
     }

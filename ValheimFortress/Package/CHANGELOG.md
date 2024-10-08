@@ -1,3 +1,27 @@
+  **0.23.3**
+---
+```
+- Multiplayer diminishing returns always provide a small bonus instead of a the potential of a penalty.
+```
+
+  **0.23.2**
+---
+```
+- Rewards multiplier only applies to multiplayer scenarios for diminishing returns. Single challenges are always still 100% rewards.
+```
+
+  **0.23.1**
+---
+```
+- Added multiplayer multipliers for rewards, default 100% per player.
+```
+
+  **0.23.0**
+---
+```
+- Added live building cost reloading for structures added by this mod. Cost and refund changes now apply immediately.
+```
+
   **0.22.6**
 ---
 ```

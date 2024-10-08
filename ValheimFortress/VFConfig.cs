@@ -40,6 +40,8 @@ namespace ValheimFortress
         public static ConfigEntry<short> NumberOfEachWildShrine;
         public static ConfigEntry<short> ChallengeShrineMaxCreaturesPerWave;
         public static ConfigEntry<short> ArenaShrineMaxCreaturesPerWave;
+        public static ConfigEntry<float> ShrineRewardPlayerBonus;
+        public static ConfigEntry<bool> ServerConfigsLocked;
 
         private static CustomRPC monsterSyncRPC;
         private static CustomRPC rewardSyncRPC;
@@ -469,10 +471,14 @@ namespace ValheimFortress
         private static IEnumerator OnClientReceiveLevelConfigs(long sender, ZPackage package)
         {
             var levelsyaml = package.ReadString();
-            // Just write the updated values to the client. This will trigger an update.
-            using (StreamWriter writetext = new StreamWriter(levelDefinitionsFilePath))
+            bool level_update_valid = UpdateLevelsInMemory(levelsyaml);
+            if (level_update_valid && ServerConfigsLocked.Value == false)
             {
-                writetext.WriteLine(levelsyaml);
+                // Just write the updated values to the client. This will trigger an update.
+                using (StreamWriter writetext = new StreamWriter(levelDefinitionsFilePath))
+                {
+                    writetext.WriteLine(levelsyaml);
+                }
             }
             yield return null;
         }
@@ -493,20 +499,7 @@ namespace ValheimFortress
             if (!File.Exists(levelDefinitionsFilePath)) { return; }
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"{e} Creature filewatcher called, updating creature values."); }
             string levelsDefinitions = File.ReadAllText(levelDefinitionsFilePath);
-            ChallengeLevelDefinitionCollection levelsDefinitionConfigValues;
-            try
-            {
-                levelsDefinitionConfigValues = CONST.yamldeserializer.Deserialize<ChallengeLevelDefinitionCollection>(levelsDefinitions);
-            }
-            catch
-            {
-                if (VFConfig.EnableDebugMode.Value)
-                {
-                    Jotunn.Logger.LogWarning("Creatures failed deserializing, skipping update.");
-                }
-                return;
-            }
-            UpdateLevelsDefinition(levelsDefinitionConfigValues);
+            UpdateLevelsInMemory(levelsDefinitions);
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Updated levels in-memory values."); }
             if (GUIManager.IsHeadless())
             {
@@ -528,6 +521,18 @@ namespace ValheimFortress
                 }
             }
 
+        }
+
+        private static bool UpdateLevelsInMemory(string raw_levels_data)
+        {
+            ChallengeLevelDefinitionCollection levelsDefinitionConfigValues;
+            try {
+                levelsDefinitionConfigValues = CONST.yamldeserializer.Deserialize<ChallengeLevelDefinitionCollection>(raw_levels_data);
+            } catch {
+                return false;
+            }
+            UpdateLevelsDefinition(levelsDefinitionConfigValues);
+            return true;
         }
 
         private static void UpdateCreatureConfigFileOnChange(object sender, FileSystemEventArgs e)
@@ -711,7 +716,7 @@ namespace ValheimFortress
         /// <param name="description"></param>
         /// <param name="advanced"></param>
         /// <returns></returns>
-        public ConfigEntry<bool> BindServerConfig(string catagory, string key, bool value, string description, bool advanced = false)
+        public static ConfigEntry<bool> BindServerConfig(string catagory, string key, bool value, string description, bool advanced = false)
         {
             return cfg.Bind(catagory, key, value,
                 new ConfigDescription(description,
@@ -730,7 +735,7 @@ namespace ValheimFortress
         /// <param name="description"></param>
         /// <param name="advanced"></param>
         /// <returns></returns>
-        public ConfigEntry<string> BindServerConfig(string catagory, string key, string value, string description, bool advanced = false)
+        public static ConfigEntry<string> BindServerConfig(string catagory, string key, string value, string description, bool advanced = false)
         {
             return cfg.Bind(catagory, key, value,
                 new ConfigDescription(description, null,
@@ -748,7 +753,7 @@ namespace ValheimFortress
         /// <param name="description"></param>
         /// <param name="advanced"></param>
         /// <returns></returns>
-        public ConfigEntry<short> BindServerConfig(string catagory, string key, short value, string description, bool advanced = false, short valmin = 0, short valmax = 150)
+        public static ConfigEntry<short> BindServerConfig(string catagory, string key, short value, string description, bool advanced = false, short valmin = 0, short valmax = 150)
         {
             return cfg.Bind(catagory, key, value,
                 new ConfigDescription(description,
@@ -769,7 +774,7 @@ namespace ValheimFortress
         /// <param name="valmin"></param>
         /// <param name="valmax"></param>
         /// <returns></returns>
-        public ConfigEntry<float> BindServerConfig(string catagory, string key, float value, string description, bool advanced = false, float valmin = 0, float valmax = 150)
+        public static ConfigEntry<float> BindServerConfig(string catagory, string key, float value, string description, bool advanced = false, float valmin = 0, float valmax = 150)
         {
             return cfg.Bind(catagory, key, value,
                 new ConfigDescription(description,
@@ -799,6 +804,8 @@ namespace ValheimFortress
             ShrineReconnectPauseBetweenAmount = BindServerConfig("Shrine of Challenge", "ShrineReconnectPauseBetweenAmount", 30, "Sets the maximun number of creatures to process for reconnection in a singular second.", true, 1, 60);
             DistanceBetweenShrines = BindServerConfig("Wild Shrines", "DistanceBetweenShrines", 750f, "The mimum distance between shrines, setting this higher will result in fewer wild shrines, lower more.", true, 100f, 5000f);
             NumberOfEachWildShrine = BindServerConfig("Wild Shrines", "NumberOfEachWildShrine", 100, "Each wild shrine type will attempt to be placed this many times", true, 5, 200);
+            ShrineRewardPlayerBonus = BindServerConfig("Shrine of Challenge", "ShrineRewardPlayerBonus", 1f, "How much rewards are multipled for each additional player", true, 0f, 3f);
+
 
             ChallengeShrineMaxCreaturesPerWave = BindServerConfig("Shrine of Challenge", "max_creatures_per_wave", (short)60, "The max number of creatures that a wave can generate with, creatures will attempt to upgrade and reduce counts based on this.", true, 12, 200);
             ArenaShrineMaxCreaturesPerWave = BindServerConfig("Shrine of Arena", "max_creatures_per_wave", (short)25, "The max number of creatures that a wave can generate with, creatures will attempt to upgrade and reduce counts based on this.", true, 12, 200);
@@ -811,18 +818,21 @@ namespace ValheimFortress
             BallistaCooldownTime = BindServerConfig("Auto Ballista", "BallistaCooldownTime", 2f, "How long the ballista waits before another shot", true, 0.5f, 10f);
             BallistaTargetUpdateCacheInterval = BindServerConfig("Auto Ballista", "BallistaTargetUpdateCacheInterval", 5, "How many ticks until the ballista updates its cache of nearby enemies.", true, 1, 10);
             BallistaEnableShotSafetyCheck = BindServerConfig("Auto Ballista", "BallistaEnableShotSafetyCheck", true, "Whether or not the ballista will verify it won't hit other things before shooting.", true);
-            // Client side configurations
 
+            // Server Configs
+            ServerConfigsLocked = BindServerConfig("Server", "ServerConfigsLocked", false, "Server synced configs are not editable.", true);
+
+            // Client side configurations
             // Debugmode
             EnableDebugMode = Config.Bind("Client config", "EnableDebugMode", false,
                 new ConfigDescription("Enables Debug logging for Valheim Fortress.",
                 null,
-                new ConfigurationManagerAttributes { IsAdminOnly = false, IsAdvanced = true }));
+                new ConfigurationManagerAttributes { IsAdvanced = true }));
 
             EnableTurretDebugMode = Config.Bind("Client config", "EnableTurretDebugMode", false,
                 new ConfigDescription("Enables debug mode for turrets, this can be noisy.",
                 null,
-                new ConfigurationManagerAttributes { IsAdminOnly = false, IsAdvanced = true }));
+                new ConfigurationManagerAttributes { IsAdvanced = true }));
 
         }
     }

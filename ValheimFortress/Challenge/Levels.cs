@@ -1143,7 +1143,7 @@ namespace ValheimFortress.Challenge
         public static void UpdateLevelValues(VFConfig cfg)
         {
             
-            base_challenge_points = cfg.BindServerConfig(
+            base_challenge_points = VFConfig.BindServerConfig(
                 "shine of challenge - levels",
                 "level_base_challenge_points",
                 (short)100,
@@ -1152,7 +1152,7 @@ namespace ValheimFortress.Challenge
                 100, 1000).Value;
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Config Level base_challenge_points updated."); }
 
-            max_challenge_points = cfg.BindServerConfig(
+            max_challenge_points = VFConfig.BindServerConfig(
                 "shine of challenge - levels",
                 "max_challenge_points",
                 (short)3000,
@@ -1160,7 +1160,7 @@ namespace ValheimFortress.Challenge
                 true, 1000, 30000).Value;
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Config Level max_challenge_points updated."); }
 
-            star_chance = cfg.BindServerConfig(
+            star_chance = VFConfig.BindServerConfig(
                 "shine of challenge - levels",
                 "creature_star_chance",
                 0.15f,
@@ -1168,7 +1168,7 @@ namespace ValheimFortress.Challenge
                 true, 0.0f, 1).Value;
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Config creature_star_chance updated."); }
 
-            challenge_slope = cfg.BindServerConfig(
+            challenge_slope = VFConfig.BindServerConfig(
                 "shine of challenge - levels",
                 "challenge_slope",
                 15.0f,
@@ -1176,14 +1176,14 @@ namespace ValheimFortress.Challenge
                 false, 5f, 50f).Value;
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Config challenge_slope updated."); }
 
-            chance_of_prior_biome_creature = cfg.BindServerConfig(
+            chance_of_prior_biome_creature = VFConfig.BindServerConfig(
                 "shine of challenge - levels",
                 "chance_of_prior_biome_creature",
                 0.05f,
                 "The chance that a valid prior biome creature will be selected. Only 1 can be selected per wave. Setting to zero disables generating waves with previous biome creatures.",
                 false, 0.00f, 1.0f).Value;
 
-            max_creature_stars = cfg.BindServerConfig(
+            max_creature_stars = VFConfig.BindServerConfig(
                 "shine of challenge - levels",
                 "max_creature_stars",
                 (short)2,

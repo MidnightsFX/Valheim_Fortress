@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace ValheimFortress.Challenge
@@ -143,7 +140,7 @@ namespace ValheimFortress.Challenge
                 foreach(ChallengeLevelDefinition level in clevels)
                 {
                     if (level.levelForShrineTypes[shrine_type] != true) { continue; }
-                    if(level.requiredGlobalKey == "NONE") 
+                    if(level.requiredGlobalKey == "NONE")
                     {
                         currentLevels.Add($"{level_index} - {Localization.instance.Localize(level.levelMenuLocalization)}");
                         level_index += 1;
