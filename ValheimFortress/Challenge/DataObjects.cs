@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 using YamlDotNet.Serialization.NamingConventions;
 using YamlDotNet.Serialization;
 using UnityEngine;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
-using System.Collections;
-using System.Runtime.InteropServices.ComTypes;
+using System.ComponentModel;
 
 namespace ValheimFortress.Challenge
 {
@@ -114,8 +110,6 @@ namespace ValheimFortress.Challenge
         public short resouceCost { get; set; }
         public String requiredBoss { get; set; }
         public String resourcePrefab { get; set; }
-        public int rewardMinLevelIndex { get; set; }
-        public int rewardMaxLevelIndex { get; set; }
         public bool enabled { get; set; }
         // required for serialization, since this used to have a custom init
         public RewardEntry() { }
@@ -147,6 +141,8 @@ namespace ValheimFortress.Challenge
     public class ChallengeLevelDefinition
     {
         public short levelIndex { get; set; }
+        [DefaultValue(4)]
+        public short numPhases { get; set; }
         public Dictionary<string, bool> levelForShrineTypes { get; set; }
         public string levelMenuLocalization {  get; set; }
         public string requiredGlobalKey { get; set; }
@@ -154,8 +150,15 @@ namespace ValheimFortress.Challenge
         public string waveFormat { get; set; }
         public string bossWaveFormat { get; set; }
         public short maxCreatureFromPreviousBiomes { get; set; }
+        [DefaultValue(1)]
+        public short previousBiomeSearchRange { get; set; }
+        [DefaultValue(0.05f)]
+        public float chancePreviousBiomeCreatureSelected {  get; set; }
+        [DefaultValue(true)]
+        public bool previousBiomeCreaturesAddedStarPerBiome { get; set; }
         public string levelWarningLocalization { get; set; }
         public string bossLevelWarningLocalization { get; set; }
+        public List<String> levelRewardOptionsLimitedTo {  get; set; }
         public List<String> onlySelectMonsters { get; set; }
         public List<String> excludeSelectMonsters { get; set; }
         public Dictionary<string, bool> commonSpawnModifiers { get; set; }
@@ -227,8 +230,8 @@ namespace ValheimFortress.Challenge
     {
         public static string SerializeObject<T>(T objectToSerialize)
         {
-            System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new BinaryFormatter();
-            System.IO.MemoryStream memStr = new System.IO.MemoryStream();
+            BinaryFormatter bf = new BinaryFormatter();
+            MemoryStream memStr = new MemoryStream();
 
             try
             {

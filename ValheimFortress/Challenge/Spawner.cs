@@ -70,6 +70,12 @@ namespace ValheimFortress.Challenge
             GameObject gameObject = PrefabManager.Instance.GetPrefab(hoard.prefab);
             for (int i = 0; i < hoard.amount; i++)
             {
+                if (shrine.ChallengeNoLongerSpawnable())
+                {
+                    // Abort the async spawning because the challenge has been cancelled
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Shrine run cancelled, coroutine spawner stopped."); }
+                    break;
+                }
                 if (amount_spawned >= spawn_segment_size)
                 {
                     amount_spawned = 0;

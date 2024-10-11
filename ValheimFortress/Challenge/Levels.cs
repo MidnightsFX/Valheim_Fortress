@@ -1234,11 +1234,13 @@ namespace ValheimFortress.Challenge
             return wavedefinition;
         }
 
-        public static PhasedWaveTemplate dynamicBuildWaveTemplate(ChallengeLevelDefinition defined_level, Int16 max_wave_points, bool boss_mode, bool siege_mode, short override_max_creatures = 0, int phases = 4)
+        public static PhasedWaveTemplate dynamicBuildWaveTemplate(ChallengeLevelDefinition defined_level, Int16 max_wave_points, bool boss_mode, bool siege_mode, short override_max_creatures = 0)
         {
             WaveOutline waveOutline = new WaveOutline();
-
-            if (siege_mode) { phases = phases * 2; }
+            short phases = defined_level.numPhases;
+            // maybe need some sanity checks?
+            if (phases == 0) { phases = 4; } // fallback if phases are not defined
+            if (siege_mode) { phases *= 2; }
 
             Int16 max_creatures_from_previous_biomes = defined_level.maxCreatureFromPreviousBiomes;
             String selected_biome = defined_level.biome;
@@ -1314,7 +1316,7 @@ namespace ValheimFortress.Challenge
                             continue; 
                         }
                         // Creature too low of a level
-                        if (!(current_creature_biome_level >= (targeted_wave_biome_level - 1))) {
+                        if (!(current_creature_biome_level >= (targeted_wave_biome_level - defined_level.previousBiomeSearchRange))) {
                             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"creature {skey} biome is too easy."); }
                             continue;
                         }
@@ -1328,7 +1330,7 @@ namespace ValheimFortress.Challenge
                             }
                             // Roll to see if we will add this creature, its only a 5% chance by default.
                             float prior_biome_chance = UnityEngine.Random.value;
-                            if(chance_of_prior_biome_creature < prior_biome_chance) {
+                            if(defined_level.chancePreviousBiomeCreatureSelected < prior_biome_chance) {
                                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"previous biome creature {skey} failed its add roll {chance_of_prior_biome_creature} < {prior_biome_chance}."); }
                                 continue; 
                             }
@@ -1340,7 +1342,11 @@ namespace ValheimFortress.Challenge
                         if (waveOutline.HasKey(skey) && duplicate_roll > duplicate_chance) { continue; }
 
                         // If the creature is from a previous biome, we note that, and add at least one star to its generation
-                        if (current_creature_biome_level != targeted_wave_biome_level) { creatures_selected_from_previous_biome += 1; min_stars += 1;  }
+                        if (current_creature_biome_level != targeted_wave_biome_level) 
+                        { 
+                            creatures_selected_from_previous_biome += 1;
+                            if (defined_level.previousBiomeCreaturesAddedStarPerBiome) { min_stars += (short)(targeted_wave_biome_level - current_creature_biome_level); }
+                        }
 
                         // Add the creature!
                         waveOutline.AddCreatureToWave(skey, max_wave_points, percentage, min_stars, max_creature_stars);
@@ -1456,6 +1462,10 @@ namespace ValheimFortress.Challenge
         public static short DetermineCreatureStars(short min_stars, short max_stars)
         {
             short creatureStars = min_stars;
+            if (creatureStars >= max_stars) {
+                creatureStars = max_stars;
+                return creatureStars;
+            }
             // Random value between 0-1.
             float upgradeRoll = UnityEngine.Random.value;
             if (upgradeRoll > (1 - star_chance))
@@ -1469,6 +1479,7 @@ namespace ValheimFortress.Challenge
             }
             return creatureStars;
         }
+
 
         public static float linearDecreaseRandomWaveAdjustment(int phases, int current_phase, float variance = 0.10f)
         {
@@ -1528,42 +1539,42 @@ namespace ValheimFortress.Challenge
             return wave_percent;
         }
 
-        public static float ApplyWavePercentModifiers(Dictionary<string, bool> wavePercentModifiers, int phases, int current_phase)
+        public static float ApplyWavePercentModifiers(Dictionary<string, bool> waveMods, int phases, int current_phase)
         {
             float wavePercent = 1f;
             // Guard clause for no modifiers
-            if (wavePercentModifiers == null)
+            if (waveMods == null)
             {
                 return wavePercent;
-            } else if (wavePercentModifiers.Count == 0)
+            } else if (waveMods.Count == 0)
             {
                 return wavePercent;
             }
 
             // non-null and contains a key to operate with
-            if (wavePercentModifiers.ContainsKey("linearDecreaseRandomWaveAdjustment")) {
-                if (wavePercentModifiers["linearDecreaseRandomWaveAdjustment"] == true)
+            if (waveMods.ContainsKey("linearDecreaseRandomWaveAdjustment")) {
+                if (waveMods["linearDecreaseRandomWaveAdjustment"] == true)
                 {
                     wavePercent = linearDecreaseRandomWaveAdjustment(phases, current_phase);
                 }
             }
 
-            if (wavePercentModifiers.ContainsKey("linearIncreaseRandomWaveAdjustment")) {
-                if (wavePercentModifiers["linearIncreaseRandomWaveAdjustment"] == true)
+            if (waveMods.ContainsKey("linearIncreaseRandomWaveAdjustment")) {
+                if (waveMods["linearIncreaseRandomWaveAdjustment"] == true)
                 {
                     wavePercent = linearIncreaseRandomWaveAdjustment(phases, current_phase);
                 }
             }
 
-            if (wavePercentModifiers.ContainsKey("partialRandomWaveAdjustment")) {
-                if (wavePercentModifiers["partialRandomWaveAdjustment"] == true)
+            if (waveMods.ContainsKey("partialRandomWaveAdjustment")) {
+                if (waveMods["partialRandomWaveAdjustment"] == true)
                 {
                     wavePercent = partialRandomWaveAdjustment(0.3f);
                 }
             }
 
-            if (wavePercentModifiers.ContainsKey("onlyGenerateInSecondHalf")) {
-                if (wavePercentModifiers["onlyGenerateInSecondHalf"] == true)
+            if (waveMods.ContainsKey("onlyGenerateInSecondHalf")) {
+                if (waveMods["onlyGenerateInSecondHalf"] == true)
                 {
                     wavePercent = onlyGenerateInSecondHalf(phases, current_phase);
                 }

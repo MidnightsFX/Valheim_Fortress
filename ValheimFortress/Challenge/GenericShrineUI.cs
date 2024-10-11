@@ -43,7 +43,7 @@ namespace ValheimFortress.Challenge
 
         protected bool cleanupPortals = true;
 
-        public short selected_level = 0;
+        private short selected_level_index = 0;
         public bool current_hard_mode = false;
         public bool current_boss_mode = false;
         public bool current_siege_mode = false;
@@ -77,13 +77,14 @@ namespace ValheimFortress.Challenge
                 string[] level_pieces = levelSelector.GetComponent<Dropdown>().options[levelSelector.GetComponent<Dropdown>().value].text.Split('-');
                 string text_level = ValheimFortress.ReplaceWhitespace(level_pieces[0], "");
                 short level_definition_lookup_index = (short)(short.Parse(text_level) - 1);
+
                 // if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Looking up level definition with index of text-{text_level} (1 based) int-{level_definition_lookup_index} (zero based)"); }
                 List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
                 short level_difficulty = clevels.ElementAt(level_definition_lookup_index).levelIndex;
                 bool hardmode_status = false;
                 bool bossmode_status = false;
                 bool siegemode_status = false;
-                if (rewardName != estimatedRewardName || selected_level != level_definition_lookup_index) { value_changed = true; }
+                if (rewardName != estimatedRewardName || selected_level_index != level_definition_lookup_index) { value_changed = true; }
                 if (VFConfig.EnableHardModifier.Value)
                 {
                     hardmode_status = hardModeToggle.GetComponent<Toggle>().isOn;
@@ -105,7 +106,7 @@ namespace ValheimFortress.Challenge
                 // Skip the update if the estimate is the same as the previous
                 if (value_changed == false) { return; }
                 estimatedRewardName = rewardName;
-                selected_level = level_definition_lookup_index;
+                selected_level_index = level_definition_lookup_index;
                 estimatedRewards = RewardsData.DetermineRewardAmount(estimatedRewardName, level_difficulty, hardmode_status, bossmode_status, siegemode_status);
                 estimate_text.GetComponent<Text>().text = $"{estimatedRewards}";
             }
@@ -130,8 +131,7 @@ namespace ValheimFortress.Challenge
             short level_definition_lookup_index = (short)(short.Parse(text_level) - 1);
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"level index: {level_definition_lookup_index}"); }
             List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
-            short levelIndex = clevels.ElementAt(level_definition_lookup_index).levelIndex;
-            availableRewards = UserInterfaceData.UpdateRewards(levelIndex);
+            availableRewards = UserInterfaceData.UpdateRewards(clevels.ElementAt(level_definition_lookup_index));
             reward_dropdown.ClearOptions();
             reward_dropdown.AddOptions(availableRewards);
         }
@@ -324,7 +324,7 @@ namespace ValheimFortress.Challenge
 
             // Always want to update the rewards and challenge levels
             // The first update is always for level 1 because that is the default that will be selected
-            availableRewards = UserInterfaceData.UpdateRewards(1);
+            availableRewards = UserInterfaceData.UpdateRewards();
             
 
             // Create the rewards selector dropdown

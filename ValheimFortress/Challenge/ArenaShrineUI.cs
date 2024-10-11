@@ -44,8 +44,7 @@ namespace ValheimFortress.Challenge
             // Grab the first segment in the level definition, which is the index of the defined level
             string[] level_pieces = levelSelector.GetComponent<Dropdown>().options[levelSelector.GetComponent<Dropdown>().value].text.Split('-');
             string text_level = ValheimFortress.ReplaceWhitespace(level_pieces[0], "");
-            short level_definition_lookup_index = (short)(short.Parse(text_level) - 1);
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Looking up level definition with index of text-{text_level} (1 based) int-{level_definition_lookup_index} (zero based)"); }
+            short level_lookup_id = (short)(short.Parse(text_level) - 1);
             List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
             bool hard_mode = false;
             if (VFConfig.EnableHardModifier.Value) { hard_mode = hardModeToggle.GetComponent<Toggle>().isOn; }
@@ -53,10 +52,11 @@ namespace ValheimFortress.Challenge
             if (VFConfig.EnableBossModifier.Value) { boss_mode = bossModeToggle.GetComponent<Toggle>().isOn; }
             bool siege_mode = false;
             if (VFConfig.EnableSiegeModifer.Value) { siege_mode = siegeModeToggle.GetComponent<Toggle>().isOn; }
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Shrine challenge. Selected reward: {selected_reward}, selected level index: {level_definition_lookup_index}"); }
             // Start the coroutine that sends the warning text
-            UserInterfaceData.PreparePhase(clevels.ElementAt(level_definition_lookup_index), boss_mode, Shrine.gameObject);
-            Shrine.SetLevel(level_definition_lookup_index);
+            ChallengeLevelDefinition selectedLevel = clevels.ElementAt(level_lookup_id);
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Shrine challenge. Selected reward: {selected_reward}, selected level ID {level_lookup_id} selected level index: {selectedLevel.levelIndex}"); }
+            UserInterfaceData.PreparePhase(selectedLevel, boss_mode, Shrine.gameObject);
+            Shrine.SetLevel(level_lookup_id, selectedLevel.levelIndex);
             Shrine.SetReward(selected_reward);
             if (hard_mode) { Shrine.SetHardMode(); }
             if (boss_mode) { Shrine.SetBossMode(); }

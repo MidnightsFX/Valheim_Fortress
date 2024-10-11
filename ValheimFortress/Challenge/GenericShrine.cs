@@ -1,4 +1,5 @@
 ﻿using Jotunn.Entities;
+using Jotunn.Extensions;
 using Jotunn.Managers;
 using System;
 using System.Collections;
@@ -11,43 +12,49 @@ namespace ValheimFortress.Challenge
     abstract class GenericShrine : MonoBehaviour, Hoverable, Interactable
     {
         protected ZNetView zNetView;
-        public IntZNetProperty spawned_creatures { get; protected set; }
+        public IntZNetProperty spawned_creatures { get; set; }
 
-        public DictionaryZNetProperty alive_creature_list { get; protected set; }
+        public DictionaryZNetProperty alive_creature_list { get; set; }
 
-        public BoolZNetProperty hard_mode { get; protected set; }
-        public BoolZNetProperty boss_mode { get; protected set; }
-        public BoolZNetProperty siege_mode { get; protected set; }
-        public BoolZNetProperty challenge_active { get; protected set; }
+        public BoolZNetProperty hard_mode { get; set; }
+        public BoolZNetProperty boss_mode { get; set; }
+        public BoolZNetProperty siege_mode { get; set; }
+        public BoolZNetProperty challenge_active { get; set; }
 
-        public BoolZNetProperty start_challenge { get; protected set; }
+        public BoolZNetProperty start_challenge { get; set; }
 
-        public IntZNetProperty selected_level { get; protected set; }
-        public StringZNetProperty selected_reward { get; protected set; }
-        public BoolZNetProperty end_of_challenge { get; protected set; }
-        public BoolZNetProperty should_add_creature_beacons { get; protected set; }
-        public IntZNetProperty currentPhase { get; protected set; }
-        public BoolZNetProperty wave_definition_ready { get; protected set; }
-        public BoolZNetProperty spawn_locations_ready { get; protected set; }
-        public BoolZNetProperty force_next_phase { get; protected set; }
+        public IntZNetProperty selected_level { get; set; }
+        public IntZNetProperty selected_level_index { get; set; }
+        public StringZNetProperty selected_reward { get; set; }
+        public BoolZNetProperty end_of_challenge { get; set; }
+        public BoolZNetProperty should_add_creature_beacons { get; set; }
+        public IntZNetProperty currentPhase { get; set; }
+        public BoolZNetProperty wave_definition_ready { get; set; }
+        public BoolZNetProperty spawn_locations_ready { get; set; }
+        public BoolZNetProperty force_next_phase { get; set; }
 
-        protected static bool client_set_creature_beacons = false;
-        protected static bool shrine_portal_active = false;
-        protected static List<GameObject> enemies = new List<GameObject>();
+        protected bool client_set_creature_beacons = false;
+        protected List<GameObject> enemies = new List<GameObject>();
         protected GameObject shrine_spawnpoint;
+        protected GameObject shrine_portal;
         protected static PhasedWaveTemplate wave_phases_definitions;
-        protected static Vector3[] remote_spawn_locations = new Vector3[0];
-        protected static bool phase_running = false;
-        protected static Spawner spawn_controller;
+        protected Vector3[] remote_spawn_locations = new Vector3[0];
+        protected bool phase_running = false;
+        protected Spawner spawn_controller;
         protected static int availablePhases = 0;
-        protected static Rewards reward_controller = new Rewards();
+        protected Rewards reward_controller = new Rewards();
 
         protected static CustomRPC WaveDefinitionRPC;
 
         public virtual void Awake()
         {
-            zNetView = GetComponent<ZNetView>();
-
+            if (this.gameObject.TryGetComponent<ZNetView>(out zNetView) == false)
+            {
+                this.gameObject.AddComponent<ZNetView>();
+                zNetView = this.gameObject.GetComponent<ZNetView>();
+                zNetView.m_persistent = true;
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("ZnetView was not found, and was added manually."); }
+            }
             if ((bool)zNetView)
             {
                 spawned_creatures = new IntZNetProperty("spawned_creatures", zNetView, 0);
@@ -57,6 +64,7 @@ namespace ValheimFortress.Challenge
                 challenge_active = new BoolZNetProperty("shrine_challenge_active", zNetView, false);
                 start_challenge = new BoolZNetProperty("shrine_start_challenge", zNetView, false);
                 selected_level = new IntZNetProperty("shrine_selected_level", zNetView, 0);
+                selected_level_index = new IntZNetProperty("selected_level_index", zNetView, 0);
                 selected_reward = new StringZNetProperty("shrine_selected_reward", zNetView, "coins");
                 end_of_challenge = new BoolZNetProperty("end_of_challenge", zNetView, false);
                 should_add_creature_beacons = new BoolZNetProperty("should_add_creature_beacons", zNetView, false);
@@ -70,36 +78,43 @@ namespace ValheimFortress.Challenge
 
                 if (VFConfig.EnableDebugMode.Value)
                 {
-                    Jotunn.Logger.LogInfo("Created Shrine Znet View Values.");
-                    Jotunn.Logger.LogInfo($"spawned_creatures={spawned_creatures.Get()}");
-                    Jotunn.Logger.LogInfo($"hard_mode={hard_mode.Get()}");
-                    Jotunn.Logger.LogInfo($"boss_mode={boss_mode.Get()}");
-                    Jotunn.Logger.LogInfo($"siege_mode={siege_mode.Get()}");
-                    Jotunn.Logger.LogInfo($"challenge_active={challenge_active.Get()}");
-                    Jotunn.Logger.LogInfo($"start_challenge={start_challenge.Get()}");
-                    Jotunn.Logger.LogInfo($"selected_level={selected_level.Get()}");
-                    Jotunn.Logger.LogInfo($"selected_reward={selected_reward.Get()}");
-                    Jotunn.Logger.LogInfo($"end_of_challenge={end_of_challenge.Get()}");
-                    Jotunn.Logger.LogInfo($"should_add_creature_beacons={should_add_creature_beacons.Get()}");
-                    Jotunn.Logger.LogInfo($"currentPhase={currentPhase.Get()}");
-                    Jotunn.Logger.LogInfo($"wave_definition_ready={wave_definition_ready.Get()}");
-                    Jotunn.Logger.LogInfo($"spawn_locations_ready={spawn_locations_ready.Get()}");
-                    Jotunn.Logger.LogInfo($"force_next_phase={force_next_phase.Get()}");
-
-                    //Jotunn.Logger.LogInfo($"alive_creature_list={alive_creature_list.Get()}");
-                    // Print the actual entries in the alive creature list
-                    string current_creature_entries = "";
-                    foreach (KeyValuePair<String, short> entry in alive_creature_list.Get())
+                    // Only log znet values if the znet is present and valid
+                    if (zNetView.IsValid())
                     {
-                        current_creature_entries += $"\n{entry.Key}={entry.Value}";
+                        Jotunn.Logger.LogInfo("Created Shrine Znet View Values.");
+                        Jotunn.Logger.LogInfo($"spawned_creatures={spawned_creatures.Get()}");
+                        Jotunn.Logger.LogInfo($"hard_mode={hard_mode.Get()}");
+                        Jotunn.Logger.LogInfo($"boss_mode={boss_mode.Get()}");
+                        Jotunn.Logger.LogInfo($"siege_mode={siege_mode.Get()}");
+                        Jotunn.Logger.LogInfo($"challenge_active={challenge_active.Get()}");
+                        Jotunn.Logger.LogInfo($"start_challenge={start_challenge.Get()}");
+                        Jotunn.Logger.LogInfo($"selected_level={selected_level.Get()}");
+                        Jotunn.Logger.LogInfo($"selected_level_index={selected_level_index.Get()}");
+                        Jotunn.Logger.LogInfo($"selected_reward={selected_reward.Get()}");
+                        Jotunn.Logger.LogInfo($"end_of_challenge={end_of_challenge.Get()}");
+                        Jotunn.Logger.LogInfo($"should_add_creature_beacons={should_add_creature_beacons.Get()}");
+                        Jotunn.Logger.LogInfo($"currentPhase={currentPhase.Get()}");
+                        Jotunn.Logger.LogInfo($"wave_definition_ready={wave_definition_ready.Get()}");
+                        Jotunn.Logger.LogInfo($"spawn_locations_ready={spawn_locations_ready.Get()}");
+                        Jotunn.Logger.LogInfo($"force_next_phase={force_next_phase.Get()}");
+
+                        //Jotunn.Logger.LogInfo($"alive_creature_list={alive_creature_list.Get()}");
+                        // Print the actual entries in the alive creature list
+                        string current_creature_entries = "";
+                        foreach (KeyValuePair<String, short> entry in alive_creature_list.Get())
+                        {
+                            current_creature_entries += $"\n{entry.Key}={entry.Value}";
+                        }
+                        Jotunn.Logger.LogInfo($"alive_creature_list size {alive_creature_list.Get().Count} values:{current_creature_entries}");
                     }
-                    Jotunn.Logger.LogInfo($"alive_creature_list size {alive_creature_list.Get().Count} values:{current_creature_entries}");
                 }
                 
                 WaveDefinitionRPC = NetworkManager.Instance.AddRPC("levelsyaml_rpc", VFConfig.OnServerRecieveConfigs, OnClientReceivePhaseConfigs);
                 // Don't need to sync wave data to new clients connecting. There is a chance that if we swap owners during someone connecting to a region where a shrine challenge occurs that things could go wonky
                 // SynchronizationManager.Instance.AddInitialSynchronization(WaveDefinitionRPC, SendPhaseConfigs);
             }
+            shrine_portal = gameObject.transform.Find("portal").gameObject;
+            shrine_spawnpoint = gameObject.transform.FindDeepChild("spawnpoint").gameObject;
             // Jotunn.Logger.LogInfo("Shrine Awake Finished");
         }
 
@@ -274,6 +289,7 @@ namespace ValheimFortress.Challenge
 
         protected bool RemainingPhases()
         {
+            Jotunn.Logger.LogInfo($"Checking for remaining phases.");
             if (availablePhases > wave_phases_definitions.hordePhases.Count)
             {
                 availablePhases = wave_phases_definitions.hordePhases.Count;
@@ -308,13 +324,15 @@ namespace ValheimFortress.Challenge
             selected_reward.ForceSet(reward);
         }
 
-        public void SetLevel(Int16 level)
+        public void SetLevel(int level, int level_index)
         {
             selected_level.ForceSet(level);
+            selected_level_index.ForceSet(level_index);
         }
 
         public void SetStartChallenge()
         {
+            Jotunn.Logger.LogInfo($"Challenge started at {this.GetInstanceID()}");
             start_challenge.ForceSet(true);
         }
 
@@ -323,29 +341,29 @@ namespace ValheimFortress.Challenge
             spawned_creatures.Set(spawned_creatures.Get() + 1);
         }
 
+        public bool IsChallengeActive()
+        {
+            return challenge_active.Get();
+        }
+
+        public bool ChallengeNoLongerSpawnable()
+        {
+            return challenge_active.Get() == false && wave_definition_ready.Get() == false;
+        }
+
+        public Boolean CentralPortalActiveStatus()
+        {
+            return shrine_portal.activeSelf;
+        }
+
         public void EnablePortal()
         {
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Enabling Central Shrine portal."); }
-            // gets the child object which holds all of the portal fx etc, and enables it
-            try
-            {
-                GameObject shrine_portal = this.transform.Find("portal").gameObject;
-                shrine_portal.SetActive(true);
-            }
-            catch { }
-            shrine_portal_active = true;
+            shrine_portal.SetActive(true);
         }
 
         public void Disableportal()
         {
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Disabling Central Shrine Portal."); }
-            try
-            {
-                GameObject shrine_portal = transform.Find("portal").gameObject;
-                shrine_portal.SetActive(false);
-            }
-            catch { }
-            shrine_portal_active = false;
+            shrine_portal.SetActive(false);
         }
 
         public void addEnemy(GameObject enemy)
@@ -527,10 +545,10 @@ namespace ValheimFortress.Challenge
                 StartCoroutine(reward_controller.InitReward(reward_entry.Key, number_of_rewards, spawn_position));
             }
         }
-
-        public void SpawnReward(String reward_resource, short level, Vector3 spawn_position, bool hard_mode, bool boss_mode, bool siege_mode)
+        public void SpawnReward(Vector3 spawn_position)
         {
-            short number_of_rewards = RewardsData.DetermineRewardAmount(reward_resource, level, hard_mode, boss_mode, siege_mode, DetermineMultiplayerBonus());
+            string reward_resource = selected_reward.Get();
+            short number_of_rewards = RewardsData.DetermineRewardAmount(reward_resource, (short)selected_level_index.Get(), hard_mode.Get(), boss_mode.Get(), siege_mode.Get(), DetermineMultiplayerBonus());
             string reward_prefab = RewardsData.resourceRewards[reward_resource].resourcePrefab;
             StartCoroutine(reward_controller.InitReward(reward_prefab, number_of_rewards, spawn_position));
         }

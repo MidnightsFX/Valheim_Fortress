@@ -1,9 +1,14 @@
-  **0.23.4**
+  **0.30.0**
 ---
 ```
-- Adds support to limit rewards to a lower and upper level bound
+- Adds support to limit rewards available for a specific level
 - Adds support to gate rewards by arbitrary global keys
+- Adds support for making longer or shorter wave definitions
 - Massively reduced the shiny-ness of the shrine of the arena
+- Increased the likelyhood that a turret would take a shot if it might be able to hit its target
+- Fix a ghosting bug with the spawner coroutine, ghosts no longer pop in and out after aborting a challenge
+- Fixed a bug that would redirect spawns from one shrine to another
+- Fixed a bug where portals would spawn in trees
 ```
 
   **0.23.3**

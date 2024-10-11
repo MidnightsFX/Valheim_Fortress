@@ -10,9 +10,9 @@ namespace ValheimFortress.Challenge
 {
     internal class ArenaShrine : GenericShrine
     {
-        private static ArenaShrineUI ui_controller;
+        private ArenaShrineUI ui_controller;
         static new Vector3[] remote_spawn_locations = new Vector3[0];
-        private static short fail_to_start = 0;
+        private short fail_to_start = 0;
         // We statically set the remote spawn locations to the internal shrine spawnpoint, because this is the gladiator shrine and thats the only place it spawns things from.
 
         public override string GetHoverName()
@@ -94,7 +94,6 @@ namespace ValheimFortress.Challenge
             if (ui_controller == null || spawn_controller == null || shrine_spawnpoint == null || remote_spawn_locations == null)
             {
                 spawn_controller = this.gameObject.GetComponent<Spawner>();
-                shrine_spawnpoint = this.transform.FindDeepChild("spawnpoint").gameObject;
                 remote_spawn_locations = new Vector3[] { shrine_spawnpoint.transform.position, shrine_spawnpoint.transform.position, shrine_spawnpoint.transform.position };
                 ui_controller = this.gameObject.GetComponent<ArenaShrineUI>();
             }
@@ -112,7 +111,7 @@ namespace ValheimFortress.Challenge
             {
                 // Only need to enable the central portal once.
                 // This is done for every client so everyone is in sync, because for some reason otherwise it doesn't show on some clients
-                if (shrine_portal_active == false)
+                if (CentralPortalActiveStatus() == false)
                 {
                     EnablePortal();
                 }
@@ -195,7 +194,7 @@ namespace ValheimFortress.Challenge
                             {
                                 localplayer.Message(MessageHud.MessageType.Center, Localization.instance.Localize("$shrine_challenge_complete"));
                             }
-                            SpawnReward(selected_reward.Get(), Levels.GetChallengeLevelDefinitions().ElementAt(selected_level.Get()).levelIndex, shrine_spawnpoint.transform.position, hard_mode.Get(), boss_mode.Get(), siege_mode.Get());
+                            SpawnReward(shrine_spawnpoint.transform.position);
                             challenge_active.Set(false);
                             boss_mode.Set(false);
                             hard_mode.Set(false);

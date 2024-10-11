@@ -163,8 +163,6 @@ namespace ValheimFortress
 #    resource_cost: 5                    |- This is the cost to gain 1 of the particular reward. Points are generated based on how many monsters are spawned.
 #    resource_prefab: ""Coins""            |- This is the unity prefab name for a resource, you will often see mods list the prefabs they have added. Prefabs are also listed on the valheim wiki.
 #    required_boss: ""None""               |- This must be one of the following values: ""None"" ""Eikythr"" ""TheElder"" ""BoneMass"" ""Moder"" ""Yagluth"" ""TheQueen""
-#    rewardMinLevelIndex: 0                |- (OPTIONAL) This will require that a wave is of a certain strength in order to allow selecting this reward, disabled when set to 0.
-#    rewardMaxLevelIndex: 0                |- (OPTIONAL) This reward will not be available on waves above a certain difficulty, disabled when set to 0.
 ";
                     writetext.WriteLine(header);
                     writetext.WriteLine(RewardsData.YamlRewardsDefinition());
@@ -200,6 +198,7 @@ namespace ValheimFortress
 #################################################
 # levels:
 # - levelIndex: 1                                                  |- LevelIndex is the difficulty this wave is set at, valid values are 1+
+#   numPhases: 4                                                   |- The number of phases in this level, enemies will be distributed among the phases
 #   levelForShrineTypes:                                           |- What shrines will host this level, multiple definitions can be applied
 #     challenge: true                                              |-   Shrine of challenge will host this level
 #     arena: true                                                  |-   Shrine of the arena will host this level
@@ -209,10 +208,14 @@ namespace ValheimFortress
 #   waveFormat: Tutorial                                           |- This is the format of the wave, formates are defined in WaveStyles.yaml, it determines how many creatures, what catagory and percentage of total points they use
 #   bossWaveFormat: TutorialBoss                                   |- This is the format if the wave is modified to be a boss wave
 #   maxCreatureFromPreviousBiomes: 0                               |- This is the maximum number of creatures that can be selected from prior biomes
+#   previousBiomeSearchRange: 1                                    |- How many previous biomes to look back for potential creatures
+#   chancePreviousBiomeCreatureSelected: 0.05                      |- Chance that a creature will be selected from a previous biome, if it can be
+#   previousBiomeCreaturesAddedStarPerBiome: true                  |- automatically upgrades creatures from a previous biome, one star per biome difference (up to max defined stars)
 #   levelWarningLocalization: $shrine_warning_meadows              |- This is the announcement text that plays when the challenge starts as a normal wave, uses literal value if the localization does not exist
 #   bossLevelWarningLocalization: $shrine_warning_meadows_boss     |- This is the announcement text that plays when the challenge starts as a boss wave, localizations are available here https://github.com/MidnightsFX/Valheim_Fortress/blob/master/JotunnModStub/Localizations/English.json
 #   onlySelectMonsters: []                                         |- This is an array of monsters that are the only valid targets for this wave
 #   excludeSelectMonsters: []                                      |- This is an array of monsters that are to be avoided for the wave
+#   
 #   commonSpawnModifiers:                                          |- Spawn modifiers are functions applied to each part of the wave, they can be different per catagory of monster
 #     linearIncreaseRandomWaveAdjustment: true                     |-   In general, it is best to only use one type of spawn modifier per creature type
 #     linearDecreaseRandomWaveAdjustment: false                    |- Linear Decrease/Increase will frontload or backload this creature in the various phase of the wave, meaning more of it will appear earlier or later depending on the modifier

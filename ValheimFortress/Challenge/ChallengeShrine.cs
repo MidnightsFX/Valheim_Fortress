@@ -7,9 +7,8 @@ namespace ValheimFortress.Challenge
 {
     internal class ChallengeShrine : GenericShrine
     {
-        private static ChallengeShrineUI ui_controller;
-        private static new GameObject shrine_spawnpoint;
-        private static short fail_to_start = 0;
+        private ChallengeShrineUI ui_controller;
+        private short fail_to_start = 0;
 
         public override string GetHoverName()
         {
@@ -41,6 +40,7 @@ namespace ValheimFortress.Challenge
             else
             {
                 ui_controller.DisplayUI();
+                Jotunn.Logger.LogInfo($"Challenge UI from {this.GetInstanceID()}");
             }
 
             return true;
@@ -83,13 +83,13 @@ namespace ValheimFortress.Challenge
         public override void Update()
         {
             // We do nothing when this is not a znet object (this happens during object placement)
+            //Jotunn.Logger.LogInfo("Checking zNetView Validness.");
             if (zNetView.IsValid() != true) { return; }
 
             // reconnect componets if they go missing
-            if (ui_controller == null || spawn_controller == null || shrine_spawnpoint == null)
+            if (ui_controller == null || spawn_controller == null)
             {
                 spawn_controller = this.gameObject.GetComponent<Spawner>();
-                shrine_spawnpoint = this.transform.FindDeepChild("spawnpoint").gameObject;
                 ui_controller = this.gameObject.GetComponent<ChallengeShrineUI>();
             }
 
@@ -102,11 +102,12 @@ namespace ValheimFortress.Challenge
             // Jotunn.Logger.LogInfo("Shrine UI not closing.");
 
             // So clients and servers see the internal structure portal update
+            // Jotunn.Logger.LogInfo("Checking Portal status.");
             if (challenge_active.Get() == true)
             {
                 // Only need to enable the central portal once.
                 // This is done for every client so everyone is in sync, because for some reason otherwise it doesn't show on some clients
-                if (shrine_portal_active == false)
+                if (CentralPortalActiveStatus() == false)
                 {
                     EnablePortal();
                 }
@@ -117,8 +118,7 @@ namespace ValheimFortress.Challenge
                 end_of_challenge.ForceSet(false);
             }
 
-            // Jotunn.Logger.LogInfo("Shrine portal status not updating.");
-
+            // Jotunn.Logger.LogInfo("Checking if this is the owner.");
             // Everything past here should only be run once, by whatever main thread is controlling the ticks in this region.
             if (!zNetView.IsOwner())
             {
@@ -127,6 +127,7 @@ namespace ValheimFortress.Challenge
 
             // Jotunn.Logger.LogInfo("Entering ZnetOwner States.");
 
+            // Jotunn.Logger.LogInfo("Checking to start the challenge.");
             // Kick off the challenge- even if it was trigger by a non-znet owner
             if (start_challenge.Get() == true)
             {
@@ -150,29 +151,35 @@ namespace ValheimFortress.Challenge
             }
 
             // Jotunn.Logger.LogInfo("Did not need to start a challenge.");
-
+            // Jotunn.Logger.LogInfo("Checking if the challenge is already active.");
             if (challenge_active.Get() == true)
             {
                 // the challenge should be running but there are no phase definitions. This happens when the shrine has become disconnected.
                 if (wave_phases_definitions == null)
                 {
                     Jotunn.Logger.LogInfo("Starting shrine reconnection to creatures, this will regenerate the wave definition.");
+                    Jotunn.Logger.LogInfo("Starting coroutine.");
                     StartCoroutine(ReconnectUnlinkedCreatures(shrine_spawnpoint.transform.position, gameObject.GetComponent<ChallengeShrine>()));
+                    Jotunn.Logger.LogInfo("Getting levels.");
                     List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
+                    Jotunn.Logger.LogInfo("Selecting level.");
                     ChallengeLevelDefinition levelDefinition = clevels.ElementAt(selected_level.Get());
+                    Jotunn.Logger.LogInfo("Generating wave.");
                     wave_phases_definitions = Levels.generateRandomWaveWithOptions(levelDefinition, hard_mode.Get(), boss_mode.Get(), siege_mode.Get(), VFConfig.ChallengeShrineMaxCreaturesPerWave.Value);
                     wave_definition_ready.Set(true);
                     return;
                     // Ideally everything else is currently still correct since the last time this object was loaded
                 }
 
-                if (wave_phases_definitions.hordePhases.Count > 0)
+                // Jotunn.Logger.LogInfo("Checking for remaining phases and active enemies.");
+                if (wave_phases_definitions.hordePhases != null && wave_phases_definitions.hordePhases.Count > 0)
                 {
                     // We need to A. have spawned creatures & there needs to be none of those spawned creatures remaining
                     if (force_next_phase.Get() || enemies.Count > 0 && spawned_creatures.Get() <= 0 && phase_running == false)
                     {
                         if (RemainingPhases())
                         {
+                            Jotunn.Logger.LogInfo("Starting next phase");
                             // Start the next phase
                             should_add_creature_beacons.Set(false);
                             force_next_phase.Set(false);
@@ -192,7 +199,7 @@ namespace ValheimFortress.Challenge
                             {
                                 localplayer.Message(MessageHud.MessageType.Center, Localization.instance.Localize("$shrine_challenge_complete"));
                             }
-                            SpawnReward(selected_reward.Get(), Levels.GetChallengeLevelDefinitions().ElementAt(selected_level.Get()).levelIndex, shrine_spawnpoint.transform.position, hard_mode.Get(), boss_mode.Get(), siege_mode.Get());
+                            SpawnReward(shrine_spawnpoint.transform.position);
                             challenge_active.Set(false);
                             boss_mode.Set(false);
                             hard_mode.Set(false);

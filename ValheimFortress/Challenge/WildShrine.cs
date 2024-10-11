@@ -3,8 +3,6 @@ using Jotunn.Managers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace ValheimFortress.Challenge
@@ -204,7 +202,7 @@ namespace ValheimFortress.Challenge
             {
                 // Only need to enable the central portal once.
                 // This is done for every client so everyone is in sync, because for some reason otherwise it doesn't show on some clients
-                if (shrine_portal_active == false)
+                if (CentralPortalActiveStatus() == false)
                 {
                     EnablePortal();
                 }

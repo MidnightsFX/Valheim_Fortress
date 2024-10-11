@@ -67,17 +67,17 @@ namespace ValheimFortress.Challenge
         }
 
 
-        public static List<String> UpdateRewards(short level_index) {
+        public static List<String> UpdateRewards(ChallengeLevelDefinition level_definition = null) {
             Dictionary<String, RewardEntry> possible_rewards = RewardsData.resourceRewards;
             List<String> availableRewards = new List<String> { };
             var zs = ZoneSystem.instance;
             foreach (KeyValuePair<string, RewardEntry> entry in possible_rewards)
             {
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Checking reward:{entry.Key} required key: {entry.Value.requiredBoss} min level: {entry.Value.rewardMinLevelIndex} max level: {entry.Value.rewardMaxLevelIndex}"); }
-                if ((entry.Value.rewardMinLevelIndex != 0 && entry.Value.rewardMinLevelIndex > level_index) || (entry.Value.rewardMaxLevelIndex != 0 && entry.Value.rewardMaxLevelIndex < level_index))
+                if (level_definition != null && level_definition.levelRewardOptionsLimitedTo != null && !level_definition.levelRewardOptionsLimitedTo.Contains(entry.Key))
                 {
-                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Reward {entry.Key} skipped due to level requirement not being met: {entry.Value.rewardMinLevelIndex} > {level_index} or {entry.Value.rewardMaxLevelIndex} < {level_index}."); }
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Level specified rewards set, reward {entry.Key} skipped due not being included."); }
                     continue;
+
                 }
                 if (entry.Value.requiredBoss == "None")
                 {
@@ -150,23 +150,23 @@ namespace ValheimFortress.Challenge
             var zs = ZoneSystem.instance;
             List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
             List<String> currentLevels = new List<String> { };
-            short level_index = 1;
+            short level_index = 0;
             if (zs) // If the zonesystem does not exist, we can't check global keys. So skip it. This list will be updated on the UI open anyways.
             {
                 foreach(ChallengeLevelDefinition level in clevels)
                 {
+                    level_index += 1;
                     if (level.levelForShrineTypes[shrine_type] != true) { continue; }
                     if(level.requiredGlobalKey == "NONE")
                     {
                         currentLevels.Add($"{level_index} - {Localization.instance.Localize(level.levelMenuLocalization)}");
-                        level_index += 1;
+                        
                         continue;
                     }
                     if (zs.GetGlobalKey(level.requiredGlobalKey)) 
                     {
                         currentLevels.Add($"{level_index} - {Localization.instance.Localize(level.levelMenuLocalization)}");
                     }
-                    level_index += 1;
                 }
             }
             else

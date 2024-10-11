@@ -20,7 +20,7 @@ namespace ValheimFortress.Challenge
             // Color color = Color.magenta;
             Color[] colorPixels = new Color[circle_radius * circle_radius].Populate(Color.magenta);
 
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"starting spawn portal placement {remote_spawns}"); }
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Starting spawn portal placement."); }
             foreach (Vector3 spawn_location in remote_spawns)
             {
                 Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
@@ -59,6 +59,7 @@ namespace ValheimFortress.Challenge
         // This will need multiple invocation types if I end up using multiple spawn types for various shrines
         public static IEnumerator DetermineRemoteSpawnLocations(GameObject shrine, GenericShrine challengeShrine)
         {
+            LayerMask terrain_lmsk = LayerMask.GetMask("terrain");
             Vector3 shrine_position = shrine.transform.position;
             GameObject shrine_spawnpoint = shrine.transform.Find("spawnpoint").gameObject;
             Vector3 shrine_gladiator_spawn_position = shrine_spawnpoint.transform.position;
@@ -69,6 +70,7 @@ namespace ValheimFortress.Challenge
             float current_min_z = shrine_position.z - range_increment;
             float min_y_difference = shrine_position.y - 32;
             float max_y_difference = shrine_position.y + 32;
+            float max_difference_from_ground = 1f;
 
 
             List<Vector3> spawn_locations = new List<Vector3>();
@@ -94,11 +96,27 @@ namespace ValheimFortress.Challenge
                 {
                     potential_spawn.y = height;
                 }
-                if ((bool)EffectArea.IsPointInsideArea(potential_spawn, EffectArea.Type.PlayerBase)) { continue; } // Don't spawn in players bases
-                if (potential_spawn.y < 27) { continue; } // This is a Y check which prevents spawns in a body of water
-                if (potential_spawn.y > max_y_difference || potential_spawn.y < min_y_difference) { continue; } // skip spawn setups which have a massive difference in height, this helps prevent portals ontop of pines
+                Physics.Raycast(potential_spawn + Vector3.up * 1f, Vector3.down, out var terrain_hit, 1000f, terrain_lmsk);
+                float terrain_diff = terrain_hit.point.y - potential_spawn.y;
+                if (Math.Abs(terrain_diff) > max_difference_from_ground)
+                {
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Potential spawn location x:{potential_spawn.x},y:{potential_spawn.y},z:{potential_spawn.z} was significantly different than terrain y:{terrain_hit.point.y}. Retrying."); }
+                    continue;
+                }
+                // Don't spawn in players bases
+                if ((bool)EffectArea.IsPointInsideArea(potential_spawn, EffectArea.Type.PlayerBase))
+                {
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Potential spawn location x:{potential_spawn.x},y:{potential_spawn.y},z:{potential_spawn.z} was in a player base. Retrying."); }
+                    continue;
+                }
+                // This is a Y check which prevents spawns in a body of water
+                if (potential_spawn.y < 27) {
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Potential spawn location x:{potential_spawn.x},y:{potential_spawn.y},z:{potential_spawn.z} was below sea level y:27. Retrying."); }
+                    continue; 
+                } 
+                // if (potential_spawn.y > max_y_difference || potential_spawn.y < min_y_difference) { continue; } // skip spawn setups which have a massive difference in height, this helps prevent portals ontop of pines
 
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Valid spawn location determined: x={potential_spawn.x} y={potential_spawn.y} z={potential_spawn.z}"); }
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Valid spawn location determined x:{potential_spawn.x} y:{potential_spawn.y} z:{potential_spawn.z}."); }
                 spawn_locations.Add(potential_spawn);
             }
             Jotunn.Logger.LogInfo("Spawn locations determined");

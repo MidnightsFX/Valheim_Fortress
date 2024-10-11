@@ -42,7 +42,7 @@ namespace ValheimFortress.Challenge
             {
                 return;
             }
-            if (shrineReference.challenge_active.Get() == false)
+            if (shrineReference.IsChallengeActive() == false)
             {
                 DestroySelf();
             }

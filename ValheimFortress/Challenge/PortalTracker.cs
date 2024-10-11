@@ -40,7 +40,7 @@ namespace ValheimFortress.Challenge
             }
 
             // If the shrine reference is set we check to see if a challenge is active and when its no longer active we destroy the portal
-            if (shrineReference.challenge_active.Get() == false)
+            if (shrineReference.IsChallengeActive() == false)
             {
                 GameObject destroyVFX = UnityEngine.Object.Instantiate(ValheimFortress.getPortalDestroyVFX(), this.transform.position, this.transform.rotation);
                 ZNetScene.instance.Destroy(base.gameObject);

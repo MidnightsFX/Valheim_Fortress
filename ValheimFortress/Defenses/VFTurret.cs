@@ -1,11 +1,9 @@
 ﻿using Jotunn.Managers;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using UnityEngine;
 using ValheimFortress.Challenge;
-using static UnityEngine.GraphicsBuffer;
 
 namespace ValheimFortress.Defenses
 {
@@ -26,7 +24,7 @@ namespace ValheimFortress.Defenses
         public float m_ammo_accuracy = VFConfig.BallistaAmmoAccuracyPenalty.Value; // Ammo will be perfectly accurate minus this percent, right now 95% accuracy
         private static int max_ticks_between_target_cache_update = VFConfig.BallistaTargetUpdateCacheInterval.Value;
 
-        private static LayerMask lmsk = 1;
+		private static LayerMask lmsk;
 
         // These are all set later in time
         private GameObject m_Projectile;
@@ -112,9 +110,11 @@ namespace ValheimFortress.Defenses
                 m_noTargetScanRate = (float)UnityEngine.Random.Range(8, 16);
                 update_target_cache_interval = UnityEngine.Random.Range(1, VFConfig.BallistaTargetUpdateCacheInterval.Value);
 
-				// Invert bit mask to target all things but characters
-				lmsk = lmsk << LayerMask.GetMask("default"); // Bit shift default
-                lmsk = ~lmsk; // Invert default bitshift to avoid colliding with default layer, but still collide with everything else
+				// Invert bit mask to check collisions
+				lmsk |= (1 << 0); // ignore default
+                lmsk |= (1 << 1); // ignore transparentFX
+                lmsk |= (1 << 2); // ignore raycast ignore
+                lmsk = ~lmsk; // Invert default bitshift to avoid colliding with masked layers, but still collide with everything else
             }
 		}
 
@@ -365,8 +365,10 @@ namespace ValheimFortress.Defenses
 			{
                 RaycastHit rayhit;
                 bool did_raycast_hit = Physics.Raycast(eye.transform.position, eye.transform.forward, out rayhit, m_viewDistance, lmsk);
-                float raycast_distance_to_hit = Vector3.Distance(eye.transform.position, m_target.transform.position);
-                bool rayshot_hit_distance = rayhit.distance > (raycast_distance_to_hit - 2) && rayhit.distance < (raycast_distance_to_hit + 2);
+				Vector3 raycast_start_pos = eye.transform.position;
+				raycast_start_pos.z += 0.5f; // offset the starting point a little bit forward
+                float raycast_distance_to_hit = Vector3.Distance(raycast_start_pos, m_target.transform.position);
+                bool rayshot_hit_distance = rayhit.distance > (raycast_distance_to_hit - 2);
                 if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($" distance to target: {raycast_distance_to_hit}, raycast distance test: {rayhit.distance}, can hit distance: {rayshot_hit_distance} hit bool: {did_raycast_hit}"); }
                 if (!rayshot_hit_distance) { return; }
 				if (!did_raycast_hit) { return; }
