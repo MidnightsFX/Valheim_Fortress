@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace ValheimFortress.Challenge
 {
@@ -64,6 +63,18 @@ namespace ValheimFortress.Challenge
             {
                 localplayer.Message(MessageHud.MessageType.Center, selected_message);
             }
+        }
+
+        // This always loads up the first dynamic ordered level from the valid/selected levels
+        public static List<string> UpdateRewardsInitially(List<string> levels)
+        {
+            string[] level_pieces = levels[0].Split('-');
+            string text_level = ValheimFortress.ReplaceWhitespace(level_pieces[0], "");
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Leveltext: {text_level}"); }
+            short level_definition_lookup_index = (short)(short.Parse(text_level) - 1);
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"level index: {level_definition_lookup_index}"); }
+            List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
+            return UpdateRewards(clevels.ElementAt(level_definition_lookup_index));
         }
 
 

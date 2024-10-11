@@ -1,3 +1,12 @@
+  **0.30.1**
+---
+```
+- Fixes Documentation for new level reward limiting
+- Fixes reward limiting not working for level 0
+- Reduces the size of the UI panel when no modifiers are enabled
+- Fixes location of the rewards estimator
+```
+
   **0.30.0**
 ---
 ```

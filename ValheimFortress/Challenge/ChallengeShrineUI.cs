@@ -13,7 +13,7 @@ namespace ValheimFortress.Challenge
         {
             CreateStaticUIObjects();
             createCancelUI();
-            
+            UITriggersUpdatePanelSizeOnConfigChangeChallenge();
             Shrine = this.GetComponent<ChallengeShrine>();
             // Jotunn.Logger.LogInfo($"UI Attached to {Shrine.GetInstanceID()}");
         }

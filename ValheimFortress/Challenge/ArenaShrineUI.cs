@@ -21,6 +21,7 @@ namespace ValheimFortress.Challenge
             cleanupPortals = false;
             CreateStaticUIObjects();
             createCancelUI();
+            UITriggersUpdatePanelSizeOnConfigChangeArena();
             // Jotunn.Logger.LogInfo("UI Awake Finished");
             Shrine = this.GetComponent<ArenaShrine>();
         }

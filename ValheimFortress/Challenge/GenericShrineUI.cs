@@ -136,11 +136,37 @@ namespace ValheimFortress.Challenge
             reward_dropdown.AddOptions(availableRewards);
         }
 
+        public void UITriggersUpdatePanelSizeOnConfigChangeArena()
+        {
+            VFConfig.EnableBossModifier.SettingChanged += UpdatePanelUIOnSettingsChangedArena;
+            VFConfig.EnableHardModifier.SettingChanged += UpdatePanelUIOnSettingsChangedArena;
+            VFConfig.EnableSiegeModifer.SettingChanged += UpdatePanelUIOnSettingsChangedArena;
+        }
+
+        public void UITriggersUpdatePanelSizeOnConfigChangeChallenge()
+        {
+            VFConfig.EnableBossModifier.SettingChanged += UpdatePanelUIOnSettingsChangedChallenge;
+            VFConfig.EnableHardModifier.SettingChanged += UpdatePanelUIOnSettingsChangedChallenge;
+            VFConfig.EnableSiegeModifer.SettingChanged += UpdatePanelUIOnSettingsChangedChallenge;
+        }
+
+        public void UpdatePanelUIOnSettingsChangedArena(object sender, EventArgs e)
+        {
+            CreateStaticUIObjects();
+            CreateChallengeUI("arena");
+        }
+
+        public void UpdatePanelUIOnSettingsChangedChallenge(object sender, EventArgs e)
+        {
+            CreateStaticUIObjects();
+            CreateChallengeUI("challenge");
+        }
+
         public void CreateStaticUIObjects()
         {
             // This was supposed to allow this is not need to be recreated much/at all
             // However, there are a few edge cases that cause this to be null
-            if (ChallengePanel != null) { return; }
+            // if (ChallengePanel != null) { return; }
 
             if (GUIManager.Instance == null)
             {
@@ -153,146 +179,266 @@ namespace ValheimFortress.Challenge
                 Jotunn.Logger.LogError("GUIManager CustomGUI is null");
                 return;
             }
-            // Create the panel object
-            ChallengePanel = GUIManager.Instance.CreateWoodpanel(
-                parent: GUIManager.CustomGUIFront.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(0, 0),
-                width: 600,
-                height: 600,
-                draggable: true);
+            if (VFConfig.EnableBossModifier.Value == false && VFConfig.EnableHardModifier.Value == false && VFConfig.EnableSiegeModifer.Value == false)
+            {
+                // Create the panel object
+                ChallengePanel = GUIManager.Instance.CreateWoodpanel(
+                    parent: GUIManager.CustomGUIFront.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(0, 0),
+                    width: 600,
+                    height: 400,
+                    draggable: true);
+
+                // Create the title
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_header"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(60f, 165f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 30,
+                    color: GUIManager.Instance.ValheimOrange,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 400f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+                // Subtitle description
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_description"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(45f, 100f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 14,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 500f,
+                    height: 80f,
+                    addContentSizeFitter: false);
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_warning"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(85f, 60f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 18,
+                    color: GUIManager.Instance.ValheimYellow,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 400f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+
+
+                // Rewards text
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_reward_label"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(-60f, -60f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 16,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 300f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+
+                // Level selector text
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_level_label"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(-60f, 5f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 16,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 300f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+            } else {
+                // Create the panel object
+                ChallengePanel = GUIManager.Instance.CreateWoodpanel(
+                    parent: GUIManager.CustomGUIFront.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(0, 0),
+                    width: 600,
+                    height: 600,
+                    draggable: true);
+
+                // Create the title
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_header"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(60f, 230f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 30,
+                    color: GUIManager.Instance.ValheimOrange,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 400f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+                // Subtitle description
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_description"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(45f, 155f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 14,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 500f,
+                    height: 80f,
+                    addContentSizeFitter: false);
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_warning"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(85f, 95f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 18,
+                    color: GUIManager.Instance.ValheimYellow,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 400f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+
+
+                // Rewards text
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_reward_label"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(-60f, -5f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 16,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 300f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+
+                // Level selector text
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_level_label"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(-60f, 50f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 16,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 300f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+            }
             // This hides the panel immediately
             ChallengePanel.SetActive(false);
 
-            // Create the title
-            GUIManager.Instance.CreateText(
-                text: Localization.instance.Localize("$shrine_header"),
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(60f, 230f),
-                font: GUIManager.Instance.AveriaSerifBold,
-                fontSize: 30,
-                color: GUIManager.Instance.ValheimOrange,
-                outline: true,
-                outlineColor: Color.black,
-                width: 400f,
-                height: 40f,
-                addContentSizeFitter: false);
-            // Subtitle description
-            GUIManager.Instance.CreateText(
-                text: Localization.instance.Localize("$shrine_description"),
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(45f, 155f),
-                font: GUIManager.Instance.AveriaSerifBold,
-                fontSize: 14,
-                color: GUIManager.Instance.ValheimBeige,
-                outline: true,
-                outlineColor: Color.black,
-                width: 500f,
-                height: 80f,
-                addContentSizeFitter: false);
-            GUIManager.Instance.CreateText(
-                text: Localization.instance.Localize("$shrine_warning"),
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(85f, 95f),
-                font: GUIManager.Instance.AveriaSerifBold,
-                fontSize: 18,
-                color: GUIManager.Instance.ValheimYellow,
-                outline: true,
-                outlineColor: Color.black,
-                width: 400f,
-                height: 40f,
-                addContentSizeFitter: false);
+            
 
+            if (VFConfig.EnableBossModifier.Value || VFConfig.EnableHardModifier.Value || VFConfig.EnableSiegeModifer.Value)
+            {
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_modifiers_label"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(-138f, -48f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 16,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 100f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+                GUIManager.Instance.CreateText(
+                    text: Localization.instance.Localize("$shrine_modifiers_rewards_label"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(28f, -48f),
+                    font: GUIManager.Instance.AveriaSerifBold,
+                    fontSize: 16,
+                    color: GUIManager.Instance.ValheimBeige,
+                    outline: true,
+                    outlineColor: Color.black,
+                    width: 200f,
+                    height: 40f,
+                    addContentSizeFitter: false);
+                if (startChallengeButtonGO != null) { Destroy(startChallengeButtonGO.gameObject); startChallengeButtonGO = null; }
+                // Create the start button object
+                startChallengeButtonGO = GUIManager.Instance.CreateButton(
+                    text: Localization.instance.Localize("$shrine_confirm"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(0f, -224f),
+                    width: 150f,
+                    height: 60f);
+                startChallengeButtonGO.SetActive(true);
+                if (cancelButtonGO != null) { Destroy(cancelButtonGO.gameObject); cancelButtonGO = null; }
+                // Create the close button object
+                cancelButtonGO = GUIManager.Instance.CreateButton(
+                    text: Localization.instance.Localize("$shrine_cancel"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(240f, 240f),
+                    width: 40f,
+                    height: 40f);
+                cancelButtonGO.SetActive(true);
 
-            // Rewards text
-            GUIManager.Instance.CreateText(
-                text: Localization.instance.Localize("$shrine_reward_label"),
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(-60f, -5f),
-                font: GUIManager.Instance.AveriaSerifBold,
-                fontSize: 16,
-                color: GUIManager.Instance.ValheimBeige,
-                outline: true,
-                outlineColor: Color.black,
-                width: 300f,
-                height: 40f,
-                addContentSizeFitter: false);
-
-            // Level selector text
-            GUIManager.Instance.CreateText(
-                text: Localization.instance.Localize("$shrine_level_label"),
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(-60f, 50f),
-                font: GUIManager.Instance.AveriaSerifBold,
-                fontSize: 16,
-                color: GUIManager.Instance.ValheimBeige,
-                outline: true,
-                outlineColor: Color.black,
-                width: 300f,
-                height: 40f,
-                addContentSizeFitter: false);
-
-            GUIManager.Instance.CreateText(
-                text: Localization.instance.Localize("$shrine_modifiers_label"),
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(-138f, -48f),
-                font: GUIManager.Instance.AveriaSerifBold,
-                fontSize: 16,
-                color: GUIManager.Instance.ValheimBeige,
-                outline: true,
-                outlineColor: Color.black,
-                width: 100f,
-                height: 40f,
-                addContentSizeFitter: false);
-            GUIManager.Instance.CreateText(
-                text: Localization.instance.Localize("$shrine_modifiers_rewards_label"),
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(28f, -48f),
-                font: GUIManager.Instance.AveriaSerifBold,
-                fontSize: 16,
-                color: GUIManager.Instance.ValheimBeige,
-                outline: true,
-                outlineColor: Color.black,
-                width: 200f,
-                height: 40f,
-                addContentSizeFitter: false);
-
-            // Create the start button object
-            startChallengeButtonGO = GUIManager.Instance.CreateButton(
-                text: Localization.instance.Localize("$shrine_confirm"),
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(0f, -224f),
-                width: 150f,
-                height: 60f);
-            startChallengeButtonGO.SetActive(true);
-
-            // Create the close button object
-            cancelButtonGO = GUIManager.Instance.CreateButton(
-                text: Localization.instance.Localize("$shrine_cancel"),
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(240f, 240f),
-                width: 40f,
-                height: 40f);
-            cancelButtonGO.SetActive(true);
+            } else {
+                if (startChallengeButtonGO != null) { Destroy(startChallengeButtonGO.gameObject); startChallengeButtonGO = null; }
+                // Create the start button object
+                startChallengeButtonGO = GUIManager.Instance.CreateButton(
+                    text: Localization.instance.Localize("$shrine_confirm"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(0f, -125f),
+                    width: 150f,
+                    height: 60f);
+                startChallengeButtonGO.SetActive(true);
+                if (cancelButtonGO != null) { Destroy(cancelButtonGO.gameObject); cancelButtonGO = null; }
+                // Create the close button object
+                cancelButtonGO = GUIManager.Instance.CreateButton(
+                    text: Localization.instance.Localize("$shrine_cancel"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(240f, 150f),
+                    width: 40f,
+                    height: 40f);
+                cancelButtonGO.SetActive(true);
+            }
 
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Shrine UI Created."); }
             // Add a listener to the button to close the panel again
@@ -310,33 +456,66 @@ namespace ValheimFortress.Challenge
             currentLevels = UserInterfaceData.UpdateLevels(shrine_type);
             // We specifically want to be able to completely rebuild the UI when this is called again to update the levels and rewards dynamically
 
-            // create the wave selector dropdown
-            levelSelector = GUIManager.Instance.CreateDropDown(
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(45f, 60f),
-                
-                fontSize: 16,
-                width: 200f,
-                height: 40f);
-            levelSelector.GetComponent<Dropdown>().AddOptions(currentLevels);
+            if (VFConfig.EnableBossModifier.Value == false && VFConfig.EnableHardModifier.Value == false && VFConfig.EnableSiegeModifer.Value == false)
+            {
+                if (levelSelector != null) { Destroy(levelSelector.gameObject); levelSelector = null; }
+                // create the wave selector dropdown
+                levelSelector = GUIManager.Instance.CreateDropDown(
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(45f, 10f),
+                    fontSize: 16,
+                    width: 200f,
+                    height: 40f);
+                levelSelector.GetComponent<Dropdown>().AddOptions(currentLevels);
 
-            // Always want to update the rewards and challenge levels
-            // The first update is always for level 1 because that is the default that will be selected
-            availableRewards = UserInterfaceData.UpdateRewards();
-            
+                // Always want to update the rewards and challenge levels
+                // The first update is always for level 1 because that is the default that will be selected
+                availableRewards = UserInterfaceData.UpdateRewardsInitially(currentLevels);
 
-            // Create the rewards selector dropdown
-            rewardSelector = GUIManager.Instance.CreateDropDown(
-                parent: ChallengePanel.transform,
-                anchorMin: new Vector2(0.5f, 0.5f),
-                anchorMax: new Vector2(0.5f, 0.5f),
-                position: new Vector2(45f, 5f),
-                fontSize: 16,
-                width: 200f,
-                height: 40f);
-            rewardSelector.GetComponent<Dropdown>().AddOptions(availableRewards);
+                if (rewardSelector != null) { Destroy(rewardSelector.gameObject); rewardSelector = null; }
+                // Create the rewards selector dropdown
+                rewardSelector = GUIManager.Instance.CreateDropDown(
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(45f, -50f),
+                    fontSize: 16,
+                    width: 200f,
+                    height: 40f);
+                rewardSelector.GetComponent<Dropdown>().AddOptions(availableRewards);
+
+            } else  {
+                if (levelSelector != null) { Destroy(levelSelector.gameObject); levelSelector = null; }
+                // create the wave selector dropdown
+                levelSelector = GUIManager.Instance.CreateDropDown(
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(45f, 60f),
+
+                    fontSize: 16,
+                    width: 200f,
+                    height: 40f);
+                levelSelector.GetComponent<Dropdown>().AddOptions(currentLevels);
+
+                // Always want to update the rewards and challenge levels
+                // The first update is always for level 1 because that is the default that will be selected
+                availableRewards = UserInterfaceData.UpdateRewardsInitially(currentLevels);
+
+                if (rewardSelector != null) { Destroy(rewardSelector.gameObject); rewardSelector = null; }
+                // Create the rewards selector dropdown
+                rewardSelector = GUIManager.Instance.CreateDropDown(
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(45f, 5f),
+                    fontSize: 16,
+                    width: 200f,
+                    height: 40f);
+                rewardSelector.GetComponent<Dropdown>().AddOptions(availableRewards);
+            }
 
             // Add a listener which will update the available rewards choices when we change the selected level
             levelSelector.GetComponent<Dropdown>().onValueChanged.AddListener(delegate { UpdatePossibleRewards(rewardSelector.GetComponent<Dropdown>(), levelSelector.GetComponent<Dropdown>()); });
@@ -344,37 +523,75 @@ namespace ValheimFortress.Challenge
 
             if (VFConfig.EnableRewardsEstimate.Value)
             {
-                // Shrine reward estimate
-                estimate_symbol = GUIManager.Instance.CreateText(
-                    text: Localization.instance.Localize("$shrine_reward_estimate"),
-                    parent: ChallengePanel.transform,
-                    anchorMin: new Vector2(0.5f, 0.5f),
-                    anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(180f, 50f),
-                    font: GUIManager.Instance.AveriaSerifBold,
-                    fontSize: 16,
-                    color: GUIManager.Instance.ValheimBeige,
-                    outline: true,
-                    outlineColor: Color.black,
-                    width: 40f,
-                    height: 40f,
-                    addContentSizeFitter: false);
-                // Destroy the old text before rendering new text if it has been updated
-                if (estimate_text != null) { Destroy(estimate_text); }
-                estimate_text = GUIManager.Instance.CreateText(
-                    text: $"{estimatedRewards}",
-                    parent: ChallengePanel.transform,
-                    anchorMin: new Vector2(0.5f, 0.5f),
-                    anchorMax: new Vector2(0.5f, 0.5f),
-                    position: new Vector2(220f, 50f),
-                    font: GUIManager.Instance.AveriaSerifBold,
-                    fontSize: 16,
-                    color: GUIManager.Instance.ValheimBeige,
-                    outline: true,
-                    outlineColor: Color.black,
-                    width: 100f,
-                    height: 40f,
-                    addContentSizeFitter: false);
+                
+                if (VFConfig.EnableBossModifier.Value == false && VFConfig.EnableHardModifier.Value == false && VFConfig.EnableSiegeModifer.Value == false)
+                {
+                    if (estimate_symbol != null) { Destroy(estimate_symbol.gameObject); estimate_symbol = null; }
+                    // Shrine reward estimate
+                    estimate_symbol = GUIManager.Instance.CreateText(
+                        text: Localization.instance.Localize("$shrine_reward_estimate"),
+                        parent: ChallengePanel.transform,
+                        anchorMin: new Vector2(0.5f, 0.5f),
+                        anchorMax: new Vector2(0.5f, 0.5f),
+                        position: new Vector2(180f, -57f),
+                        font: GUIManager.Instance.AveriaSerifBold,
+                        fontSize: 16,
+                        color: GUIManager.Instance.ValheimBeige,
+                        outline: true,
+                        outlineColor: Color.black,
+                        width: 40f,
+                        height: 40f,
+                        addContentSizeFitter: false);
+                    // Destroy the old text before rendering new text if it has been updated
+                    if (estimate_text != null) { Destroy(estimate_text); estimate_text = null; }
+                    estimate_text = GUIManager.Instance.CreateText(
+                        text: $"{estimatedRewards}",
+                        parent: ChallengePanel.transform,
+                        anchorMin: new Vector2(0.5f, 0.5f),
+                        anchorMax: new Vector2(0.5f, 0.5f),
+                        position: new Vector2(220f, -57f),
+                        font: GUIManager.Instance.AveriaSerifBold,
+                        fontSize: 16,
+                        color: GUIManager.Instance.ValheimBeige,
+                        outline: true,
+                        outlineColor: Color.black,
+                        width: 100f,
+                        height: 40f,
+                        addContentSizeFitter: false);
+                } else {
+                    if (estimate_symbol != null) { Destroy(estimate_symbol.gameObject); estimate_symbol = null; }
+                    // Shrine reward estimate
+                    estimate_symbol = GUIManager.Instance.CreateText(
+                        text: Localization.instance.Localize("$shrine_reward_estimate"),
+                        parent: ChallengePanel.transform,
+                        anchorMin: new Vector2(0.5f, 0.5f),
+                        anchorMax: new Vector2(0.5f, 0.5f),
+                        position: new Vector2(180f, -3f),
+                        font: GUIManager.Instance.AveriaSerifBold,
+                        fontSize: 16,
+                        color: GUIManager.Instance.ValheimBeige,
+                        outline: true,
+                        outlineColor: Color.black,
+                        width: 40f,
+                        height: 40f,
+                        addContentSizeFitter: false);
+                    // Destroy the old text before rendering new text if it has been updated
+                    if (estimate_text != null) { Destroy(estimate_text); estimate_text = null; }
+                    estimate_text = GUIManager.Instance.CreateText(
+                        text: $"{estimatedRewards}",
+                        parent: ChallengePanel.transform,
+                        anchorMin: new Vector2(0.5f, 0.5f),
+                        anchorMax: new Vector2(0.5f, 0.5f),
+                        position: new Vector2(220f, -3f),
+                        font: GUIManager.Instance.AveriaSerifBold,
+                        fontSize: 16,
+                        color: GUIManager.Instance.ValheimBeige,
+                        outline: true,
+                        outlineColor: Color.black,
+                        width: 100f,
+                        height: 40f,
+                        addContentSizeFitter: false);
+                }
             }
             else
             {
@@ -385,6 +602,7 @@ namespace ValheimFortress.Challenge
 
             if (VFConfig.EnableHardModifier.Value)
             {
+                if (hardmode_label != null) { Destroy(hardmode_label.gameObject); hardmode_label = null; }
                 // Hardmode toggle text
                 hardmode_label = GUIManager.Instance.CreateText(
                     text: Localization.instance.Localize("$shrine_hard_mode_label"),
@@ -400,6 +618,7 @@ namespace ValheimFortress.Challenge
                     width: 200f,
                     height: 40f,
                     addContentSizeFitter: false);
+                if (hardmode_desc != null) { Destroy(hardmode_desc.gameObject); hardmode_desc = null; }
                 hardmode_desc = GUIManager.Instance.CreateText(
                     text: Localization.instance.Localize("$shrine_hard_mode_description"),
                     parent: ChallengePanel.transform,
@@ -414,6 +633,7 @@ namespace ValheimFortress.Challenge
                     width: 350f,
                     height: 40f,
                     addContentSizeFitter: false);
+                if (hardmode_reward_desc != null) { Destroy(hardmode_reward_desc.gameObject); hardmode_reward_desc = null; }
                 hardmode_reward_desc = GUIManager.Instance.CreateText(
                     text: Localization.instance.Localize("$shrine_hard_mode_reward"),
                     parent: ChallengePanel.transform,
@@ -428,6 +648,7 @@ namespace ValheimFortress.Challenge
                     width: 350f,
                     height: 40f,
                     addContentSizeFitter: false);
+                if (hardModeToggle != null) { Destroy(hardModeToggle.gameObject); hardModeToggle = null; }
                 // Hardcore toggle, enables generation with stars
                 hardModeToggle = GUIManager.Instance.CreateToggle(
                     parent: ChallengePanel.transform,
@@ -448,6 +669,7 @@ namespace ValheimFortress.Challenge
 
             if (VFConfig.EnableBossModifier.Value)
             {
+                if (bossmode_label != null) { Destroy(bossmode_label.gameObject); bossmode_label = null; }
                 // Only update the text if its not null, since the only other option here is we destroy the object
                 bossmode_label = GUIManager.Instance.CreateText(
                     text: Localization.instance.Localize("$shrine_boss_mode"),
@@ -463,6 +685,7 @@ namespace ValheimFortress.Challenge
                     width: 200f,
                     height: 40f,
                     addContentSizeFitter: false);
+                if (bossmode_desc != null) { Destroy(bossmode_desc.gameObject); bossmode_desc = null; }
                 bossmode_desc = GUIManager.Instance.CreateText(
                     text: Localization.instance.Localize("$shrine_boss_mode_description"),
                     parent: ChallengePanel.transform,
@@ -477,6 +700,7 @@ namespace ValheimFortress.Challenge
                     width: 350f,
                     height: 40f,
                     addContentSizeFitter: false);
+                if (bossmode_reward_desc != null) { Destroy(bossmode_reward_desc.gameObject); bossmode_reward_desc = null; }
                 bossmode_reward_desc = GUIManager.Instance.CreateText(
                     text: Localization.instance.Localize("$shrine_boss_mode_reward"),
                     parent: ChallengePanel.transform,
@@ -492,6 +716,7 @@ namespace ValheimFortress.Challenge
                     height: 40f,
                     addContentSizeFitter: false);
                 // Bossmode toggle
+                if (bossModeToggle != null) { Destroy(bossModeToggle.gameObject); bossModeToggle = null; }
                 bossModeToggle = GUIManager.Instance.CreateToggle(
                     parent: ChallengePanel.transform,
                     width: 40f,
@@ -511,6 +736,7 @@ namespace ValheimFortress.Challenge
 
             if (VFConfig.EnableSiegeModifer.Value)
             {
+                if (siegemode_label != null) { Destroy(siegemode_label.gameObject); siegemode_label = null; }
                 siegemode_label = GUIManager.Instance.CreateText(
                     text: Localization.instance.Localize("$shrine_siege_mode"),
                     parent: ChallengePanel.transform,
@@ -525,6 +751,7 @@ namespace ValheimFortress.Challenge
                     width: 200f,
                     height: 40f,
                     addContentSizeFitter: false);
+                if (siegemode_desc != null) { Destroy(siegemode_desc.gameObject); siegemode_desc = null; }
                 siegemode_desc = GUIManager.Instance.CreateText(
                     text: Localization.instance.Localize("$shrine_siege_mode_description"),
                     parent: ChallengePanel.transform,
@@ -539,6 +766,7 @@ namespace ValheimFortress.Challenge
                     width: 350f,
                     height: 40f,
                     addContentSizeFitter: false);
+                if (siegemode_reward_desc != null) { Destroy(siegemode_reward_desc.gameObject); siegemode_reward_desc = null; }
                 siegemode_reward_desc = GUIManager.Instance.CreateText(
                     text: Localization.instance.Localize("$shrine_siege_mode_reward"),
                     parent: ChallengePanel.transform,
@@ -554,6 +782,7 @@ namespace ValheimFortress.Challenge
                     height: 40f,
                     addContentSizeFitter: false);
                 // Siegemode toggle
+                if (siegeModeToggle != null) { Destroy(siegeModeToggle.gameObject); siegeModeToggle = null; }
                 siegeModeToggle = GUIManager.Instance.CreateToggle(
                     parent: ChallengePanel.transform,
                     width: 40f,

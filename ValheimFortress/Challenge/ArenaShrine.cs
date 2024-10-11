@@ -100,7 +100,7 @@ namespace ValheimFortress.Challenge
 
             if (ui_controller.IsShrineOrCancelUIVisible() && (Input.GetKeyDown(KeyCode.Escape)))
             {
-                Jotunn.Logger.LogInfo("Shrine UI detected close commands.");
+                // Jotunn.Logger.LogInfo("Shrine UI detected close commands.");
                 ui_controller.HideUI();
                 ui_controller.HideCancelUI();
             }
