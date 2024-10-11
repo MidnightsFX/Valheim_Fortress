@@ -232,6 +232,8 @@ Each of these segments will select a different creature and the different catago
 #   bossLevelWarningLocalization: $shrine_warning_meadows_boss     |- This is the announcement text that plays when the challenge starts as a boss wave, localizations are available here https://github.com/MidnightsFX/Valheim_Fortress/blob/master/JotunnModStub/Localizations/English.json
 #   onlySelectMonsters: []                                         |- This is an array of monsters that are the only valid targets for this wave
 #   excludeSelectMonsters: []                                      |- This is an array of monsters that are to be avoided for the wave
+#   levelRewardOptionsLimitedTo:                                   |- When set, only the available rewards can be selected for this level, rewards still have their normal global key requirements
+#     - Coin                                                       |- The rewards entry name of rewards that should be available for this level
 #   commonSpawnModifiers:                                          |- Spawn modifiers are functions applied to each part of the wave, they can be different per catagory of monster
 #     linearIncreaseRandomWaveAdjustment: true                     |-   In general, it is best to only use one type of spawn modifier per creature type
 #     linearDecreaseRandomWaveAdjustment: false                    |- Linear Decrease/Increase will frontload or backload this creature in the various phase of the wave, meaning more of it will appear earlier or later depending on the modifier
