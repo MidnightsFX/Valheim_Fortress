@@ -41,7 +41,7 @@ namespace ValheimFortress.Challenge
         protected Vector3[] remote_spawn_locations = new Vector3[0];
         protected bool phase_running = false;
         protected Spawner spawn_controller;
-        protected static int availablePhases = 0;
+        protected static int availablePhases;
         protected Rewards reward_controller = new Rewards();
 
         protected static CustomRPC WaveDefinitionRPC;
@@ -116,6 +116,7 @@ namespace ValheimFortress.Challenge
             shrine_portal = gameObject.transform.Find("portal").gameObject;
             shrine_spawnpoint = gameObject.transform.FindDeepChild("spawnpoint").gameObject;
             // Jotunn.Logger.LogInfo("Shrine Awake Finished");
+            availablePhases = 0;
         }
 
         protected void SetCurrentCreatureList(List<HoardConfig> phase_hoard_configs)
@@ -232,6 +233,10 @@ namespace ValheimFortress.Challenge
                 short unfound_creatures = (short)(total_number_to_add - total_number_currently_added);
                 Jotunn.Logger.LogInfo($"Could not locate: {unfound_creatures} reducing remaining creatures.");
                 DecrementSpawned(unfound_creatures);
+                if (enemies.Count == 0 && spawned_creatures.Get() == 0 && phase_running == false) {
+                    Jotunn.Logger.LogInfo($"No Enemies exist and no phase is running, force starting next phase.");
+                    force_next_phase.ForceSet(true);
+                }
             }
 
             yield break;
@@ -254,8 +259,10 @@ namespace ValheimFortress.Challenge
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sending Hoard phase configs to peer clients."); }
             try
             {
+                // This is needed for the sender to also have this set, clients will set it on recieve
+                availablePhases = wave_phases_definitions.hordePhases.Count;
                 if (VFConfig.EnableDebugMode.Value) {
-                    Jotunn.Logger.LogInfo($"Set wave phases: {wave_phases_definitions}.");
+                    Jotunn.Logger.LogInfo($"Set wave phases: {availablePhases}.");
                 }
                 // I really wanted to do this with JSON, but I already have YAML in here, and didn't want to pull another large dep package
                 var yaml_string = CONST.yamlserializer.Serialize(wave_phases_definitions);
@@ -353,16 +360,27 @@ namespace ValheimFortress.Challenge
 
         public Boolean CentralPortalActiveStatus()
         {
+            if (shrine_portal == null) {
+                shrine_portal = gameObject.transform.Find("portal").gameObject;
+            }
             return shrine_portal.activeSelf;
         }
 
         public void EnablePortal()
         {
+            if (shrine_portal == null)
+            {
+                shrine_portal = gameObject.transform.Find("portal").gameObject;
+            }
             shrine_portal.SetActive(true);
         }
 
         public void Disableportal()
         {
+            if (shrine_portal == null)
+            {
+                shrine_portal = gameObject.transform.Find("portal").gameObject;
+            }
             shrine_portal.SetActive(false);
         }
 

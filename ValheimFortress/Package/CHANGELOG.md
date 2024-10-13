@@ -1,3 +1,11 @@
+  **0.30.2**
+---
+```
+- Fixed rewards docs
+- Fix for Wildshrines reference going missing
+- Fix for wavestalling caused by no enemies being part of a reloaded location
+```
+
   **0.30.1**
 ---
 ```

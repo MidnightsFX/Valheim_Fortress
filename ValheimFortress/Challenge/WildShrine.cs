@@ -164,6 +164,10 @@ namespace ValheimFortress.Challenge
             currentPhase.Set(currentPhase.Get() + 1);
             Jotunn.Logger.LogInfo($"Challenge started. Level: {selected_level.Get()} Reward: {selected_reward.Get()}");
             Jotunn.Logger.LogInfo("Start challenge functions completed. Challenge started!");
+            if (shrine_portal == null)
+            {
+                shrine_portal = gameObject.transform.Find("portal").gameObject;
+            }
 
         }
 
@@ -266,6 +270,7 @@ namespace ValheimFortress.Challenge
                     StartCoroutine(ReconnectUnlinkedCreatures(shrine_spawnpoint.transform.position, gameObject.GetComponent<WildShrine>()));
                     WildShrineLevelConfiguration wLevelDefinition = wildShrineConfiguration.wildShrineLevelsConfig.ElementAt(selected_level.Get());
                     wave_phases_definitions = Levels.generateRandomWaveWithOptions(wLevelDefinition.wildLevelDefinition.ToChallengeLevelDefinition(), hard_mode.Get(), false, siege_mode.Get(), wLevelDefinition.wildLevelDefinition.maxCreaturesPerPhaseOverride);
+                    StartCoroutine(RemoteLocationPortals.DetermineRemoteSpawnLocations(gameObject, gameObject.GetComponent<WildShrine>()));
                     return;
                 }
                 if (wave_phases_definitions.hordePhases.Count > 0)
