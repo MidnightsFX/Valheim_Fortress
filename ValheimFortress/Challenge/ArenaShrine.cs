@@ -156,7 +156,7 @@ namespace ValheimFortress.Challenge
             if (challenge_active.Get() == true)
             {
                 // the challenge should be running but there are no phase definitions. This happens when the shrine has become disconnected.
-                if (wave_phases_definitions == null)
+                if (wave_phases_definitions == null || enemies.Count == 0 && spawned_creatures.Get() > 0 && phase_running == false)
                 {
                     Jotunn.Logger.LogInfo("Starting shrine reconnection to creatures, this will regenerate the wave definition.");
                     StartCoroutine(ReconnectUnlinkedCreatures(shrine_spawnpoint.transform.position, gameObject.GetComponent<ArenaShrine>()));

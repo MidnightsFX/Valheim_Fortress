@@ -7,6 +7,7 @@ using UnityEngine;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using System.ComponentModel;
+using System.Linq;
 
 namespace ValheimFortress.Challenge
 {
@@ -366,6 +367,47 @@ namespace ValheimFortress.Challenge
         protected override void SetValue(Vector3 value)
         {
             zNetView.GetZDO().Set(Key, value);
+        }
+    }
+
+    public class ArrayVectorZNetProperty : ZNetProperty<Vector3[]>
+    {
+        BinaryFormatter binFormatter = new BinaryFormatter();
+        public ArrayVectorZNetProperty(string key, ZNetView zNetView, Vector3[] defaultValue) : base(key, zNetView, defaultValue)
+        {
+        }
+
+        public override Vector3[] Get()
+        {
+            var stored = zNetView.GetZDO().GetByteArray(Key);
+            // we can't deserialize a null buffer
+            if (stored == null) { return new Vector3[0]; }
+            var mStream = new MemoryStream(stored);
+            var deserializedstringarr = (string[])binFormatter.Deserialize(mStream);
+            if (deserializedstringarr == null || deserializedstringarr.Length == 0) { return null; }
+            Vector3[] varr = new Vector3[deserializedstringarr.Length];
+            int i = 0;
+            foreach (var item in deserializedstringarr) {
+                string[] vvals = item.Split(',');
+                varr[i] = new Vector3(x: float.Parse(vvals[0]), y: float.Parse(vvals[1]), z: float.Parse(vvals[2]));
+                i++;
+            }
+            return varr;
+        }
+
+        protected override void SetValue(Vector3[] value)
+        {
+            string[] serializable_vectors = new string[value.Length];
+            int i = 0;
+            foreach (var v in value) {
+                serializable_vectors[i] = $"{v.x},{v.y},{v.z}";
+                i++;
+            }
+            var mStream = new MemoryStream();
+            binFormatter.Serialize(mStream, serializable_vectors);
+            
+
+            zNetView.GetZDO().Set(Key, mStream.ToArray());
         }
     }
 

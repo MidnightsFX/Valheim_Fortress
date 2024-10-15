@@ -50,10 +50,10 @@ namespace ValheimFortress.Challenge
         {
             if (challenge_active.Get() == false)
             {
-                RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations, gameObject.GetComponent<ChallengeShrine>());
+                RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations.Get(), gameObject.GetComponent<ChallengeShrine>());
                 currentPhase.Set(0); //ensure this is zero
                 challenge_active.Set(true);
-                spawn_controller.TrySpawningPhase(5f, false, wave_phases_definitions.hordePhases[currentPhase.Get()], gameObject, remote_spawn_locations);
+                spawn_controller.TrySpawningPhase(5f, false, wave_phases_definitions.hordePhases[currentPhase.Get()], gameObject, remote_spawn_locations.Get());
                 SetCurrentCreatureList(wave_phases_definitions.hordePhases[currentPhase.Get()]);
                 phase_running = true;
                 Jotunn.Logger.LogInfo($"Challenge started. Level: {selected_level.Get()} Reward: {selected_reward.Get()}");
@@ -155,17 +155,14 @@ namespace ValheimFortress.Challenge
             if (challenge_active.Get() == true)
             {
                 // the challenge should be running but there are no phase definitions. This happens when the shrine has become disconnected.
-                if (wave_phases_definitions == null)
+                if (wave_phases_definitions == null || enemies.Count == 0 && spawned_creatures.Get() > 0 && phase_running == false)
                 {
                     Jotunn.Logger.LogInfo("Starting shrine reconnection to creatures, this will regenerate the wave definition.");
-                    Jotunn.Logger.LogInfo("Starting coroutine.");
                     StartCoroutine(ReconnectUnlinkedCreatures(shrine_spawnpoint.transform.position, gameObject.GetComponent<ChallengeShrine>()));
-                    Jotunn.Logger.LogInfo("Getting levels.");
                     List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
-                    Jotunn.Logger.LogInfo("Selecting level.");
                     ChallengeLevelDefinition levelDefinition = clevels.ElementAt(selected_level.Get());
-                    Jotunn.Logger.LogInfo("Generating wave.");
                     wave_phases_definitions = Levels.generateRandomWaveWithOptions(levelDefinition, hard_mode.Get(), boss_mode.Get(), siege_mode.Get(), VFConfig.ChallengeShrineMaxCreaturesPerWave.Value);
+                    RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations.Get(), gameObject.GetComponent<ChallengeShrine>());
                     wave_definition_ready.Set(true);
                     return;
                     // Ideally everything else is currently still correct since the last time this object was loaded
@@ -184,7 +181,7 @@ namespace ValheimFortress.Challenge
                             should_add_creature_beacons.Set(false);
                             force_next_phase.Set(false);
                             var current_phase = currentPhase.Get();
-                            spawn_controller.TrySpawningPhase(10f, true, wave_phases_definitions.hordePhases[current_phase], gameObject, remote_spawn_locations);
+                            spawn_controller.TrySpawningPhase(10f, true, wave_phases_definitions.hordePhases[current_phase], gameObject, remote_spawn_locations.Get());
                             SetCurrentCreatureList(wave_phases_definitions.hordePhases[current_phase]);
                             phase_running = true;
                             currentPhase.Set(current_phase + 1);

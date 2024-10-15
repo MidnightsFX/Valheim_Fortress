@@ -54,6 +54,7 @@ namespace ValheimFortress.Challenge
             wave_definition_ready = new BoolZNetProperty("wave_definition_ready", zNetView, false);
             spawn_locations_ready = new BoolZNetProperty("spawn_locations_ready", zNetView, false);
             force_next_phase = new BoolZNetProperty("force_next_phase", zNetView, false);
+            remote_spawn_locations = new ArrayVectorZNetProperty("remote_spawn_locations", zNetView, null);
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Created shrine znet values."); }
 
             Dictionary<String, short> default_creature_dictionary = new Dictionary<String, short>() { };
@@ -84,7 +85,7 @@ namespace ValheimFortress.Challenge
 
         public override bool UseItem(Humanoid user, ItemDrop.ItemData item)
         {
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"znet data {start_challenge} {challenge_active}."); }
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"znet data {start_challenge.Get()} {challenge_active.Get()}."); }
             if (start_challenge.Get() || challenge_active.Get())
             {
                 // Don't want the message that you can't do that, because its already done
@@ -157,8 +158,8 @@ namespace ValheimFortress.Challenge
             challenge_active.Set(true);
             // Should be before the phase starts
             phase_running = true;
-            RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations, gameObject.GetComponent<WildShrine>());
-            spawn_controller.TrySpawningPhase(5f, false, wave_phases_definitions.hordePhases[currentPhase.Get()], gameObject, remote_spawn_locations);
+            RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations.Get(), gameObject.GetComponent<WildShrine>());
+            spawn_controller.TrySpawningPhase(5f, false, wave_phases_definitions.hordePhases[currentPhase.Get()], gameObject, remote_spawn_locations.Get());
             SetCurrentCreatureList(wave_phases_definitions.hordePhases[currentPhase.Get()]);
             start_challenge.Set(false);
             currentPhase.Set(currentPhase.Get() + 1);
@@ -228,7 +229,8 @@ namespace ValheimFortress.Challenge
             // Kick off the challenge- even if it was trigger by a non-znet owner
             if (start_challenge.Get() == true)
             {
-                //if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Kicking off wave start."); }
+                // if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Kicking off wave start."); }
+
                 if (wave_definition_ready.Get() == false && spawn_locations_ready.Get() == false)
                 {
                     if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Build spawn locations & wave definition."); }
@@ -264,13 +266,13 @@ namespace ValheimFortress.Challenge
             {
                 //if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Challenge active."); }
                 // Generally this mode is entered when the shrine does not have wave information, but has passed the generation phase
-                if (wave_phases_definitions == null)
+                if (wave_phases_definitions == null || enemies.Count == 0 && spawned_creatures.Get() > 0 && phase_running == false)
                 {
                     Jotunn.Logger.LogInfo("Starting shrine reconnection to creatures, this will regenerate the wave definition.");
                     StartCoroutine(ReconnectUnlinkedCreatures(shrine_spawnpoint.transform.position, gameObject.GetComponent<WildShrine>()));
                     WildShrineLevelConfiguration wLevelDefinition = wildShrineConfiguration.wildShrineLevelsConfig.ElementAt(selected_level.Get());
                     wave_phases_definitions = Levels.generateRandomWaveWithOptions(wLevelDefinition.wildLevelDefinition.ToChallengeLevelDefinition(), hard_mode.Get(), false, siege_mode.Get(), wLevelDefinition.wildLevelDefinition.maxCreaturesPerPhaseOverride);
-                    StartCoroutine(RemoteLocationPortals.DetermineRemoteSpawnLocations(gameObject, gameObject.GetComponent<WildShrine>()));
+                    RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations.Get(), gameObject.GetComponent<WildShrine>());
                     return;
                 }
                 if (wave_phases_definitions.hordePhases.Count > 0)
@@ -288,7 +290,7 @@ namespace ValheimFortress.Challenge
                             should_add_creature_beacons.Set(false);
                             force_next_phase.Set(false);
                             var current_phase = currentPhase.Get();
-                            spawn_controller.TrySpawningPhase(10f, true, wave_phases_definitions.hordePhases[current_phase], gameObject, remote_spawn_locations);
+                            spawn_controller.TrySpawningPhase(10f, true, wave_phases_definitions.hordePhases[current_phase], gameObject, remote_spawn_locations.Get());
                             SetCurrentCreatureList(wave_phases_definitions.hordePhases[current_phase]);
                             phase_running = true;
                             int max_wave_phase = wave_phases_definitions.hordePhases.Count;

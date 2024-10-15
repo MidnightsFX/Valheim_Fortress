@@ -32,13 +32,13 @@ namespace ValheimFortress.Challenge
         public BoolZNetProperty wave_definition_ready { get; set; }
         public BoolZNetProperty spawn_locations_ready { get; set; }
         public BoolZNetProperty force_next_phase { get; set; }
+        public ArrayVectorZNetProperty remote_spawn_locations { get; set; }
 
         protected bool client_set_creature_beacons = false;
         protected List<GameObject> enemies = new List<GameObject>();
         protected GameObject shrine_spawnpoint;
         protected GameObject shrine_portal;
         protected static PhasedWaveTemplate wave_phases_definitions;
-        protected Vector3[] remote_spawn_locations = new Vector3[0];
         protected bool phase_running = false;
         protected Spawner spawn_controller;
         protected static int availablePhases;
@@ -72,6 +72,7 @@ namespace ValheimFortress.Challenge
                 wave_definition_ready = new BoolZNetProperty("wave_definition_ready", zNetView, false);
                 spawn_locations_ready = new BoolZNetProperty("spawn_locations_ready", zNetView, false);
                 force_next_phase = new BoolZNetProperty("force_next_phase", zNetView, false);
+                remote_spawn_locations = new ArrayVectorZNetProperty("remote_spawn_locations", zNetView, new Vector3[0]);
 
                 Dictionary<String, short> default_creature_dictionary = new Dictionary<String, short>() { };
                 alive_creature_list = new DictionaryZNetProperty("alive_creature_list", zNetView, default_creature_dictionary);
@@ -97,6 +98,7 @@ namespace ValheimFortress.Challenge
                         Jotunn.Logger.LogInfo($"wave_definition_ready={wave_definition_ready.Get()}");
                         Jotunn.Logger.LogInfo($"spawn_locations_ready={spawn_locations_ready.Get()}");
                         Jotunn.Logger.LogInfo($"force_next_phase={force_next_phase.Get()}");
+                        Jotunn.Logger.LogInfo($"remote_spawn_locations={remote_spawn_locations}");
 
                         //Jotunn.Logger.LogInfo($"alive_creature_list={alive_creature_list.Get()}");
                         // Print the actual entries in the alive creature list
@@ -233,7 +235,7 @@ namespace ValheimFortress.Challenge
                 short unfound_creatures = (short)(total_number_to_add - total_number_currently_added);
                 Jotunn.Logger.LogInfo($"Could not locate: {unfound_creatures} reducing remaining creatures.");
                 DecrementSpawned(unfound_creatures);
-                if (enemies.Count == 0 && spawned_creatures.Get() == 0 && phase_running == false) {
+                if (enemies.Count == 0 && spawned_creatures.Get() <= 0 && phase_running == false) {
                     Jotunn.Logger.LogInfo($"No Enemies exist and no phase is running, force starting next phase.");
                     force_next_phase.ForceSet(true);
                 }
@@ -341,6 +343,7 @@ namespace ValheimFortress.Challenge
         {
             Jotunn.Logger.LogInfo($"Challenge started at {this.GetInstanceID()}");
             start_challenge.ForceSet(true);
+            spawned_creatures.ForceSet(0);
         }
 
         public void IncrementSpawned()
@@ -410,7 +413,7 @@ namespace ValheimFortress.Challenge
 
         public void SetWaveSpawnPoints(Vector3[] spawn_points)
         {
-            remote_spawn_locations = spawn_points;
+            remote_spawn_locations.Set(spawn_points);
             spawn_locations_ready.Set(true);
         }
 
@@ -524,8 +527,6 @@ namespace ValheimFortress.Challenge
                 GameObject vfx = UnityEngine.Object.Instantiate(ValheimFortress.getNotifier(), enemy.transform.localPosition, enemy.transform.rotation);
                 vfx.transform.parent = enemy.transform; // Parent to the creature?
             }
-            // If somehow the tracked creatures got de-synced, this has literally never happend but- why not
-            if (alive_creatures != spawned_creatures.Get()) { spawned_creatures.Set(alive_creatures); }
             client_set_creature_beacons = true;
         }
 

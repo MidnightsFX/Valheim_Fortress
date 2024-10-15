@@ -1,3 +1,11 @@
+  **0.30.3**
+---
+```
+- Fix for enemies not being reconnected to a shrine in some area load/unload scenarios
+- Fixed enemies being counted twice in specific scenarios
+- Improves portal stability when the area is loaded and unloaded
+```
+
   **0.30.2**
 ---
 ```

@@ -26,12 +26,11 @@ namespace ValheimFortress.Challenge
                 Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
                 var tempportal = UnityEngine.Object.Instantiate(ValheimFortress.getPortal(), spawn_location, rotation);
                 portals.Add(tempportal);
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Created spawn portal"); }
                 // We are going to manipulate the lifetime of this object outside of its timed life.
                 Destroy(tempportal.GetComponent<TimedDestruction>());
                 tempportal.AddComponent<PortalTracker>();
                 tempportal.GetComponent<PortalTracker>().SetShrine(shrine); ;
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Added portal tracker and removed timed life."); }
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Created portal at {spawn_location}."); }
                 if (VFConfig.EnableMapPings.Value) { Chat.instance.SendPing(spawn_location); }
                 // attackOverlay.ForestFilter.SetPixels((int)spawn_location.x, (int)spawn_location.y, circle_radius, circle_radius, colorPixels);
             }
