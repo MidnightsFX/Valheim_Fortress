@@ -168,6 +168,7 @@ namespace ValheimFortress.Challenge
                 {
                     level_index += 1;
                     if (level.levelForShrineTypes[shrine_type] != true) { continue; }
+                    // if (level.levelName)
                     if(level.requiredGlobalKey == "NONE")
                     {
                         currentLevels.Add($"{level_index} - {Localization.instance.Localize(level.levelMenuLocalization)}");

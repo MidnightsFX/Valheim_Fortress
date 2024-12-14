@@ -156,5 +156,9 @@
   "wild_shrine_mistlands_request": "The shrine desires trophies from the Mistlands.",
   "wild_seekers_attack": "Skittering echos in the mists",
   "wild_seekers_defeated": "The mists are quiet",
-  "mistlands_warning_wilderness": "Shapes shift in the mists"
+  "mistlands_warning_wilderness": "Shapes shift in the mists",
+  "shrine_admin_menu_button": "+",
+  "shrine_admin_menu": "Admin Menu",
+  "shrine_admin_description": "Available levels on this specific shrine can be limited below.",
+  "shrine_admin_save": "Apply"
 }

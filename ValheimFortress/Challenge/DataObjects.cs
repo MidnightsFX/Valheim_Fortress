@@ -141,6 +141,8 @@ namespace ValheimFortress.Challenge
     [DataContract]
     public class ChallengeLevelDefinition
     {
+        [DefaultValue("")]
+        public string levelName { get; set; }
         public short levelIndex { get; set; }
         [DefaultValue(4)]
         public short numPhases { get; set; }
