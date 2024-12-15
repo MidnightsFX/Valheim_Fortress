@@ -14,7 +14,7 @@ namespace ValheimFortress.Challenge
         protected GameObject ChallengePanel;
         protected GameObject CancelPanel;
         // this is unset until the shrine building calls for the UI, in which case it is then set
-        // protected Shrine Shrine;
+        protected GenericShrine Shrine;
 
         protected List<String> currentLevels = new List<string> { };
         protected List<String> availableRewards = new List<string> { };
@@ -41,12 +41,19 @@ namespace ValheimFortress.Challenge
         protected GameObject cancelButtonGO;
         protected GameObject startChallengeButtonGO;
 
+        protected GameObject AdminMenuButtonGO;
+        protected GameObject AdminMenuPanel;
+        protected GameObject adminEntryField;
+
         protected bool cleanupPortals = true;
 
         private short selected_level_index = 0;
         public bool current_hard_mode = false;
         public bool current_boss_mode = false;
         public bool current_siege_mode = false;
+        public enum adminFunctions {
+            filterName
+        }
 
         public abstract void Awake();
 
@@ -119,7 +126,18 @@ namespace ValheimFortress.Challenge
         public void HideUI()
         {
             ChallengePanel.SetActive(false);
+            HideAdminUI();
             GUIManager.BlockInput(false);
+        }
+
+        public void ShowAdminUI()
+        {
+            AdminMenuPanel.SetActive(true);
+        }
+
+        public void HideAdminUI()
+        {
+            AdminMenuPanel.SetActive(false);
         }
 
         public void UpdatePossibleRewards(Dropdown reward_dropdown, Dropdown level_dropdown)
@@ -360,7 +378,21 @@ namespace ValheimFortress.Challenge
             // This hides the panel immediately
             ChallengePanel.SetActive(false);
 
-            
+            // Create the panel object
+            AdminMenuPanel = GUIManager.Instance.CreateWoodpanel(
+                parent: GUIManager.CustomGUIFront.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(305, 0),
+                width: 200,
+                height: 400,
+                draggable: true);
+
+            // This hides the panel immediately
+            AdminMenuPanel.SetActive(false);
+            CreateAdminSelectionUI();
+
+
 
             if (VFConfig.EnableBossModifier.Value || VFConfig.EnableHardModifier.Value || VFConfig.EnableSiegeModifer.Value)
             {
@@ -415,6 +447,17 @@ namespace ValheimFortress.Challenge
                     height: 40f);
                 cancelButtonGO.SetActive(true);
 
+                // Create the admin button object
+                AdminMenuButtonGO = GUIManager.Instance.CreateButton(
+                    text: Localization.instance.Localize("$shrine_admin_menu_button"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(200f, 240f),
+                    width: 40f,
+                    height: 40f);
+                AdminMenuButtonGO.SetActive(true);
+
             } else {
                 if (startChallengeButtonGO != null) { Destroy(startChallengeButtonGO.gameObject); startChallengeButtonGO = null; }
                 // Create the start button object
@@ -438,12 +481,29 @@ namespace ValheimFortress.Challenge
                     width: 40f,
                     height: 40f);
                 cancelButtonGO.SetActive(true);
+
+                if (SynchronizationManager.Instance.PlayerIsAdmin)
+                {
+                    // Create the admin button object
+                    AdminMenuButtonGO = GUIManager.Instance.CreateButton(
+                        text: Localization.instance.Localize("$shrine_admin_menu_button"),
+                        parent: ChallengePanel.transform,
+                        anchorMin: new Vector2(0.5f, 0.5f),
+                        anchorMax: new Vector2(0.5f, 0.5f),
+                        position: new Vector2(200f, 150f),
+                        width: 40f,
+                        height: 40f);
+                    AdminMenuButtonGO.SetActive(true);
+                }
             }
 
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Shrine UI Created."); }
             // Add a listener to the button to close the panel again
             Button cancelButton = cancelButtonGO.GetComponent<Button>();
             cancelButton.onClick.AddListener(HideUI);
+            // Add a listener to the button to admin the panel
+            Button adminButton = AdminMenuButtonGO.GetComponent<Button>();
+            adminButton.onClick.AddListener(ShowAdminUI);
             // Add a listener to the button to close the panel and trigger the challenge scripts
             Button startChallengeButton = startChallengeButtonGO.GetComponent<Button>();
             startChallengeButton.onClick.AddListener(StartChallenge);
@@ -967,6 +1027,101 @@ namespace ValheimFortress.Challenge
             Button teleportCreaturesButton = teleportCreaturesObj.GetComponent<Button>();
             teleportCreaturesButton.onClick.AddListener(TeleportCreatures);
         }
+
+        public void CreateAdminSelectionUI()
+        {
+            // Create the close button object
+            GameObject adminCancelButtonGo = GUIManager.Instance.CreateButton(
+                text: Localization.instance.Localize("$shrine_cancel"),
+                parent: AdminMenuPanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(175f, 175f),
+                width: 40f,
+                height: 40f);
+            // Create the title
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_admin_menu"),
+                parent: AdminMenuPanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(20f, 165f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 30,
+                color: GUIManager.Instance.ValheimOrange,
+                outline: true,
+                outlineColor: Color.black,
+                width: 400f,
+                height: 40f,
+                addContentSizeFitter: false);
+            // Create the description
+            GUIManager.Instance.CreateText(
+                text: Localization.instance.Localize("$shrine_admin_description"),
+                parent: AdminMenuPanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(20f, 165f),
+                font: GUIManager.Instance.AveriaSerifBold,
+                fontSize: 16,
+                color: GUIManager.Instance.ValheimBeige,
+                outline: true,
+                outlineColor: Color.black,
+                width: 400f,
+                height: 40f,
+                addContentSizeFitter: false);
+            // Admin input field
+            adminEntryField = GUIManager.Instance.CreateInputField(
+                parent: AdminMenuPanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(250f, -250f),
+                contentType: InputField.ContentType.Standard,
+                placeholderText: "filter:levelname,levelname2",
+                fontSize: 16,
+                width: 200f,
+                height: 200f);
+            // Create the save button
+            GameObject adminsaveButtonGo = GUIManager.Instance.CreateButton(
+                text: Localization.instance.Localize("$shrine_admin_save"),
+                parent: AdminMenuPanel.transform,
+                anchorMin: new Vector2(0.5f, 0.5f),
+                anchorMax: new Vector2(0.5f, 0.5f),
+                position: new Vector2(0f, -150f),
+                width: 40f,
+                height: 40f);
+
+            Button adminCancelButton = adminCancelButtonGo.GetComponent<Button>();
+            adminCancelButton.onClick.AddListener(HideCancelUI);
+
+            Button adminSaveButton = adminsaveButtonGo.GetComponent<Button>();
+            adminSaveButton.onClick.AddListener(SetupAdminFunctions);
+        }
+
+        public void SetupAdminFunctions()
+        {
+            string input = adminEntryField.gameObject.GetComponent<InputField>().text;
+            if (input != null) {
+                string[] input_function_and_values = input.Split(';');
+                foreach (string function_and_value in input_function_and_values) {
+                    string[] functions_and_values = function_and_value.Split(':');
+                    string operation = functions_and_values[0];
+                    if (adminFunctions.filterName.ToString() == operation)
+                    {
+                        string values = functions_and_values[1];
+                        ApplyAdminFunctions(adminFunctions.filterName, values.Split(',').ToList<string>());
+                    }
+                    
+                }
+            }
+        }
+
+        public abstract void ApplyAdminFunctions(adminFunctions function, List<string> values);
+
+        public abstract void SaveLevelFilterToShrine(List<string> level_filter_names);
+
+        public abstract void SaveAdminCommandsToShrine();
+
+        public abstract void LoadLevelFilterFromShrine();
 
         public abstract void CleanupPortalsButtonClick();
 
