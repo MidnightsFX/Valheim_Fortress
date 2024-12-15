@@ -1,7 +1,9 @@
 ﻿using Jotunn.Managers;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR;
 
 namespace ValheimFortress.Challenge
 {
@@ -57,6 +59,11 @@ namespace ValheimFortress.Challenge
 
 
             yield break;
+        }
+
+        public void SpawnAdditionalHoarde(HoardConfig hoard, GenericShrine shrine, Vector3[] remote_spawn_locations)
+        {
+            StartCoroutine(SpawnHorde(hoard, shrine, remote_spawn_locations));
         }
 
         IEnumerator SpawnHorde(HoardConfig hoard, GenericShrine shrine, Vector3[] remote_spawn_locations)

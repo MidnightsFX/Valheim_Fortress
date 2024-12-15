@@ -1,10 +1,10 @@
 ﻿{
   "name": "ValheimFortress",
   "description": "Build a base, summon a challenge, defeat it and reap the rewards!",
-  "version_number": "0.30.3",
+  "version_number": "0.30.5",
   "website_url": "https://discord.gg/Dmr9PQTy9m",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2202",
-    "ValheimModding-Jotunn-2.20.1"
+    "ValheimModding-Jotunn-2.21.2"
   ]
 }

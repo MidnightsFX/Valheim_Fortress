@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.XR;
 
 namespace ValheimFortress.Challenge
 {
@@ -146,7 +147,7 @@ namespace ValheimFortress.Challenge
         protected IEnumerator ReconnectUnlinkedCreatures(Vector3 shrine_location, GenericShrine shrine_ref)
         {
             Dictionary<String, short> current_creature_list = alive_creature_list.Get();
-            Jotunn.Logger.LogInfo($"types of creatures to reconnect: {current_creature_list.Count}");
+            Jotunn.Logger.LogDebug($"types of creatures to reconnect: {current_creature_list.Count}");
             // Nothing to do
             if (current_creature_list.Count == 0)
             {
@@ -159,7 +160,7 @@ namespace ValheimFortress.Challenge
             {
                 current_creature_entries += $"{entry.Key}={entry.Value}\n";
             }
-            Jotunn.Logger.LogInfo($"Current creatures to reconnect: \n{current_creature_entries}");
+            Jotunn.Logger.LogDebug($"Current creatures to reconnect: \n{current_creature_entries}");
 
             enemies.Clear();
 
@@ -175,57 +176,78 @@ namespace ValheimFortress.Challenge
             short current_pause_progress = 0;
             short current_creature_add_iteration = 0;
 
-            foreach (Character pchar in potentialTargets)
+            if (total_number_to_add == 0)
             {
-                if (current_pause_progress == VFConfig.ShrineReconnectPauseBetweenAmount.Value)
+                Jotunn.Logger.LogInfo("Shrine reconnection called but no creatures requested to reconnect, starting next level.");
+                force_next_phase.ForceSet(true);
+                yield break;
+            }
+
+            if (potentialTargets.Count == 0)
+            {
+                Jotunn.Logger.LogDebug($"Spawning replacement creatures for creature reconnection.");
+                foreach (KeyValuePair<string, short> needed_creature  in current_creature_list)
                 {
-                    Jotunn.Logger.LogInfo($"Pausing while reconnecting creatures {current_creature_add_iteration}/{potentialTargets.Count}");
-                    yield return new WaitForSeconds(1);
+                    HoardConfig replacementHoard = new HoardConfig() { creature = needed_creature.Key, prefab = Levels.SpawnableCreatures[needed_creature.Key].prefabName, amount = needed_creature.Value };
+                    spawn_controller.SpawnAdditionalHoarde(replacementHoard, this, remote_spawn_locations.Get());
+                    // We need to remove unlinked counted creatures, since the spawning functionality will link and increment all of the requested spawns.
+                    DecrementSpawned(needed_creature.Value);
+                    // We add the number of spawned creatures to our totals so we can break out of the reconnection list at the bottom.
+                    number_of_this_creature_added[needed_creature.Key] = needed_creature.Value;
                 }
-                current_creature_add_iteration++;
-                current_pause_progress++;
-                string creature_name = pchar.name.Replace("(Clone)", "");
-                Jotunn.Logger.LogInfo($"checking reconnection for: {creature_name}");
-                
-                // we might need some of this entry
-                if (current_creature_list.ContainsKey(creature_name))
+            } else {
+                foreach (Character pchar in potentialTargets)
                 {
-                    // can merge this up with safe navigation
-                    // we do need this entry
-                    if(current_creature_list[creature_name] > 0)
+                    if (current_pause_progress == VFConfig.ShrineReconnectPauseBetweenAmount.Value)
                     {
-                        // we need more of this entry
-                        if(number_of_this_creature_added[creature_name] < current_creature_list[creature_name])
+                        Jotunn.Logger.LogDebug($"Pausing while reconnecting creatures {current_creature_add_iteration}/{potentialTargets.Count}");
+                        yield return new WaitForSeconds(1);
+                    }
+                    current_creature_add_iteration++;
+                    current_pause_progress++;
+                    string creature_name = pchar.name.Replace("(Clone)", "");
+                    Jotunn.Logger.LogDebug($"checking reconnection for: {creature_name}");
+
+                    // we might need some of this entry
+                    if (current_creature_list.ContainsKey(creature_name))
+                    {
+                        // can merge this up with safe navigation
+                        // we do need this entry
+                        if (current_creature_list[creature_name] > 0)
                         {
-                            Jotunn.Logger.LogInfo($"locating parent GO: {pchar.gameObject.name}");
-                            // Destroy item drop for this creature
-                            Destroy(pchar.gameObject.GetComponent<CharacterDrop>());
-                            pchar.m_onDeath = null;
-                            // Set faction to boss to avoid fighting other creatures
-                            pchar.m_faction = Character.Faction.Boss;
-                            // Set the AI to hunt the nearby player
-                            BaseAI ai = pchar.gameObject.GetComponent<BaseAI>();
-                            if (ai != null)
+                            // we need more of this entry
+                            if (number_of_this_creature_added[creature_name] < current_creature_list[creature_name])
                             {
-                                ai.SetHuntPlayer(true);
-                            }
-                            // Add the rewards tracker, and set the reference shrine
-                            pchar.gameObject.AddComponent<CreatureTracker>();
-                            pchar.gameObject.GetComponent<CreatureTracker>().SetShrine(shrine_ref);
-                            pchar.gameObject.GetComponent<CreatureTracker>().setCreatureName(creature_name);
-                            // Add the enemy to the locally tracked list for shrine operations
-                            enemies.Add(pchar.gameObject);
-                            // Increment the number of characters spawned
-                            number_of_this_creature_added[creature_name]++;
-                            total_number_currently_added++;
+                                Jotunn.Logger.LogDebug($"locating parent GO: {pchar.gameObject.name}");
+                                // Destroy item drop for this creature
+                                Destroy(pchar.gameObject.GetComponent<CharacterDrop>());
+                                pchar.m_onDeath = null;
+                                // Set faction to boss to avoid fighting other creatures
+                                pchar.m_faction = Character.Faction.Boss;
+                                // Set the AI to hunt the nearby player
+                                BaseAI ai = pchar.gameObject.GetComponent<BaseAI>();
+                                if (ai != null)
+                                {
+                                    ai.SetHuntPlayer(true);
+                                }
+                                // Add the rewards tracker, and set the reference shrine
+                                pchar.gameObject.AddComponent<CreatureTracker>();
+                                pchar.gameObject.GetComponent<CreatureTracker>().SetShrine(shrine_ref);
+                                pchar.gameObject.GetComponent<CreatureTracker>().setCreatureName(creature_name);
+                                // Add the enemy to the locally tracked list for shrine operations
+                                enemies.Add(pchar.gameObject);
+                                // Increment the number of characters spawned
+                                number_of_this_creature_added[creature_name]++;
+                                total_number_currently_added++;
 
-                            // exit the loop if we now have enough creatures
-                            if (total_number_currently_added == total_number_to_add)
-                            {
-                                break;
+                                // exit the loop if we now have enough creatures
+                                if (total_number_currently_added == total_number_to_add)
+                                {
+                                    break;
+                                }
                             }
+
                         }
-
                     }
                 }
             }

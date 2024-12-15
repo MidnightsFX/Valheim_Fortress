@@ -98,7 +98,7 @@ namespace ValheimFortress.Challenge
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Checking tribute: {wlevelcfg.tributeName} == {item.m_dropPrefab.name} ({(wlevelcfg.tributeName == item.m_dropPrefab.name)})"); }
                 if (wlevelcfg.tributeName == item.m_dropPrefab.name)
                 {
-                    List<ItemDrop.ItemData> user_inventory = user.m_inventory.GetAllItemsSorted();
+                    List<ItemDrop.ItemData> user_inventory = user.m_inventory.GetAllItemsInGridOrder();
                     if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"User Inventory contains {user_inventory.Count} items."); }
                     int user_tribute_count = 0;
                     Dictionary<ItemDrop.ItemData, int> user_tribute_indexes = new Dictionary<ItemDrop.ItemData, int>();
