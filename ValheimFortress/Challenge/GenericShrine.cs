@@ -34,6 +34,8 @@ namespace ValheimFortress.Challenge
         public BoolZNetProperty spawn_locations_ready { get; set; }
         public BoolZNetProperty force_next_phase { get; set; }
         public ArrayVectorZNetProperty remote_spawn_locations { get; set; }
+        public ListStringZNetProperty adminLevelLimits { get; set; }
+        public StringZNetProperty adminConfigData {  get; set; }
 
         protected bool client_set_creature_beacons = false;
         protected List<GameObject> enemies = new List<GameObject>();
@@ -74,6 +76,8 @@ namespace ValheimFortress.Challenge
                 spawn_locations_ready = new BoolZNetProperty("spawn_locations_ready", zNetView, false);
                 force_next_phase = new BoolZNetProperty("force_next_phase", zNetView, false);
                 remote_spawn_locations = new ArrayVectorZNetProperty("remote_spawn_locations", zNetView, new Vector3[0]);
+                adminLevelLimits = new ListStringZNetProperty("adminLevelLimits", zNetView, new List<string>() { });
+                adminConfigData = new StringZNetProperty("adminConfigData", zNetView, "filter:levelname,levelname2");
 
                 Dictionary<String, short> default_creature_dictionary = new Dictionary<String, short>() { };
                 alive_creature_list = new DictionaryZNetProperty("alive_creature_list", zNetView, default_creature_dictionary);
@@ -100,6 +104,7 @@ namespace ValheimFortress.Challenge
                         Jotunn.Logger.LogInfo($"spawn_locations_ready={spawn_locations_ready.Get()}");
                         Jotunn.Logger.LogInfo($"force_next_phase={force_next_phase.Get()}");
                         Jotunn.Logger.LogInfo($"remote_spawn_locations={remote_spawn_locations}");
+                        Jotunn.Logger.LogInfo($"adminLevelLimits={adminLevelLimits.Get()}");
 
                         //Jotunn.Logger.LogInfo($"alive_creature_list={alive_creature_list.Get()}");
                         // Print the actual entries in the alive creature list

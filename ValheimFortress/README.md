@@ -150,6 +150,18 @@ Basic configuration view in-game.
 
 </details>
 
+### Admin Shrine configuration
+If you are registered as an admin on your server (or hosting locally) you can edit shrine specific admin settings.
+
+Currently this supports the following function, `filtername` which allows you to filter which levels can be selected at this specific shrine.
+
+Filtername uses the following format:
+```
+filtername:level_name1,level_name2
+```
+
+Any levels which have the value `levelName: level_name1` or `levelName: level_name2` will show up as selectable levels at this shrine. This will not limit levels for any other shrines.
+
 <!-- TOC --><a name="adding-rewards"></a>
 ### Adding Rewards
 Rewards can be added through yaml definitions. You can add anything, but invalid prefabs will cause errors when spawning your reward, and you will recieve nothing.

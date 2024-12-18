@@ -1,3 +1,11 @@
+  **0.31.0**
+---
+```
+- Adds an admin function to all shrines of challenge and shrines of the arena
+	- Admin mode currently supports setting a shrine specific filter for what levels can be selected at that shrine
+- Adds level names, these are internal, non-unique and used to filter what levels can be selected at a shrine
+```
+
   **0.30.5**
 ---
 ```

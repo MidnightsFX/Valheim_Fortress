@@ -8,7 +8,6 @@ namespace ValheimFortress.Challenge
 {
     internal class ArenaShrineUI : GenericShrineUI
     {
-        private ArenaShrine Shrine;
         public override void AddCreatureFlares()
         {
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Adding creature flares."); }
@@ -79,6 +78,17 @@ namespace ValheimFortress.Challenge
             ChallengePanel.SetActive(true);
             GUIManager.BlockInput(true);
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Enabled UI from Shrine object."); }
+        }
+
+        public override void ApplyAdminFunctions(adminFunctions function, List<string> values)
+        {
+            switch (function)
+            {
+                case adminFunctions.filtername:
+                    Shrine.adminLevelLimits.ForceSet(values);
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Set Admin level limit filter."); }
+                    break;
+            }
         }
     }
 }
