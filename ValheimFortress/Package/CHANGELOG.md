@@ -1,3 +1,25 @@
+  **0.31.0**
+---
+```
+- Adds an admin function to all shrines of challenge and shrines of the arena
+	- Admin mode currently supports setting a shrine specific filter for what levels can be selected at that shrine
+- Adds level names, these are internal, non-unique and used to filter what levels can be selected at a shrine
+```
+
+  **0.30.5**
+---
+```
+- Improves shrine reconnection scenarios that involve zero remaining enemies or no found enemies
+```
+
+  **0.30.4**
+---
+```
+- Bog Witch update
+- Updated to Jotunn 2.21.2
+- Fixes for the new game version, this is not backwards compatible.
+```
+
   **0.30.3**
 ---
 ```

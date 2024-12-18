@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -156,18 +157,25 @@ namespace ValheimFortress.Challenge
             return availableRewards;
         }
 
-        public static List<String> UpdateLevels(string shrine_type = "challenge")
+        public static List<String> UpdateLevels(string shrine_type = "challenge", List<string> levelfilternames = null)
         {
             var zs = ZoneSystem.instance;
             List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
             List<String> currentLevels = new List<String> { };
             short level_index = 0;
+            if (VFConfig.EnableDebugMode.Value && levelfilternames != null)
+            {
+                Jotunn.Logger.LogInfo($"level filter was provided: {levelfilternames.Count} {String.Join(", ",levelfilternames.ToArray())}");
+            }
             if (zs) // If the zonesystem does not exist, we can't check global keys. So skip it. This list will be updated on the UI open anyways.
             {
                 foreach(ChallengeLevelDefinition level in clevels)
                 {
                     level_index += 1;
                     if (level.levelForShrineTypes[shrine_type] != true) { continue; }
+                    // If the level filter is active and the current level is not a part of the filter, skip it
+                    if (levelfilternames != null && levelfilternames.Count > 0 && !levelfilternames.Contains(level.levelName)) { continue; }
+
                     if(level.requiredGlobalKey == "NONE")
                     {
                         currentLevels.Add($"{level_index} - {Localization.instance.Localize(level.levelMenuLocalization)}");

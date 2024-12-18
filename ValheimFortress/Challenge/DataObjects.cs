@@ -141,6 +141,8 @@ namespace ValheimFortress.Challenge
     [DataContract]
     public class ChallengeLevelDefinition
     {
+        [DefaultValue("")]
+        public string levelName { get; set; }
         public short levelIndex { get; set; }
         [DefaultValue(4)]
         public short numPhases { get; set; }
@@ -370,6 +372,32 @@ namespace ValheimFortress.Challenge
         }
     }
 
+    public class ListStringZNetProperty : ZNetProperty<List<string>>
+    {
+        BinaryFormatter binFormatter = new BinaryFormatter();
+        public ListStringZNetProperty(string key, ZNetView zNetView, List<string> defaultValue) : base(key, zNetView, defaultValue)
+        {
+        }
+
+        public override List<string> Get()
+        {
+            var stored = zNetView.GetZDO().GetByteArray(Key);
+            // we can't deserialize a null buffer
+            if (stored == null) { return new List<string>(); }
+            var mStream = new MemoryStream(stored);
+            var deserializedDictionary = (List<String>)binFormatter.Deserialize(mStream);
+            return deserializedDictionary;
+        }
+
+        protected override void SetValue(List<string> value)
+        {
+            var mStream = new MemoryStream();
+            binFormatter.Serialize(mStream, value);
+
+            zNetView.GetZDO().Set(Key, mStream.ToArray());
+        }
+    }
+
     public class ArrayVectorZNetProperty : ZNetProperty<Vector3[]>
     {
         BinaryFormatter binFormatter = new BinaryFormatter();
@@ -430,7 +458,6 @@ namespace ValheimFortress.Challenge
 
         protected override void SetValue(Dictionary<String, short> value)
         {
-            
             var mStream = new MemoryStream();
             binFormatter.Serialize(mStream, value);
 

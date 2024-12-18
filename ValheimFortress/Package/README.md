@@ -150,6 +150,18 @@ Basic configuration view in-game.
 
 </details>
 
+### Admin Shrine configuration
+If you are registered as an admin on your server (or hosting locally) you can edit shrine specific admin settings.
+
+Currently this supports the following function, `filtername` which allows you to filter which levels can be selected at this specific shrine.
+
+Filtername uses the following format:
+```
+filtername:level_name1,level_name2
+```
+
+Any levels which have the value `levelName: level_name1` or `levelName: level_name2` will show up as selectable levels at this shrine. This will not limit levels for any other shrines.
+
 <!-- TOC --><a name="adding-rewards"></a>
 ### Adding Rewards
 Rewards can be added through yaml definitions. You can add anything, but invalid prefabs will cause errors when spawning your reward, and you will recieve nothing.
@@ -341,7 +353,24 @@ Q. I broke my configuration files and want to try again.
 
 Q. Wave generation seems insanely unbalanced, what gives?
 	A. Delete your configurations (SpawnableCreatures.yaml in the VFortress folder) and MidnightsFX.ValheimFortress.cfg, this will regenerate new configurations with the defaults.
-	If you are trying to increase or lower the difficulty from this base point, it is recommended you start by decreasing/increasing the difficulty slope in small increments	
+	If you are trying to increase or lower the difficulty from this base point, it is recommended you start by decreasing/increasing the difficulty slope in small increments
+
+Q. The skeltons are attacking the greydwarfs again
+	A. The faction changes (and drop removal etc) are not persisted across game restarts. So if you save/quit during a challenge the remaining creatures will not act the same when you log back in, 
+		and will revert back to their vanilla settings. Loosing stars, gaining their loot, loosing their connection to the shrine. It won't cause issues for your game. But you will still have to kill them normally, and won't get shrine rewards for it.
+ 
+Q. My game freezes or becomes very slow for some period of time during waves or when creatures are spawning, what do I do?
+	A. This mod is fairly intensive on the CPU (during wave generation), in order to perform all of the calculations that go into creating an interesting and varied wave- then actually spawning all of those creatures (and the potentially massive number of interactions with them)
+	   can be very taxing on your computer. If you find this to be an issue consider reducing the configured number of maximum creatures to spawn or increasing the number of cores used for GC collection.
+		A. Reduce `max_creatures_per_wave`
+		A. Optionally, Increase GC collection duration. From Steam, Right Click on Valheim -> Manage -> Browse Local Files. Go to valheim_Data folder and open boot config file. change `gc-max-time-slice=3` to `gc-max-time-slice=10`	
+	    this will allow scripts to execute for a longer timeperiod, which will allow these long-running scripts to execute without killing your game.
+		
+
+Q. My game freezes, crashes or becomes very slow when the reward is spawned, what do I do?
+	A. Reduce the value of `MaxRewardsPerSecond`, this will spread out reward spawning over a longer period and reduce the impact on your game.
+	A. Optionally, Increase GC collection duration. From Steam, Right Click on Valheim -> Manage -> Browse Local Files. Go to valheim_Data folder and open boot config file. change `gc-max-time-slice=3` to `gc-max-time-slice=10`
+	this will allow scripts to execute for a longer timeperiod, which will allow these long-running scripts to execute without killing your game.
 
 Q. Rewards are too generous / rewards arn't rewarding enough!
 	A. You can configure all of the reward costs, and the bonuses that are applied to determine the pool for rewards. I suggest you read the main mods configuration file and look at the rewards config file.
@@ -379,4 +408,8 @@ If you like this mod maybe you'll like my other work
 
 <!-- TOC --><a name="known-issues"></a>
 ## Known issues
+- Building pieces sometimes don't have destructable bits
+- Building pieces don't have wear and tear
 - Mobs can form a 'spawn tower' (especially common when using the Arena spawner with high spawn limits)
+- Automated turret likes to fire off into space instead of hitting its target occassionally (its aim isn't perfect, so sometimes this is intended)
+	- If you can reliably reproduce this issue please report it on the Github or Discord
