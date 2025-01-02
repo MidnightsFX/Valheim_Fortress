@@ -1,3 +1,11 @@
+  **0.31.1**
+---
+```
+- Changes ballista targeting to allow shooting as long as they would hit a creature/character even if its not the primary target.
+	- Fixes a bug where the ballista would not shoot at a target if it was not the primary target.
+	- Removes ballistas psychic avoidance of shooting the player (you can now be hit in the crossfire)
+```
+
   **0.31.0**
 ---
 ```

@@ -111,9 +111,11 @@ namespace ValheimFortress.Defenses
                 update_target_cache_interval = UnityEngine.Random.Range(1, VFConfig.BallistaTargetUpdateCacheInterval.Value);
 
 				// Invert bit mask to check collisions
-				lmsk |= (1 << 0); // ignore default
-                lmsk |= (1 << 1); // ignore transparentFX
-                lmsk |= (1 << 2); // ignore raycast ignore
+				// lmsk |= (1 << 0); // ignore default
+                // lmsk |= (1 << 1); // ignore transparentFX
+                // lmsk |= (1 << 2); // ignore raycast ignore
+                // lmsk |= (1 << 9); // ignore characters
+                lmsk = LayerMask.GetMask("Default", "TransparentFX", "character");
                 lmsk = ~lmsk; // Invert default bitshift to avoid colliding with masked layers, but still collide with everything else
             }
 		}
@@ -371,7 +373,7 @@ namespace ValheimFortress.Defenses
                 bool rayshot_hit_distance = rayhit.distance > (raycast_distance_to_hit - 2);
                 if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($" distance to target: {raycast_distance_to_hit}, raycast distance test: {rayhit.distance}, can hit distance: {rayshot_hit_distance} hit bool: {did_raycast_hit}"); }
                 if (!rayshot_hit_distance) { return; }
-				if (!did_raycast_hit) { return; }
+				// if (!did_raycast_hit) { return; }
             }
 
             // This is really noisy
