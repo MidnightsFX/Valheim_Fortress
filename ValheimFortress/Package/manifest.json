@@ -1,7 +1,7 @@
 ﻿{
   "name": "ValheimFortress",
   "description": "Feel like your massive fortress needs some practial use against hordes of enemies? Ever wanted to run an automated arena and be rewarded for defeating waves of enemies?",
-  "version_number": "0.31.1",
+  "version_number": "0.31.3",
   "website_url": "https://discord.gg/Dmr9PQTy9m",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2202",

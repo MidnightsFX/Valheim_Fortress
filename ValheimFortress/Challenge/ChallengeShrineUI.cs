@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UI;
+using ValheimFortress.Data;
 
 namespace ValheimFortress.Challenge
 {
@@ -48,7 +49,7 @@ namespace ValheimFortress.Challenge
             string[] level_pieces = levelSelector.GetComponent<Dropdown>().options[levelSelector.GetComponent<Dropdown>().value].text.Split('-');
             string text_level = ValheimFortress.ReplaceWhitespace(level_pieces[0], "");
             short level_lookup_id = (short)(short.Parse(text_level) - 1);
-            List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
+            List<ChallengeLevelDefinition> clevels = ChallengeLevels.GetChallengeLevelDefinitions();
             bool hard_mode = false;
             if (VFConfig.EnableHardModifier.Value) { hard_mode = hardModeToggle.GetComponent<Toggle>().isOn; }
             bool boss_mode = false;

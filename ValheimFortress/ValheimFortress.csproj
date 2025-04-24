@@ -54,11 +54,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="API.cs" />
     <Compile Include="Challenge\ArenaShrine.cs" />
     <Compile Include="Challenge\ArenaShrineUI.cs" />
     <Compile Include="Challenge\ChallengeShrine.cs" />
     <Compile Include="Challenge\ChallengeShrineUI.cs" />
-    <Compile Include="Challenge\DataObjects.cs" />
+    <Compile Include="Challenge\ExternalShrine.cs" />
+    <Compile Include="Common\DataObjects.cs" />
     <Compile Include="Challenge\GenericShrine.cs" />
     <Compile Include="Challenge\GenericShrineUI.cs" />
     <Compile Include="Challenge\Levels.cs" />
@@ -70,15 +72,19 @@
     <Compile Include="Challenge\Spawner.cs" />
     <Compile Include="Challenge\UserInterfaceData.cs" />
     <Compile Include="Challenge\WildShrine.cs" />
-    <Compile Include="Challenge\WildShrineData.cs" />
+    <Compile Include="Common\Logger.cs" />
+    <Compile Include="Data\ChallengeLevels.cs" />
+    <Compile Include="Data\Monsters.cs" />
+    <Compile Include="Data\WildShrineData.cs" />
     <Compile Include="Common\Compression.cs" />
     <Compile Include="Common\JotunnPiece.cs" />
+    <Compile Include="Data\WaveStyles.cs" />
     <Compile Include="Defenses\VFTurret.cs" />
     <Compile Include="ValheimPiece.cs" />
     <Compile Include="Properties\IgnoreAccessModifiers.cs" />
     <Compile Include="ValheimFortress.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VFConfig.cs" />
+    <Compile Include="Common\VFConfig.cs" />
     <Compile Include="VFLocations.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -153,6 +159,7 @@
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="JotunnPostBuildTaskWin" Condition="'$(OS)' == 'Windows_NT'">
     <Exec Command="powershell.exe -ExecutionPolicy RemoteSigned -File &quot;$(SolutionDir)publish.ps1&quot; -Target &quot;$(ConfigurationName)&quot; -TargetPath &quot;$(TargetDir.TrimEnd('\'))&quot; -TargetAssembly &quot;$(TargetFileName)&quot; -ValheimPath &quot;$(VALHEIM_INSTALL.TrimEnd('\'))&quot; -DeployPath &quot;$(MOD_DEPLOYPATH.TrimEnd('\'))&quot; -ProjectPath &quot;$(ProjectDir.TrimEnd('\'))&quot; " />

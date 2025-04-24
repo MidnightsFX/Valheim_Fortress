@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using ValheimFortress.Data;
 
 namespace ValheimFortress.Challenge
 {
@@ -133,7 +134,7 @@ namespace ValheimFortress.Challenge
             {
                 if (wave_definition_ready.Get() == false && spawn_locations_ready.Get() == false)
                 {
-                    List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
+                    List<ChallengeLevelDefinition> clevels = ChallengeLevels.GetChallengeLevelDefinitions();
                     ChallengeLevelDefinition levelDefinition = clevels.ElementAt(selected_level.Get());
                     wave_phases_definitions = Levels.generateRandomWaveWithOptions(levelDefinition, hard_mode.Get(), boss_mode.Get(), siege_mode.Get(), VFConfig.ChallengeShrineMaxCreaturesPerWave.Value);
                     wave_definition_ready.Set(true);
@@ -159,7 +160,7 @@ namespace ValheimFortress.Challenge
                 {
                     Jotunn.Logger.LogInfo("Starting shrine reconnection to creatures, this will regenerate the wave definition.");
                     StartCoroutine(ReconnectUnlinkedCreatures(shrine_spawnpoint.transform.position, gameObject.GetComponent<ChallengeShrine>()));
-                    List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
+                    List<ChallengeLevelDefinition> clevels = ChallengeLevels.GetChallengeLevelDefinitions();
                     ChallengeLevelDefinition levelDefinition = clevels.ElementAt(selected_level.Get());
                     wave_phases_definitions = Levels.generateRandomWaveWithOptions(levelDefinition, hard_mode.Get(), boss_mode.Get(), siege_mode.Get(), VFConfig.ChallengeShrineMaxCreaturesPerWave.Value);
                     RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations.Get(), gameObject.GetComponent<ChallengeShrine>());

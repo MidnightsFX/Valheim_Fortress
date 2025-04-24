@@ -133,6 +133,7 @@ namespace ValheimFortress.common
 
             PieceConfig piececfg = new PieceConfig()
             {
+                Enabled = EnabledVFConfig.Value,
                 CraftingStation = $"{PieceMetadata["requiredBench"]}",
                 PieceTable = PieceTables.Hammer,
                 Category = PieceMetadata["catagory"],
@@ -205,7 +206,7 @@ namespace ValheimFortress.common
                 recipe[recipe_index] = new RequirementConfig { Item = entry.Key, Amount = entry.Value.Item1, Recover = entry.Value.Item2 };
                 recipe_index++;
             }
-            if (PieceToggles["enabled"])
+            if (EnabledVFConfig.Value)
             {
                 if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo("Updating Piece."); }
                 Piece.Requirement[] newRequirements = new Piece.Requirement[UpdatedRecipeData.Count];
@@ -228,9 +229,7 @@ namespace ValheimFortress.common
                     if (VFConfig.EnableDebugMode.Value) { Logger.LogInfo($"Updating requirements on {go.name}"); }
                     go.GetComponent<Piece>().m_resources = newRequirements;
                 }
-            }
-            else
-            {
+            } else {
                 // Set this piece not craftable
                 ScenePrefab.GetComponent<Piece>().m_enabled = false;
             }

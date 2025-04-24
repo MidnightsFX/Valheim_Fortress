@@ -1,3 +1,15 @@
+  **0.31.3**
+---
+```
+- Fixes Menu error when building level list for shrines that do not include the selected shrine
+```
+
+  **0.31.2**
+---
+```
+- Ensures lootdrop settings are set for creatures that are reconnected due to the shrine being unloaded and reloaded
+```
+
   **0.31.1**
 ---
 ```

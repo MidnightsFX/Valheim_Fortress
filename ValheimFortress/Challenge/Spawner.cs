@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
+using ValheimFortress.Data;
 
 namespace ValheimFortress.Challenge
 {
@@ -107,7 +108,7 @@ namespace ValheimFortress.Challenge
                 }
 
                 // Enable drops for hoard creatures or bosses, if configured, else destroy
-                if (Levels.SpawnableCreatures[hoard.creature].dropsEnabled == false)
+                if (Monsters.SpawnableCreatures[hoard.creature].dropsEnabled == false)
                 {
                     Destroy(creature.GetComponent<CharacterDrop>());
                 }

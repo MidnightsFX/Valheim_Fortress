@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine.UI;
 using UnityEngine;
+using ValheimFortress.Data;
 
 namespace ValheimFortress.Challenge
 {
@@ -86,7 +87,7 @@ namespace ValheimFortress.Challenge
                 short level_definition_lookup_index = (short)(short.Parse(text_level) - 1);
 
                 // if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Looking up level definition with index of text-{text_level} (1 based) int-{level_definition_lookup_index} (zero based)"); }
-                List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
+                List<ChallengeLevelDefinition> clevels = ChallengeLevels.GetChallengeLevelDefinitions();
                 short level_difficulty = clevels.ElementAt(level_definition_lookup_index).levelIndex;
                 bool hardmode_status = false;
                 bool bossmode_status = false;
@@ -151,7 +152,7 @@ namespace ValheimFortress.Challenge
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Leveltext: {text_level}"); }
             short level_definition_lookup_index = (short)(short.Parse(text_level) - 1);
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"level index: {level_definition_lookup_index}"); }
-            List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
+            List<ChallengeLevelDefinition> clevels = ChallengeLevels.GetChallengeLevelDefinitions();
             availableRewards = UserInterfaceData.UpdateRewards(clevels.ElementAt(level_definition_lookup_index));
             reward_dropdown.ClearOptions();
             reward_dropdown.AddOptions(availableRewards);

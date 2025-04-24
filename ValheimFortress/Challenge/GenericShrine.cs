@@ -6,7 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.XR;
+using ValheimFortress.Data;
 
 namespace ValheimFortress.Challenge
 {
@@ -193,7 +193,7 @@ namespace ValheimFortress.Challenge
                 Jotunn.Logger.LogDebug($"Spawning replacement creatures for creature reconnection.");
                 foreach (KeyValuePair<string, short> needed_creature  in current_creature_list)
                 {
-                    HoardConfig replacementHoard = new HoardConfig() { creature = needed_creature.Key, prefab = Levels.SpawnableCreatures[needed_creature.Key].prefabName, amount = needed_creature.Value };
+                    HoardConfig replacementHoard = new HoardConfig() { creature = needed_creature.Key, prefab = Monsters.SpawnableCreatures[needed_creature.Key].prefabName, amount = needed_creature.Value };
                     spawn_controller.SpawnAdditionalHoarde(replacementHoard, this, remote_spawn_locations.Get());
                     // We need to remove unlinked counted creatures, since the spawning functionality will link and increment all of the requested spawns.
                     DecrementSpawned(needed_creature.Value);
@@ -205,6 +205,7 @@ namespace ValheimFortress.Challenge
                 {
                     if (current_pause_progress == VFConfig.ShrineReconnectPauseBetweenAmount.Value)
                     {
+                        current_pause_progress = 0;
                         Jotunn.Logger.LogDebug($"Pausing while reconnecting creatures {current_creature_add_iteration}/{potentialTargets.Count}");
                         yield return new WaitForSeconds(1);
                     }
@@ -244,6 +245,17 @@ namespace ValheimFortress.Challenge
                                 // Increment the number of characters spawned
                                 number_of_this_creature_added[creature_name]++;
                                 total_number_currently_added++;
+
+                                // Destroy drops for reconnected creatures that don't have drops enabled
+                                CreatureValues selected_creature_details;
+                                Monsters.SpawnableCreatures.TryGetValue(creature_name, out selected_creature_details);
+                                if (selected_creature_details != null)
+                                {
+                                    if (selected_creature_details.dropsEnabled == false)
+                                    {
+                                        Destroy(pchar.gameObject.GetComponent<CharacterDrop>());
+                                    }
+                                }
 
                                 // exit the loop if we now have enough creatures
                                 if (total_number_currently_added == total_number_to_add)

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using ValheimFortress.Data;
 
 namespace ValheimFortress.Challenge
 {
@@ -74,7 +75,7 @@ namespace ValheimFortress.Challenge
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Leveltext: {text_level}"); }
             short level_definition_lookup_index = (short)(short.Parse(text_level) - 1);
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"level index: {level_definition_lookup_index}"); }
-            List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
+            List<ChallengeLevelDefinition> clevels = ChallengeLevels.GetChallengeLevelDefinitions();
             return UpdateRewards(clevels.ElementAt(level_definition_lookup_index));
         }
 
@@ -160,10 +161,10 @@ namespace ValheimFortress.Challenge
         public static List<String> UpdateLevels(string shrine_type = "challenge", List<string> levelfilternames = null)
         {
             var zs = ZoneSystem.instance;
-            List<ChallengeLevelDefinition> clevels = Levels.GetChallengeLevelDefinitions();
+            List<ChallengeLevelDefinition> clevels = ChallengeLevels.GetChallengeLevelDefinitions();
             List<String> currentLevels = new List<String> { };
             short level_index = 0;
-            if (VFConfig.EnableDebugMode.Value && levelfilternames != null)
+            if (VFConfig.EnableDebugMode.Value && levelfilternames != null && levelfilternames.Count > 0)
             {
                 Jotunn.Logger.LogInfo($"level filter was provided: {levelfilternames.Count} {String.Join(", ",levelfilternames.ToArray())}");
             }
@@ -172,7 +173,7 @@ namespace ValheimFortress.Challenge
                 foreach(ChallengeLevelDefinition level in clevels)
                 {
                     level_index += 1;
-                    if (level.levelForShrineTypes[shrine_type] != true) { continue; }
+                    if (level.levelForShrineTypes.ContainsKey(shrine_type) == false || level.levelForShrineTypes.ContainsKey(shrine_type) && level.levelForShrineTypes[shrine_type] != true) { continue; }
                     // If the level filter is active and the current level is not a part of the filter, skip it
                     if (levelfilternames != null && levelfilternames.Count > 0 && !levelfilternames.Contains(level.levelName)) { continue; }
 
@@ -184,6 +185,17 @@ namespace ValheimFortress.Challenge
                     }
                     if (zs.GetGlobalKey(level.requiredGlobalKey)) 
                     {
+                        currentLevels.Add($"{level_index} - {Localization.instance.Localize(level.levelMenuLocalization)}");
+                    }
+                }
+
+                if (currentLevels.Count == 0)
+                {
+                    level_index = 0;
+                    Jotunn.Logger.LogWarning($"Level filter resulted in zero selected levels, all levels defaulted to included.");
+                    foreach (ChallengeLevelDefinition level in clevels)
+                    {
+                        level_index += 1;
                         currentLevels.Add($"{level_index} - {Localization.instance.Localize(level.levelMenuLocalization)}");
                     }
                 }

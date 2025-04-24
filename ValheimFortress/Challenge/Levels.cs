@@ -1,19 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using ValheimFortress.common;
+using ValheimFortress.Data;
 
 
 namespace ValheimFortress.Challenge
 {
     class Levels
     {
-        static private float challenge_slope = 0.5f;
-        static private float chance_of_prior_biome_creature = 0.05f;
-        static private short max_creature_stars = 2; // This is the vanilla default, and should never be higher unless other mods support it.
-        static private short base_challenge_points = 100;
-        static private short max_creatures_per_wave = 60;
-        static private short max_challenge_points = 3000;
-        static private float star_chance = 0.15f;
         const String COMMON = CONST.COMMON;
         const String RARE = CONST.RARE;
         const String ELITE = CONST.ELITE;
@@ -45,27 +40,25 @@ namespace ValheimFortress.Challenge
             /// <param name="entries"></param>
             public void AddCreatureToWave(String creature, int total_points, float percentage, short min_stars = 0, short max_stars =0)
             {
-                short stars = DetermineCreatureStars(min_stars, max_stars);
                 short creature_spawn_amount = DetermineCreatureSpawnAmount(creature, total_points, percentage);
-                switch (SpawnableCreatures[creature].spawnType)
+                switch (Monsters.SpawnableCreatures[creature].spawnType)
                 {
                     case COMMON:
-                        commonCreatures.Add(new HoardConfig { creature = creature, prefab = SpawnableCreatures[creature].prefabName, amount = creature_spawn_amount, stars = stars });
+                        commonCreatures.Add(new HoardConfig { creature = creature, prefab = Monsters.SpawnableCreatures[creature].prefabName, amount = creature_spawn_amount, stars = 0 });
                         selectedCreatures.Add(creature);
                         break;
                     case RARE:
-                        rareCreatures.Add(new HoardConfig { creature = creature, prefab = SpawnableCreatures[creature].prefabName, amount = creature_spawn_amount, stars = stars });
+                        rareCreatures.Add(new HoardConfig { creature = creature, prefab = Monsters.SpawnableCreatures[creature].prefabName, amount = creature_spawn_amount, stars = 0 });
                         selectedCreatures.Add(creature);
                         break;
                     case ELITE:
-                        eliteCreatures.Add(new HoardConfig{ creature = creature, prefab = SpawnableCreatures[creature].prefabName, amount = creature_spawn_amount, stars = stars });
+                        eliteCreatures.Add(new HoardConfig{ creature = creature, prefab = Monsters.SpawnableCreatures[creature].prefabName, amount = creature_spawn_amount, stars = 0 });
                         selectedCreatures.Add(creature);
                         break;
                     case UNIQUE:
-                        uniqueCreatures.Add(new HoardConfig{ creature = creature, prefab = SpawnableCreatures[creature].prefabName, amount = creature_spawn_amount, stars = stars });
+                        uniqueCreatures.Add(new HoardConfig{ creature = creature, prefab = Monsters.SpawnableCreatures[creature].prefabName, amount = creature_spawn_amount, stars = 0 });
                         selectedCreatures.Add(creature);
                         break;
-
                 }
             }
 
@@ -93,1104 +86,6 @@ namespace ValheimFortress.Challenge
             public int GetCount() { return selectedCreatures.Count();}
         }
 
-        public static List<ChallengeLevelDefinition> ChallengeLevelDefinitions = new List<ChallengeLevelDefinition>
-        {
-            new ChallengeLevelDefinition
-            {
-                // Level index is the internal representation of this level, it will be used to modify the difficulty, this must be greater than 0
-                // It does not have to be unique, if multiple levels for the same shrine use the same index, they will be added in order of definition
-                // eg: you could have level 9 (black forest) have the same difficulty as level 10 (swamp)
-                levelIndex = 1,
-                // Shrine type that this level applies to
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                // This is the text used to display the level naming in the shrine level selector
-                levelMenuLocalization = "$shrine_menu_meadow",
-                // This is the global key required for this label to be displayed, this uses game global keys or NONE
-                requiredGlobalKey = "NONE",
-                // This is the biome that this level will pull its creature definitions from
-                biome = "Meadows",
-                // This is the wave style that this wave will generate in
-                waveFormat = "Tutorial",
-                // If this wave is set to be a boss wave, this is the wave style it will generate in
-                bossWaveFormat = "TutorialBoss",
-                // This is the number of creatures that could be maximally selected from a previou biome
-                maxCreatureFromPreviousBiomes = 0,
-                // This is the warning text that is displayed when the round starts, for normal- and then following for boss waves
-                levelWarningLocalization = "$shrine_warning_meadows",
-                bossLevelWarningLocalization = "$shrine_warning_meadows_boss",
-                // This is an inclusion list which specifies what creatures are allowed in this wave, this uses keys from the monster.yaml configuration
-                onlySelectMonsters = new List<String> { },
-                excludeSelectMonsters = new List<String> { },
-                // These are the spawn modifiers that are applied to each type of creature spawn
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                    { "linearDecreaseRandomWaveAdjustment", false },
-                    { "partialRandomWaveAdjustment", false },
-                    { "onlyGenerateInSecondHalf", false }
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                    { "linearDecreaseRandomWaveAdjustment", false },
-                    { "partialRandomWaveAdjustment", false },
-                    { "onlyGenerateInSecondHalf", false }
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                    { "linearDecreaseRandomWaveAdjustment", false },
-                    { "partialRandomWaveAdjustment", false },
-                    { "onlyGenerateInSecondHalf", false }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 2,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_meadow",
-                requiredGlobalKey = "NONE",
-                biome = "Meadows",
-                waveFormat = "Tutorial",
-                bossWaveFormat = "TutorialBoss",
-                maxCreatureFromPreviousBiomes = 0,
-                levelWarningLocalization = "$shrine_warning_meadows",
-                bossLevelWarningLocalization = "$shrine_warning_meadows_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 3,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_meadow",
-                requiredGlobalKey = "NONE",
-                biome = "Meadows",
-                waveFormat = "Tutorial",
-                bossWaveFormat = "TutorialBoss",
-                maxCreatureFromPreviousBiomes = 0,
-                levelWarningLocalization = "$shrine_warning_meadows",
-                bossLevelWarningLocalization = "$shrine_warning_meadows_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 4,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_meadow",
-                requiredGlobalKey = "NONE",
-                biome = "Meadows",
-                waveFormat = "Starter",
-                bossWaveFormat = "TutorialBoss",
-                maxCreatureFromPreviousBiomes = 0,
-                levelWarningLocalization = "$shrine_warning_meadows",
-                bossLevelWarningLocalization = "$shrine_warning_meadows_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 5,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_meadow",
-                requiredGlobalKey = "NONE",
-                biome = "Meadows",
-                waveFormat = "Starter",
-                bossWaveFormat = "TutorialBoss",
-                maxCreatureFromPreviousBiomes = 0,
-                levelWarningLocalization = "$shrine_warning_meadows",
-                bossLevelWarningLocalization = "$shrine_warning_meadows_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 6,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_forest",
-                requiredGlobalKey = "defeated_eikthyr",
-                biome = "BlackForest",
-                waveFormat = "Easy",
-                bossWaveFormat = "EasyBoss",
-                maxCreatureFromPreviousBiomes = 0,
-                levelWarningLocalization = "$shrine_warning_forest",
-                bossLevelWarningLocalization = "$shrine_warning_forest_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 7,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_forest",
-                requiredGlobalKey = "defeated_eikthyr",
-                biome = "BlackForest",
-                waveFormat = "Normal",
-                bossWaveFormat = "EasyBoss",
-                maxCreatureFromPreviousBiomes = 0,
-                levelWarningLocalization = "$shrine_warning_forest",
-                bossLevelWarningLocalization = "$shrine_warning_forest_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 8,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_forest",
-                requiredGlobalKey = "defeated_eikthyr",
-                biome = "BlackForest",
-                waveFormat = "Normal",
-                bossWaveFormat = "Boss",
-                maxCreatureFromPreviousBiomes = 0,
-                levelWarningLocalization = "$shrine_warning_forest",
-                bossLevelWarningLocalization = "$shrine_warning_forest_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 9,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_forest",
-                requiredGlobalKey = "defeated_eikthyr",
-                biome = "BlackForest",
-                waveFormat = "Normal",
-                bossWaveFormat = "Boss",
-                maxCreatureFromPreviousBiomes = 0,
-                levelWarningLocalization = "$shrine_warning_forest",
-                bossLevelWarningLocalization = "$shrine_warning_forest_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 10,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_forest",
-                requiredGlobalKey = "defeated_eikthyr",
-                biome = "BlackForest",
-                waveFormat = "Hard",
-                bossWaveFormat = "Boss",
-                maxCreatureFromPreviousBiomes = 0,
-                levelWarningLocalization = "$shrine_warning_forest",
-                bossLevelWarningLocalization = "$shrine_warning_forest_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 11,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_swamp",
-                requiredGlobalKey = "defeated_gdking",
-                biome = "Swamp",
-                waveFormat = "Easy",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_swamp",
-                bossLevelWarningLocalization = "$shrine_warning_swamp_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 12,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_swamp",
-                requiredGlobalKey = "defeated_gdking",
-                biome = "Swamp",
-                waveFormat = "Normal",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_swamp",
-                bossLevelWarningLocalization = "$shrine_warning_swamp_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 13,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_swamp",
-                requiredGlobalKey = "defeated_gdking",
-                biome = "Swamp",
-                waveFormat = "Normal",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_swamp",
-                bossLevelWarningLocalization = "$shrine_warning_swamp_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 14,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_swamp",
-                requiredGlobalKey = "defeated_gdking",
-                biome = "Swamp",
-                waveFormat = "Hard",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_swamp",
-                bossLevelWarningLocalization = "$shrine_warning_swamp_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 15,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_swamp",
-                requiredGlobalKey = "defeated_gdking",
-                biome = "Swamp",
-                waveFormat = "Hard",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_swamp",
-                bossLevelWarningLocalization = "$shrine_warning_swamp_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 16,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_mountain",
-                requiredGlobalKey = "defeated_bonemass",
-                biome = "Mountain",
-                waveFormat = "Normal",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_mountain",
-                bossLevelWarningLocalization = "$shrine_warning_mountain_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 17,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_mountain",
-                requiredGlobalKey = "defeated_bonemass",
-                biome = "Mountain",
-                waveFormat = "Normal",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_mountain",
-                bossLevelWarningLocalization = "$shrine_warning_mountain_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 18,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_mountain",
-                requiredGlobalKey = "defeated_bonemass",
-                biome = "Mountain",
-                waveFormat = "Hard",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_mountain",
-                bossLevelWarningLocalization = "$shrine_warning_mountain_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 19,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_mountain",
-                requiredGlobalKey = "defeated_bonemass",
-                biome = "Mountain",
-                waveFormat = "Hard",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_mountain",
-                bossLevelWarningLocalization = "$shrine_warning_mountain_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 20,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_mountain",
-                requiredGlobalKey = "defeated_bonemass",
-                biome = "Mountain",
-                waveFormat = "Expert",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_mountain",
-                bossLevelWarningLocalization = "$shrine_warning_mountain_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 21,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_plains",
-                requiredGlobalKey = "defeated_dragon",
-                biome = "Plains",
-                waveFormat = "Normal",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_plains",
-                bossLevelWarningLocalization = "$shrine_warning_plains_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 22,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_plains",
-                requiredGlobalKey = "defeated_dragon",
-                biome = "Plains",
-                waveFormat = "Hard",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_plains",
-                bossLevelWarningLocalization = "$shrine_warning_plains_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 23,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_plains",
-                requiredGlobalKey = "defeated_dragon",
-                biome = "Plains",
-                waveFormat = "VeryHard",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_plains",
-                bossLevelWarningLocalization = "$shrine_warning_plains_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 24,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_plains",
-                requiredGlobalKey = "defeated_dragon",
-                biome = "Plains",
-                waveFormat = "Normal",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_plains",
-                bossLevelWarningLocalization = "$shrine_warning_plains_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 25,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_plains",
-                requiredGlobalKey = "defeated_dragon",
-                biome = "Plains",
-                waveFormat = "Extreme",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_plains",
-                bossLevelWarningLocalization = "$shrine_warning_plains_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 26,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_mistland",
-                requiredGlobalKey = "defeated_goblinking",
-                biome = "Mistlands",
-                waveFormat = "Hard",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_mistlands",
-                bossLevelWarningLocalization = "$shrine_warning_mistlands_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 27,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_mistland",
-                requiredGlobalKey = "defeated_goblinking",
-                biome = "Mistlands",
-                waveFormat = "VeryHard",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_mistlands",
-                bossLevelWarningLocalization = "$shrine_warning_mistlands_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 28,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_mistland",
-                requiredGlobalKey = "defeated_goblinking",
-                biome = "Mistlands",
-                waveFormat = "Expert",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_mistlands",
-                bossLevelWarningLocalization = "$shrine_warning_mistlands_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 29,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_mistland",
-                requiredGlobalKey = "defeated_goblinking",
-                biome = "Mistlands",
-                waveFormat = "Extreme",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_mistlands",
-                bossLevelWarningLocalization = "$shrine_warning_mistlands_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 30,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_mistland",
-                requiredGlobalKey = "defeated_goblinking",
-                biome = "Mistlands",
-                waveFormat = "Dynamic",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_mistlands",
-                bossLevelWarningLocalization = "$shrine_warning_mistlands_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 31,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_ashland",
-                requiredGlobalKey = "defeated_fader",
-                biome = "Ashlands",
-                waveFormat = "Hard",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_ashlands",
-                bossLevelWarningLocalization = "$shrine_warning_ashlands_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 32,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_ashland",
-                requiredGlobalKey = "defeated_fader",
-                biome = "Ashlands",
-                waveFormat = "VeryHard",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_ashlands",
-                bossLevelWarningLocalization = "$shrine_warning_ashlands_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 33,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_ashland",
-                requiredGlobalKey = "defeated_fader",
-                biome = "Ashlands",
-                waveFormat = "Expert",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_ashlands",
-                bossLevelWarningLocalization = "$shrine_warning_ashlands_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 34,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_ashland",
-                requiredGlobalKey = "defeated_fader",
-                biome = "Ashlands",
-                waveFormat = "Extreme",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_ashlands",
-                bossLevelWarningLocalization = "$shrine_warning_ashlands_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 35,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", true },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_ashland",
-                requiredGlobalKey = "defeated_fader",
-                biome = "Ashlands",
-                waveFormat = "Dynamic",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_ashlands",
-                bossLevelWarningLocalization = "$shrine_warning_ashlands_boss",
-                commonSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearDecreaseRandomWaveAdjustment", true },
-                },
-                rareSpawnModifiers = new Dictionary<string, bool> {
-                    { "linearIncreaseRandomWaveAdjustment", true },
-                },
-                eliteSpawnModifiers = new Dictionary<string, bool> {
-                    { "onlyGenerateInSecondHalf", true }
-                }
-            },
-            new ChallengeLevelDefinition
-            {
-                levelIndex = 9,
-                levelForShrineTypes = new Dictionary<string, bool> {
-                    { "challenge", false },
-                    { "arena", true }
-                },
-                levelMenuLocalization = "$shrine_menu_troll_level",
-                requiredGlobalKey = "KilledTroll",
-                biome = "BlackForest",
-                waveFormat = "ElitesOnly",
-                bossWaveFormat = "DynamicBoss",
-                maxCreatureFromPreviousBiomes = 1,
-                levelWarningLocalization = "$shrine_warning_trolls",
-                bossLevelWarningLocalization = "$shrine_warning_forest_boss",
-                onlySelectMonsters = new List<String> { "Troll" },
-            },
-
-        };
-
-        public static List<ChallengeLevelDefinition> GetChallengeLevelDefinitions()
-        {
-            return ChallengeLevelDefinitions;
-        }
-
-        public static void UpdateLevelsDefinition(ChallengeLevelDefinitionCollection levelDefinitions)
-        {
-            ChallengeLevelDefinitions.Clear();
-            ChallengeLevelDefinitions = levelDefinitions.Levels;
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Updated Level definitions."); }
-        }
-
-        public static string YamlLevelsDefinition()
-        {
-            var levelCollection = new ChallengeLevelDefinitionCollection();
-            levelCollection.Levels = ChallengeLevelDefinitions;
-            var yaml = CONST.yamlserializer.Serialize(levelCollection);
-            return yaml;
-        }
-
-        // These should all stay as close as possible to 100% totals
-        // There is no rule they can't go over/under, but going over will spawn more enemies than the waves points would normally allocate
-        // This is normally only the case for challenge levels and bosses etc
-        // Tutorial 60%
-        // Starter 65%
-        // Easy 70%
-        // Normal 75%
-        // Hard 80%
-        // VeryHard 85%
-        // Expert 90%
-        // Extreme 95%
-        // Dynamic 100%
-        static Dictionary<String, WaveGenerationFormat> WaveStyles = new Dictionary<string, WaveGenerationFormat>
-        {
-            // Standard waves
-            { "Tutorial", new WaveGenerationFormat { waveFormats = new List<WaveFormatEntry> { new WaveFormatEntry( COMMON, 30 ), new WaveFormatEntry(COMMON, 30) } } },
-            { "Starter", new WaveGenerationFormat { waveFormats = new List<WaveFormatEntry> { new WaveFormatEntry( COMMON, 25 ), new WaveFormatEntry(COMMON, 25), new WaveFormatEntry(COMMON, 15) } } },
-            { "Easy", new WaveGenerationFormat { waveFormats = new List<WaveFormatEntry> { new WaveFormatEntry(RARE, 15 ), new WaveFormatEntry(COMMON, 25), new WaveFormatEntry(COMMON, 30) } } },
-            { "Normal", new WaveGenerationFormat { waveFormats = new List<WaveFormatEntry> { new WaveFormatEntry(RARE, 15 ), new WaveFormatEntry(RARE, 10), new WaveFormatEntry(COMMON, 30), new WaveFormatEntry(COMMON, 20) } } },
-            { "Hard", new WaveGenerationFormat { waveFormats = new List<WaveFormatEntry> { new WaveFormatEntry(ELITE, 5), new WaveFormatEntry(RARE, 20 ), new WaveFormatEntry(COMMON, 20), new WaveFormatEntry(COMMON, 30) } } },
-            { "VeryHard", new WaveGenerationFormat { waveFormats = new List<WaveFormatEntry> { new WaveFormatEntry(ELITE, 10), new WaveFormatEntry(RARE, 25 ), new WaveFormatEntry(COMMON, 20), new WaveFormatEntry(COMMON, 30) } } },
-            { "Expert", new WaveGenerationFormat { waveFormats = new List<WaveFormatEntry> { new WaveFormatEntry(ELITE, 10), new WaveFormatEntry(RARE, 15 ), new WaveFormatEntry(RARE, 15), new WaveFormatEntry(COMMON, 20), new WaveFormatEntry(COMMON, 30) } } },
-            { "Extreme", new WaveGenerationFormat { waveFormats = new List<WaveFormatEntry> { new WaveFormatEntry(ELITE, 15), new WaveFormatEntry(RARE, 20), new WaveFormatEntry(RARE, 15 ), new WaveFormatEntry(COMMON, 20), new WaveFormatEntry(COMMON, 25) } } },
-            { "Dynamic", new WaveGenerationFormat { waveFormats = new List<WaveFormatEntry> { new WaveFormatEntry(ELITE, 15), new WaveFormatEntry(RARE, 25 ), new WaveFormatEntry(RARE, 15), new WaveFormatEntry(COMMON, 20), new WaveFormatEntry(COMMON, 25) } } },
-            { "ElitesOnly", new WaveGenerationFormat { waveFormats = new List<WaveFormatEntry> { new WaveFormatEntry( ELITE, 25 ), new WaveFormatEntry(ELITE, 25), new WaveFormatEntry(ELITE, 25) } } },
-            { "RaresOnly", new WaveGenerationFormat { waveFormats = new List<WaveFormatEntry> { new WaveFormatEntry(RARE, 25 ), new WaveFormatEntry(RARE, 25), new WaveFormatEntry(RARE, 25) } } },
-            // Boss waves
-            { "TutorialBoss", new WaveGenerationFormat { waveFormats = new List<WaveFormatEntry> { new WaveFormatEntry(UNIQUE, 100), new WaveFormatEntry( COMMON, 30 ), new WaveFormatEntry(COMMON, 40) } } },
-            { "EasyBoss", new WaveGenerationFormat { waveFormats = new List<WaveFormatEntry> { new WaveFormatEntry(UNIQUE, 100), new WaveFormatEntry(RARE, 30 ), new WaveFormatEntry(COMMON, 30) } } },
-            { "Boss", new WaveGenerationFormat { waveFormats = new List<WaveFormatEntry> { new WaveFormatEntry(UNIQUE, 100), new WaveFormatEntry(ELITE, 20 ), new WaveFormatEntry(RARE, 30), new WaveFormatEntry(COMMON, 25) } } },
-            { "DynamicBoss", new WaveGenerationFormat { waveFormats = new List<WaveFormatEntry> { new WaveFormatEntry(UNIQUE, 100), new WaveFormatEntry(ELITE, 20 ), new WaveFormatEntry(RARE, 20), new WaveFormatEntry(RARE, 20), new WaveFormatEntry(COMMON, 20), new WaveFormatEntry(COMMON, 20) } } },
-        };
-
-        public static void UpdateWaveDefinition(WaveFormatCollection waveStyles)
-        {
-            WaveStyles.Clear();
-            foreach (KeyValuePair<string, WaveGenerationFormat> entry in waveStyles.WaveFormats)
-            {
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Updating Wavestyle Entry {entry.Key} {entry.Value}"); }
-                WaveStyles.Add(entry.Key, entry.Value);
-            }
-        }
-
-        public static string YamlWaveDefinition()
-        {
-            var waveCollection = new WaveFormatCollection();
-            waveCollection.WaveFormats = WaveStyles;
-            var yaml = CONST.yamlserializer.Serialize(waveCollection);
-            return yaml;
-        }
-
-
-        public static Dictionary<String, CreatureValues> SpawnableCreatures = new Dictionary<string, CreatureValues>
-        {
-            // Meadow Creatures
-            {"Neck", new CreatureValues { spawnCost = 2, prefabName = "Neck", spawnType = COMMON, biome = MEADOWS, enabled = true, dropsEnabled = false } },
-            {"Boar", new CreatureValues {spawnCost = 2, prefabName = "Boar", spawnType = COMMON, biome = MEADOWS, enabled = true, dropsEnabled = false } },
-            {"Deer", new CreatureValues {spawnCost = 2, prefabName = "Deer", spawnType = COMMON, biome = MEADOWS, enabled = false, dropsEnabled = false } },
-            {"Greyling", new CreatureValues {spawnCost = 3, prefabName = "Greyling", spawnType = COMMON, biome = MEADOWS, enabled = true, dropsEnabled = false } },
-            // Black Forest Creatures
-            {"GreyDwarf", new CreatureValues {spawnCost = 4, prefabName = "Greydwarf", spawnType = COMMON, biome = BLACKFOREST, enabled = true, dropsEnabled = false } },
-            {"GreyDwarfBrute", new CreatureValues {spawnCost = 8, prefabName = "Greydwarf_Elite", spawnType = RARE, biome = BLACKFOREST, enabled = true, dropsEnabled = false } },
-            {"GreyDwarfShaman", new CreatureValues {spawnCost = 8, prefabName = "Greydwarf_Shaman", spawnType = RARE, biome = BLACKFOREST, enabled = true, dropsEnabled = false } },
-            {"Skeleton", new CreatureValues {spawnCost = 4, prefabName = "Skeleton_NoArcher", spawnType = COMMON, biome = BLACKFOREST, enabled = true, dropsEnabled = false } },
-            {"SkeletonArcher", new CreatureValues {spawnCost = 5, prefabName = "Skeleton", spawnType = COMMON, biome = BLACKFOREST, enabled = true, dropsEnabled = false } },
-            {"RancidSkeleton", new CreatureValues {spawnCost = 9, prefabName = "Skeleton_Poison", spawnType = RARE, biome = BLACKFOREST, enabled = true, dropsEnabled = false } },
-            {"Ghost", new CreatureValues {spawnCost = 7, prefabName = "Ghost", spawnType = RARE, biome = BLACKFOREST, enabled = true, dropsEnabled = false } },
-            {"Troll", new CreatureValues {spawnCost = 20, prefabName = "Troll", spawnType = ELITE, biome = BLACKFOREST, enabled = true, dropsEnabled = false } },
-            // Swamp Creatures
-            {"Surtling", new CreatureValues {spawnCost = 6, prefabName = "Surtling", spawnType = RARE, biome = SWAMP, enabled = true, dropsEnabled = false} },
-            {"Leech", new CreatureValues {spawnCost = 8, prefabName = "Leech", spawnType = COMMON, biome = SWAMP, enabled = false, dropsEnabled = false} },
-            {"Wraith", new CreatureValues {spawnCost = 10, prefabName = "Wraith", spawnType = RARE, biome = SWAMP, enabled = true, dropsEnabled = false} },
-            {"Abomination", new CreatureValues {spawnCost = 30, prefabName = "Abomination", spawnType = ELITE, biome = SWAMP, enabled = true, dropsEnabled = false} },
-            {"Draugr", new CreatureValues {spawnCost = 10, prefabName = "Draugr", spawnType = COMMON, biome = SWAMP, enabled = true, dropsEnabled = false} },
-            {"DraugrArcher", new CreatureValues {spawnCost = 20, prefabName = "Draugr_Ranged", spawnType = RARE, biome = SWAMP, enabled = true, dropsEnabled = false} },
-            {"DraugrElite", new CreatureValues {spawnCost = 15, prefabName = "Draugr_Elite", spawnType = RARE, biome = SWAMP, enabled = true, dropsEnabled = false} },
-            {"Blob", new CreatureValues {spawnCost = 7, prefabName = "Blob", spawnType = COMMON, biome = SWAMP, enabled = true, dropsEnabled = false} },
-            {"BlobElite", new CreatureValues {spawnCost = 15, prefabName = "BlobElite", spawnType = RARE, biome = SWAMP, enabled = true, dropsEnabled = false} },
-            // Mountain Creatures
-            {"Bat", new CreatureValues {spawnCost = 3, prefabName = "Bat", spawnType = COMMON, biome = MOUNTAIN, enabled = false, dropsEnabled = false} },
-            {"IceDrake", new CreatureValues {spawnCost = 25, prefabName = "Hatchling", spawnType = RARE, biome = MOUNTAIN, enabled = true, dropsEnabled = false} },
-            {"Wolf", new CreatureValues {spawnCost = 18, prefabName = "Wolf", spawnType = COMMON, biome = MOUNTAIN, enabled = true, dropsEnabled = false} },
-            {"Fenring", new CreatureValues {spawnCost = 28, prefabName = "Fenring", spawnType = RARE, biome = MOUNTAIN, enabled = true, dropsEnabled = false} },
-            {"Ulv", new CreatureValues {spawnCost = 20, prefabName = "Ulv", spawnType = COMMON, biome = MOUNTAIN, enabled = true, dropsEnabled = false} },
-            {"Cultist", new CreatureValues {spawnCost = 40, prefabName = "Fenring_Cultist", spawnType = RARE, biome = MOUNTAIN, enabled = true, dropsEnabled = false} },
-            {"StoneGolem", new CreatureValues {spawnCost = 50, prefabName = "StoneGolem", spawnType = ELITE, biome = MOUNTAIN, enabled = true, dropsEnabled = false} },
-            // Plains Creatures
-            {"Deathsquito", new CreatureValues {spawnCost = 20, prefabName = "Deathsquito", spawnType = COMMON, biome = PLAINS, enabled = true, dropsEnabled = false} },
-            {"Fuling", new CreatureValues {spawnCost = 15, prefabName = "Goblin", spawnType = COMMON, biome = PLAINS, enabled = true, dropsEnabled = false} },
-            {"FulingArcher", new CreatureValues {spawnCost = 20, prefabName = "GoblinArcher", spawnType = COMMON, biome = PLAINS, enabled = true, dropsEnabled = false} },
-            {"FulingBerserker", new CreatureValues {spawnCost = 45, prefabName = "GoblinBrute", spawnType = ELITE, biome = PLAINS, enabled = true, dropsEnabled = false} },
-            {"FulingShaman", new CreatureValues {spawnCost = 40, prefabName = "GoblinShaman", spawnType = RARE, biome = PLAINS, enabled = true, dropsEnabled = false} },
-            {"Growth", new CreatureValues {spawnCost = 35, prefabName = "BlobTar", spawnType = RARE, biome = PLAINS, enabled = true, dropsEnabled = false} },
-            // Mistland Creatures
-            {"Seeker", new CreatureValues {spawnCost = 30, prefabName = "Seeker", spawnType = COMMON, biome = MISTLANDS, enabled = true, dropsEnabled = false} },
-            {"SeekerSoldier", new CreatureValues {spawnCost = 75, prefabName = "SeekerBrute", spawnType = ELITE, biome = MISTLANDS, enabled = true, dropsEnabled = false} },
-            {"SeekerBrood", new CreatureValues {spawnCost = 10, prefabName = "SeekerBrood", spawnType = COMMON, biome = MISTLANDS, enabled = true, dropsEnabled = false} },
-            {"Gjall", new CreatureValues {spawnCost = 75, prefabName = "Gjall", spawnType = ELITE, biome = MISTLANDS, enabled = true, dropsEnabled = false} },
-            {"Tick", new CreatureValues {spawnCost = 15, prefabName = "Tick", spawnType = COMMON, biome = MISTLANDS, enabled = true, dropsEnabled = false} },
-            {"DvergerRouge", new CreatureValues {spawnCost = 40, prefabName = "Dverger", spawnType = RARE, biome = MISTLANDS, enabled = true, dropsEnabled = false} },
-            {"DvergerMage", new CreatureValues {spawnCost = 75, prefabName = "DvergerMage", spawnType = RARE, biome = MISTLANDS, enabled = true, dropsEnabled = false} },
-            {"DvergerMageFire", new CreatureValues {spawnCost = 75, prefabName = "DvergerMageFire", spawnType = RARE, biome = MISTLANDS, enabled = false, dropsEnabled = false } },
-            {"DvergerMageIce", new CreatureValues {spawnCost = 75, prefabName = "DvergerMageIce", spawnType = RARE, biome = MISTLANDS, enabled = false, dropsEnabled = false } },
-            {"DvergerMageSupport", new CreatureValues {spawnCost = 75, prefabName = "DvergerMageSupport", spawnType = ELITE, biome = MISTLANDS, enabled = true, dropsEnabled = false} },
-            // Ashlands Creatures
-            {"Asksvin", new CreatureValues {spawnCost = 70, prefabName = "Asksvin", spawnType = RARE, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
-            {"Charred_Archer", new CreatureValues {spawnCost = 60, prefabName = "Charred_Archer", spawnType = COMMON, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
-            {"Charred_Twitcher", new CreatureValues {spawnCost = 45, prefabName = "Charred_Twitcher", spawnType = COMMON, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
-            {"Charred_Mage", new CreatureValues {spawnCost = 100, prefabName = "Charred_Mage", spawnType = ELITE, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
-            {"Charred_Melee", new CreatureValues {spawnCost = 75, prefabName = "Charred_Melee", spawnType = RARE, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
-            {"FallenValkyrie", new CreatureValues {spawnCost = 100, prefabName = "FallenValkyrie", spawnType = ELITE, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
-            {"BlobLava", new CreatureValues {spawnCost = 75, prefabName = "BlobLava", spawnType = RARE, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
-            {"Morgen", new CreatureValues {spawnCost = 85, prefabName = "Morgen", spawnType = ELITE, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
-            {"Volture", new CreatureValues {spawnCost = 30, prefabName = "Volture", spawnType = COMMON, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
-            // Boss Creatures
-            {"Eikthyr", new CreatureValues {spawnCost = 40, prefabName = "Eikthyr", spawnType = UNIQUE, biome = MEADOWS, enabled = true, dropsEnabled = false} },
-            {"TheElder", new CreatureValues {spawnCost = 180, prefabName = "gd_king", spawnType = UNIQUE, biome = BLACKFOREST, enabled = true, dropsEnabled = false} },
-            {"Bonemass", new CreatureValues {spawnCost = 250, prefabName = "Bonemass", spawnType = UNIQUE, biome = SWAMP, enabled = true, dropsEnabled = false} },
-            {"Moder", new CreatureValues {spawnCost = 320, prefabName = "Dragon", spawnType = UNIQUE, biome = MOUNTAIN, enabled = true, dropsEnabled = false} },
-            {"Yagluth", new CreatureValues {spawnCost = 450, prefabName = "GoblinKing", spawnType = UNIQUE, biome = PLAINS, enabled = true, dropsEnabled = false} },
-            {"TheQueen", new CreatureValues {spawnCost = 600, prefabName = "SeekerQueen", spawnType = UNIQUE, biome = MISTLANDS, enabled = true, dropsEnabled = false} },
-            {"Fader", new CreatureValues {spawnCost = 800, prefabName = "Fader", spawnType = UNIQUE, biome = ASHLANDS, enabled = true, dropsEnabled = false} },
-        };
-
-        public static void UpdateSpawnableCreatures(SpawnableCreatureCollection spawnables)
-        {
-            SpawnableCreatures.Clear();
-            foreach (KeyValuePair<string, CreatureValues> entry in spawnables.Creatures)
-            {
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Updating Creature Entry {entry.Key} Prefab:{entry.Value.prefabName} SpawnCost:{entry.Value.spawnCost} Biome:{entry.Value.biome} SpawnType:{entry.Value.spawnType}"); } 
-                SpawnableCreatures.Add(entry.Key, entry.Value);
-            }
-        }
-
-        public static string YamlCreatureDefinition()
-        {
-            var creatureCollection = new SpawnableCreatureCollection();
-            creatureCollection.Creatures = SpawnableCreatures;
-            var yaml = CONST.yamlserializer.Serialize(creatureCollection);
-            return yaml;
-        }
-
-        public static void UpdateLevelValues(VFConfig cfg)
-        {
-            
-            base_challenge_points = VFConfig.BindServerConfig(
-                "shine of challenge - levels",
-                "level_base_challenge_points",
-                (short)100,
-                "The base number of points that all waves add. This is especially impactful in early levels (meadows).",
-                false,
-                100, 1000).Value;
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Config Level base_challenge_points updated."); }
-
-            max_challenge_points = VFConfig.BindServerConfig(
-                "shine of challenge - levels",
-                "max_challenge_points",
-                (short)3000,
-                "The absolute max number of points a wave can generate with, higher values will be clamped down to this value.",
-                true, 1000, 30000).Value;
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Config Level max_challenge_points updated."); }
-
-            star_chance = VFConfig.BindServerConfig(
-                "shine of challenge - levels",
-                "creature_star_chance",
-                0.15f,
-                "The chance that a creature will be an upgraded version of itself.",
-                true, 0.0f, 1).Value;
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Config creature_star_chance updated."); }
-
-            challenge_slope = VFConfig.BindServerConfig(
-                "shine of challenge - levels",
-                "challenge_slope",
-                15.0f,
-                "The linear regression slope which increases difficulty. If you want harder waves, add 1 and try out the difficulty again.",
-                false, 5f, 50f).Value;
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Config challenge_slope updated."); }
-
-            chance_of_prior_biome_creature = VFConfig.BindServerConfig(
-                "shine of challenge - levels",
-                "chance_of_prior_biome_creature",
-                0.05f,
-                "The chance that a valid prior biome creature will be selected. Only 1 can be selected per wave. Setting to zero disables generating waves with previous biome creatures.",
-                false, 0.00f, 1.0f).Value;
-
-            max_creature_stars = VFConfig.BindServerConfig(
-                "shine of challenge - levels",
-                "max_creature_stars",
-                (short)2,
-                "This is the max number of stars a creature can have. CLLC is required for anything over 2.",
-                true, 0, 10).Value;
-        }
-
 
         // Steep logarithmic curve with controllable curve rate and increases.
         // Log(level^2) * (challenge_slope * level) + base_challenge_points
@@ -1198,14 +93,14 @@ namespace ValheimFortress.Challenge
         {
             Double level_offset = Math.Pow(level, 2);
             Double computed_slope = Math.Log(level_offset);
-            Double offset = challenge_slope * level;
+            Double offset = VFConfig.ChallengeSlope.Value * level;
             Double allocated_additional_points = computed_slope * offset;
-            Int16 allocated_challenge_points = (Int16)(base_challenge_points + allocated_additional_points);
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Challenge points slope:{allocated_challenge_points} = (log({level_offset})[{computed_slope}] * ({challenge_slope} * {level})[{offset}])[{allocated_additional_points}] + {base_challenge_points} "); }
+            Int16 allocated_challenge_points = (Int16)(VFConfig.BaseChallengePoints.Value + allocated_additional_points);
+            Logger.LogInfo($"Challenge points slope:{allocated_challenge_points} = (log({level_offset})[{computed_slope}] * ({VFConfig.ChallengeSlope.Value} * {level})[{offset}])[{allocated_additional_points}] + {VFConfig.BaseChallengePoints.Value} ");
             // Cap the challenge points if they are over the defined max
-            if (allocated_challenge_points > max_challenge_points)
+            if (allocated_challenge_points > VFConfig.MaxChallengePoints.Value)
             {
-                allocated_challenge_points = max_challenge_points;
+                allocated_challenge_points = VFConfig.MaxChallengePoints.Value;
             }
             return allocated_challenge_points;
         }
@@ -1228,7 +123,7 @@ namespace ValheimFortress.Challenge
             }
             Jotunn.Logger.LogInfo($"Wave Challenge points: {wave_total_points}");
             // Builds out a template for wave generation
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Building wave template from {levelDefinition.waveFormat}"); }
+            Logger.LogInfo($"Building wave template from {levelDefinition.waveFormat}");
             PhasedWaveTemplate wavedefinition = dynamicBuildWaveTemplate(levelDefinition, wave_total_points, boss_mode, siege_mode, override_max_creatures);
 
             return wavedefinition;
@@ -1247,8 +142,8 @@ namespace ValheimFortress.Challenge
 
             // if (level > 30 && level < 35) { selected_biome = "Ashlands"; }
             short targeted_wave_biome_level = BiomeStringToInt(selected_biome);
-            WaveGenerationFormat WaveGenerationFormat = WaveStyles[defined_level.waveFormat];
-            if (boss_mode) { WaveGenerationFormat = WaveStyles[defined_level.bossWaveFormat]; }
+            WaveGenerationFormat WaveGenerationFormat = WaveStyles.GetWaveStyle(defined_level.waveFormat);
+            if (boss_mode) { WaveGenerationFormat = WaveStyles.GetWaveStyle(defined_level.bossWaveFormat); }
             Int16 creatures_selected_from_previous_biome = 0;
             if(VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Starting wave generation for {selected_biome} - phases: {phases}"); }
 
@@ -1261,7 +156,7 @@ namespace ValheimFortress.Challenge
             // Build a list of creature keys which are valid targets
             // We build the list once, and shuffle its contents each time to get different creatures picked for the same wave (if there are multiple valid for the role)
             List<string> creatureKeys = new List<string>();
-            foreach(KeyValuePair<string, CreatureValues> creature in SpawnableCreatures) {
+            foreach(KeyValuePair<string, CreatureValues> creature in Monsters.SpawnableCreatures) {
                 if(creature.Value.enabled != true) { continue; }
                 creatureKeys.Add(creature.Key);
             }
@@ -1283,13 +178,13 @@ namespace ValheimFortress.Challenge
                     
                     foreach (String skey in this_iteration_key_order)
                     {
-                        if (SpawnableCreatures[skey].spawnType != waveType) { continue; }
+                        if (Monsters.SpawnableCreatures[skey].spawnType != waveType) { continue; }
                         // Skip monsters that are not in the onlySelectedMonsters section, if its defined.
                         if (should_check_only_monsters)
                         {
                             if (!defined_level.onlySelectMonsters.Contains(skey)) 
                             {
-                                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"creature {skey} is not in the inclusion list, skipping."); }
+                                Logger.LogDebug($"creature {skey} is not in the inclusion list, skipping.");
                                 continue;
                             }
                         }
@@ -1297,7 +192,7 @@ namespace ValheimFortress.Challenge
                         {
                             if (defined_level.excludeSelectMonsters.Contains(skey)) 
                             {
-                                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"creature {skey} is in the exclusion list, skipping."); }
+                                Logger.LogDebug($"creature {skey} is in the exclusion list, skipping.");
                                 continue; 
                             }
                         }
@@ -1307,7 +202,7 @@ namespace ValheimFortress.Challenge
 
                         // Creature is not from the right biome, or -1 biome
                         // or we already have all the creatures we need from a previous biome
-                        short current_creature_biome_level = BiomeStringToInt(SpawnableCreatures[skey].biome);
+                        short current_creature_biome_level = BiomeStringToInt(Monsters.SpawnableCreatures[skey].biome);
                         //if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"{skey} Biome check: {current_creature_biome_level} > {targeted_wave_biome_level} || {targeted_wave_biome_level} != {current_creature_biome_level}"); }
                         //if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"{skey} Previous check: {current_creature_biome_level} != {targeted_wave_biome_level} && {creatures_selected_from_previous_biome} >= {max_creatures_from_previous_biomes}"); }
                         // Creature too high of a level
@@ -1331,7 +226,7 @@ namespace ValheimFortress.Challenge
                             // Roll to see if we will add this creature, its only a 5% chance by default.
                             float prior_biome_chance = UnityEngine.Random.value;
                             if(defined_level.chancePreviousBiomeCreatureSelected < prior_biome_chance) {
-                                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"previous biome creature {skey} failed its add roll {chance_of_prior_biome_creature} < {prior_biome_chance}."); }
+                                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"previous biome creature {skey} failed its add roll {defined_level.chancePreviousBiomeCreatureSelected} < {prior_biome_chance}."); }
                                 continue; 
                             }
                         }   
@@ -1349,7 +244,7 @@ namespace ValheimFortress.Challenge
                         }
 
                         // Add the creature!
-                        waveOutline.AddCreatureToWave(skey, max_wave_points, percentage, min_stars, max_creature_stars);
+                        waveOutline.AddCreatureToWave(skey, max_wave_points, percentage, min_stars, VFConfig.MaxCreatureStars.Value);
                         creature_added = true;
                         duplicate_chance = 0.25f;
                         if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"creature {skey} added as {waveType} {percentage}."); }
@@ -1368,14 +263,9 @@ namespace ValheimFortress.Challenge
             List<HoardConfig> rareCreatures = waveOutline.getRareCreatures();
             List<HoardConfig> eliteCreatures = waveOutline.getEliteCreatures();
             List<HoardConfig> uniqueCreatures = waveOutline.getUniqueCreatures();
-            short max_per_wave = max_creatures_per_wave;
-            if (override_max_creatures > 0) 
-            {
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Overriding max creatures ({max_per_wave}) per wave to {override_max_creatures}"); }
-                max_per_wave = override_max_creatures;
-            }
+            short max_per_wave = override_max_creatures;
 
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Building out wave phases from wave outline with COMMON-{commonCreatures.Count} RARE-{rareCreatures.Count} ELITE-{eliteCreatures.Count} UNIQUE-{uniqueCreatures.Count}"); }
+            Logger.LogInfo($"Building out wave phases from wave outline with COMMON-{commonCreatures.Count} RARE-{rareCreatures.Count} ELITE-{eliteCreatures.Count} UNIQUE-{uniqueCreatures.Count}");
 
             while (phases > phases_generated)
             {
@@ -1443,7 +333,7 @@ namespace ValheimFortress.Challenge
             return finalizedWaveGeneration;
         }
 
-        public static short GenerateHordePhase(List<HoardConfig> creatureEntries, Dictionary<String, bool> creature_modifiers, int phases, int current_phase, List<HoardConfig> current_phase_hoard_config, string creatureType)
+        public static short GenerateHordePhase(List<HoardConfig> creatureEntries, SpawnModifiers creature_modifiers, int phases, int current_phase, List<HoardConfig> current_phase_hoard_config, string creatureType)
         {
             short creatureSumCount = 0;
             foreach (HoardConfig entry in creatureEntries)
@@ -1457,27 +347,6 @@ namespace ValheimFortress.Challenge
                 current_phase_hoard_config.Add(new HoardConfig {creature = entry.creature, prefab = entry.prefab, amount = spawn_amount, stars = entry.stars });
             }
             return creatureSumCount;
-        }
-
-        public static short DetermineCreatureStars(short min_stars, short max_stars)
-        {
-            short creatureStars = min_stars;
-            if (creatureStars >= max_stars) {
-                creatureStars = max_stars;
-                return creatureStars;
-            }
-            // Random value between 0-1.
-            float upgradeRoll = UnityEngine.Random.value;
-            if (upgradeRoll > (1 - star_chance))
-            {
-                creatureStars += 1;
-                if (max_stars >= (min_stars + 1)) // Upgrade successful, now can it be upgraded again?
-                {
-                    float secondUpgradeRoll = UnityEngine.Random.value;
-                    if (secondUpgradeRoll > (1 - star_chance)) { creatureStars += 1; }
-                }
-            }
-            return creatureStars;
         }
 
 
@@ -1522,10 +391,10 @@ namespace ValheimFortress.Challenge
         public static short DetermineCreatureSpawnAmount(string creature, int total_points, float creature_percentage)
         {
             // The number to spawn is the total amount of wave points this segment represents / the creatures spawn cost
-            float number_to_spawn = total_points * (creature_percentage / 100f) / SpawnableCreatures[creature].spawnCost;
+            float number_to_spawn = total_points * (creature_percentage / 100f) / Monsters.SpawnableCreatures[creature].spawnCost;
             float number_to_spawn_variance = number_to_spawn * 0.10f;
             float spawn_amount = UnityEngine.Random.Range((number_to_spawn - number_to_spawn_variance), (number_to_spawn + number_to_spawn_variance));
-            if (SpawnableCreatures[creature].spawnType == UNIQUE) { spawn_amount = 1; } // uniques only spawn one
+            if (Monsters.SpawnableCreatures[creature].spawnType == UNIQUE) { spawn_amount = 1; } // uniques only spawn one
             return (short)spawn_amount;
         }
 
@@ -1539,45 +408,31 @@ namespace ValheimFortress.Challenge
             return wave_percent;
         }
 
-        public static float ApplyWavePercentModifiers(Dictionary<string, bool> waveMods, int phases, int current_phase)
+        public static float ApplyWavePercentModifiers(SpawnModifiers waveMods, int phases, int current_phase)
         {
             float wavePercent = 1f;
             // Guard clause for no modifiers
-            if (waveMods == null)
-            {
-                return wavePercent;
-            } else if (waveMods.Count == 0)
-            {
+            if (waveMods.AnyEnabled()) {
                 return wavePercent;
             }
 
-            // non-null and contains a key to operate with
-            if (waveMods.ContainsKey("linearDecreaseRandomWaveAdjustment")) {
-                if (waveMods["linearDecreaseRandomWaveAdjustment"] == true)
-                {
-                    wavePercent = linearDecreaseRandomWaveAdjustment(phases, current_phase);
-                }
+            if (waveMods.linearDecreaseRandomWaveAdjustment)
+            {
+                wavePercent = linearDecreaseRandomWaveAdjustment(phases, current_phase);
+            }
+            if (waveMods.linearIncreaseRandomWaveAdjustment)
+            {
+                wavePercent = linearIncreaseRandomWaveAdjustment(phases, current_phase);
             }
 
-            if (waveMods.ContainsKey("linearIncreaseRandomWaveAdjustment")) {
-                if (waveMods["linearIncreaseRandomWaveAdjustment"] == true)
-                {
-                    wavePercent = linearIncreaseRandomWaveAdjustment(phases, current_phase);
-                }
+            if (waveMods.partialRandomWaveAdjustment)
+            {
+                wavePercent = partialRandomWaveAdjustment(0.3f);
             }
 
-            if (waveMods.ContainsKey("partialRandomWaveAdjustment")) {
-                if (waveMods["partialRandomWaveAdjustment"] == true)
-                {
-                    wavePercent = partialRandomWaveAdjustment(0.3f);
-                }
-            }
-
-            if (waveMods.ContainsKey("onlyGenerateInSecondHalf")) {
-                if (waveMods["onlyGenerateInSecondHalf"] == true)
-                {
-                    wavePercent = onlyGenerateInSecondHalf(phases, current_phase);
-                }
+            if (waveMods.onlyGenerateInSecondHalf)
+            {
+                wavePercent = onlyGenerateInSecondHalf(phases, current_phase);
             }
             return wavePercent;
         }
@@ -1597,7 +452,7 @@ namespace ValheimFortress.Challenge
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Wave has more creatures than allowed from configuration to remove: {total_creatures_in_wave} > {max_per_wave}"); }
             short iterations = 0;
             // This won't scale up infinitely in reducing waves, but could produce waves up to 1/4th the size
-            while(iterations < max_creature_stars + 1)
+            while(iterations < VFConfig.MaxCreatureStars.Value + 1)
             {
                 total_creatures_in_wave = EvaluateAndReduceWave(hoards, total_creatures_in_wave, max_per_wave);
                 if (total_creatures_in_wave <= max_per_wave) { break; }
@@ -1615,7 +470,7 @@ namespace ValheimFortress.Challenge
                 {
                     if (entry.amount <= stop_reduction_at) { continue; }
                     if (total_creatures_in_wave <= max_per_wave) { break; }
-                    if (SpawnableCreatures[entry.creature].spawnType == CONST.UNIQUE) { continue; }
+                    if (Monsters.SpawnableCreatures[entry.creature].spawnType == CONST.UNIQUE) { continue; }
                     total_creatures_in_wave = MutatingReduceHoardConfigSize(entry, total_creatures_in_wave, max_per_wave);
                 }
             }
@@ -1626,7 +481,7 @@ namespace ValheimFortress.Challenge
         {
             if (total_creatures_in_wave > max_per_wave)
             {
-                if (hoard.stars < max_creature_stars)
+                if (hoard.stars < VFConfig.MaxCreatureStars.Value)
                 {
                     short creature_difference = (short)(hoard.amount / 2);
                     hoard.amount = creature_difference;

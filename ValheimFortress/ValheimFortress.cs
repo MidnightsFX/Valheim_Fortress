@@ -11,6 +11,7 @@ using BepInEx.Configuration;
 using System.Collections.Generic;
 using System;
 using System.Linq;
+using BepInEx.Logging;
 
 namespace ValheimFortress
 {
@@ -21,17 +22,19 @@ namespace ValheimFortress
     {
         public const string PluginGUID = "MidnightsFX.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.31.1";
+        public const string PluginVersion = "0.31.3";
 
         public static AssetBundle EmbeddedResourceBundle;
         public VFConfig cfg;
+        public static ManualLogSource Log;
         public static GameObject spawnPortal;
         public static GameObject creatureNotifier;
         public static GameObject portalDestroyVFX;
 
-        private void Awake()
+        public void Awake()
         {
             cfg = new VFConfig(Config);
+            Log = this.Logger;
             cfg.SetupConfigRPCs();
             EmbeddedResourceBundle = AssetUtils.LoadAssetBundleFromResources("ValheimFortress.AssetsEmbedded.vfbundle", typeof(ValheimFortress).Assembly);
             AddLocalizations();
@@ -41,11 +44,6 @@ namespace ValheimFortress
 
             // Yaml configs
             VFConfig.GetYamlConfigFiles();
-
-            // Generate/update/set config values.
-            // Levels.UpdateCreatureConfigValues(cfg);
-            Levels.UpdateLevelValues(cfg);
-            // Rewards.UpdateResouceRewards(cfg);
 
             // GUIManager.OnCustomGUIAvailable += () => UI.Init(EmbeddedResourceBundle);
 

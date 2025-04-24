@@ -13,27 +13,7 @@ namespace ValheimFortress.Challenge
         private WildShrineConfiguration wildShrineConfiguration;
         private static new GameObject shrine_spawnpoint;
         public override void Awake()
-        {
-            //if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Looking for znet view."); }
-            //// Because the netview is attached to the location here not the structure parent
-            //zNetView = GetComponent<ZNetView>();
-            //if (zNetView == null ) {
-            //    zNetView = GetComponentInParent<ZNetView>();
-            //    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Looking for a parented znet view."); }
-            //}
-            //if (zNetView == null)
-            //{
-            //    GameObject parent = this.transform.parent.gameObject;
-            //    zNetView = parent.GetComponent<ZNetView>();
-            //    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Looking in manually selected parent {parent.name} container for ZnetView."); }
-            //}
-            //if (zNetView == null) {
-            //    // this is used to check if the znet is valid, and send all of the data around- so this is probably gunna break things
-            //    zNetView = new ZNetView();
-            //    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("created a new znet view to use."); }
-            //}
-
-        }
+        {}
 
         private void setupLateNetworking()
         {
