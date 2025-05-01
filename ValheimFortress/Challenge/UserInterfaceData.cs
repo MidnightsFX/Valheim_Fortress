@@ -158,7 +158,7 @@ namespace ValheimFortress.Challenge
             return availableRewards;
         }
 
-        public static List<String> UpdateLevels(string shrine_type = "challenge", List<string> levelfilternames = null)
+        public static List<String> UpdateLevels(ShrineType shrine_type = ShrineType.Challenge, List<string> levelfilternames = null)
         {
             var zs = ZoneSystem.instance;
             List<ChallengeLevelDefinition> clevels = ChallengeLevels.GetChallengeLevelDefinitions();

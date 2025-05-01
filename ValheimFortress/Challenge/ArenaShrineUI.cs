@@ -75,7 +75,7 @@ namespace ValheimFortress.Challenge
 
         public override void DisplayUI()
         {
-            CreateChallengeUI("arena");
+            CreateChallengeUI(ShrineType.Arena);
             ChallengePanel.SetActive(true);
             GUIManager.BlockInput(true);
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Enabled UI from Shrine object."); }

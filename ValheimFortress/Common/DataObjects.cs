@@ -123,7 +123,7 @@ namespace ValheimFortress.Challenge
         public short spawnCost { get; set; }
         public String prefabName { get; set; }
         public String spawnType { get; set; }
-        public String biome { get; set; }
+        public Heightmap.Biome biome { get; set; }
         public Boolean enabled { get; set; }
         public Boolean dropsEnabled { get; set; }
 
@@ -241,6 +241,7 @@ namespace ValheimFortress.Challenge
         public short Difficulty { get; set; }
         public WaveStyleName WaveFormat { get; set; }
         public string LevelWarningLocalization { get; set; }
+        public LevelModifiers levelModifiers { get; set; }
         public List<String> OnlySelectMonsters { get; set; }
         public List<String> ExcludeSelectMonsters { get; set; }
         public SpawnModifiers CommonSpawnModifiers { get; set; }
@@ -281,6 +282,13 @@ namespace ValheimFortress.Challenge
         {
             return linearIncreaseRandomWaveAdjustment || linearIncreaseWaveAdjustment || linearDecreaseRandomWaveAdjustment || partialRandomWaveAdjustment || onlyGenerateInSecondHalf;
         }
+    }
+
+    public class LevelModifiers
+    {
+        public bool SiegeMode { get; set; } = false;
+        public bool HardMode { get; set; } = false;
+        public bool BossMode { get; set; } = false;
     }
 
     public class ChallengeLevelDefinitionCollection

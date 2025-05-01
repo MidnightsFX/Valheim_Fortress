@@ -14,16 +14,12 @@ namespace ValheimFortress.Challenge
     {
         protected ZNetView zNetView;
         public IntZNetProperty spawned_creatures { get; set; }
-
         public DictionaryZNetProperty alive_creature_list { get; set; }
-
         public BoolZNetProperty hard_mode { get; set; }
         public BoolZNetProperty boss_mode { get; set; }
         public BoolZNetProperty siege_mode { get; set; }
         public BoolZNetProperty challenge_active { get; set; }
-
         public BoolZNetProperty start_challenge { get; set; }
-
         public IntZNetProperty selected_level { get; set; }
         public IntZNetProperty selected_level_index { get; set; }
         public StringZNetProperty selected_reward { get; set; }
@@ -41,13 +37,13 @@ namespace ValheimFortress.Challenge
         protected List<GameObject> enemies = new List<GameObject>();
         protected GameObject shrine_spawnpoint;
         protected GameObject shrine_portal;
-        protected static PhasedWaveTemplate wave_phases_definitions;
+        protected PhasedWaveTemplate wave_phases_definitions;
         protected bool phase_running = false;
         protected Spawner spawn_controller;
-        protected static int availablePhases;
+        protected int availablePhases;
         protected Rewards reward_controller = new Rewards();
 
-        protected static CustomRPC WaveDefinitionRPC;
+        protected CustomRPC WaveDefinitionRPC;
 
         public virtual void Awake()
         {
@@ -117,7 +113,7 @@ namespace ValheimFortress.Challenge
                     }
                 }
                 
-                WaveDefinitionRPC = NetworkManager.Instance.AddRPC("levelsyaml_rpc", VFConfig.OnServerRecieveConfigs, OnClientReceivePhaseConfigs);
+                WaveDefinitionRPC = NetworkManager.Instance.AddRPC("VF_levelsyaml_rpc", VFConfig.OnServerRecieveConfigs, OnClientReceivePhaseConfigs);
                 // Don't need to sync wave data to new clients connecting. There is a chance that if we swap owners during someone connecting to a region where a shrine challenge occurs that things could go wonky
                 // SynchronizationManager.Instance.AddInitialSynchronization(WaveDefinitionRPC, SendPhaseConfigs);
             }
@@ -283,7 +279,7 @@ namespace ValheimFortress.Challenge
             yield break;
         }
 
-        protected static IEnumerator OnClientReceivePhaseConfigs(long sender, ZPackage package)
+        protected IEnumerator OnClientReceivePhaseConfigs(long sender, ZPackage package)
         {
             var phaseConfigs = package.ReadString();
             // Write the phase Configs to this clients variable- after parsing them back out
@@ -295,7 +291,7 @@ namespace ValheimFortress.Challenge
             yield return null;
         }
 
-        protected static ZPackage SendPhaseConfigs()
+        protected ZPackage SendPhaseConfigs()
         {
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sending Hoard phase configs to peer clients."); }
             try
@@ -320,7 +316,7 @@ namespace ValheimFortress.Challenge
             }
         }
 
-        protected static void SendUpdatedPhaseConfigs()
+        protected void SendUpdatedPhaseConfigs()
         {
             try
             {
@@ -341,16 +337,16 @@ namespace ValheimFortress.Challenge
             if (availablePhases > wave_phases_definitions.hordePhases.Count)
             {
                 availablePhases = wave_phases_definitions.hordePhases.Count;
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Phases Available was undefined too large and was reset to: {availablePhases}."); }
+                Jotunn.Logger.LogInfo($"Phases Available was undefined too large and was reset to: {availablePhases}.");
             }
 
             if (availablePhases == 0)
             {
                 availablePhases = wave_phases_definitions.hordePhases.Count;
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Phases Available was undefined, updating it to reflect current wavephase definition {availablePhases}."); }
+                Jotunn.Logger.LogInfo($"Phases Available was undefined, updating it to reflect current wavephase definition {availablePhases}.");
             }
             bool dophases_remain = (availablePhases - currentPhase.Get()) > 0;
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Phases remaining check: available:{availablePhases} current{currentPhase.Get()} {dophases_remain}."); }
+            Jotunn.Logger.LogInfo($"Phases remaining check: available:{availablePhases} current{currentPhase.Get()} {dophases_remain}.");
             return dophases_remain;
         }
 

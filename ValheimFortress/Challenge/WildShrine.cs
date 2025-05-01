@@ -116,7 +116,7 @@ namespace ValheimFortress.Challenge
                         selected_level.ForceSet(wild_level_index);
                         start_challenge.ForceSet(true);
                         user.Message(MessageHud.MessageType.Center, Localization.instance.Localize(wlevelcfg.wildshrine_wave_start_localization));
-                        if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Deducted {wlevelcfg.tributeAmount} {wlevelcfg.tributeName} and enabling challenge setup."); }
+                        Jotunn.Logger.LogInfo($"Deducted {wlevelcfg.tributeAmount} {wlevelcfg.tributeName} and enabling challenge setup.");
                         return true;
                     } else
                     {

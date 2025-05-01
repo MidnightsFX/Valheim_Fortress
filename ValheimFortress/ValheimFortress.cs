@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 using BepInEx.Logging;
+using ValheimFortress.Common;
 
 namespace ValheimFortress
 {

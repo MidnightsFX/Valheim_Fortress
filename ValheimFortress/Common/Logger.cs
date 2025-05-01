@@ -1,14 +1,14 @@
 ﻿using BepInEx.Logging;
 using System;
 
-namespace ValheimFortress.common
+namespace ValheimFortress.Common
 {
     internal static class Logger
     {
 
-        public static LogLevel Level = LogLevel.Info;
+        public static LogLevel Level = LogLevel.Warning;
 
-        public static void enableDebugLogging(object sender, EventArgs e)
+        public static void enableDebugLogging()
         {
             if (VFConfig.EnableDebugMode.Value)
             {
@@ -16,12 +16,12 @@ namespace ValheimFortress.common
             }
             else
             {
-                Level = LogLevel.Info;
+                Level = LogLevel.Warning;
             }
             // set log level
         }
 
-        public static void toggleDebug()
+        public static void toggleDebug(object s, EventArgs e)
         {
             if (VFConfig.EnableDebugMode.Value)
             {
@@ -29,7 +29,7 @@ namespace ValheimFortress.common
             }
             else
             {
-                Level = LogLevel.Info;
+                Level = LogLevel.Warning;
             }
             // set log level
         }

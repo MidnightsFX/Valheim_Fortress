@@ -1,3 +1,11 @@
+  **0.31.0**
+---
+```
+- Overhaul of internal level and challenge definitions
+- Improved support for piece modifications when joining a server
+- Startup optimizations
+```
+
   **0.30.3**
 ---
 ```

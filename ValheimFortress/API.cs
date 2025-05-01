@@ -23,12 +23,14 @@ namespace ValheimFortress
             List<string> excludeSelectMonsters,
             SpawnModifiers commonSpawnModifiers,
             SpawnModifiers rareSpawnModifiers,
-            SpawnModifiers eliteSpawnModifiers
+            SpawnModifiers eliteSpawnModifiers,
+            LevelModifiers levelModifiers
         ){
             ExternalShrineLevel level = new ExternalShrineLevel();
             level.Biome = biome;
             level.Difficulty = difficulty;
             level.WaveFormat = waveFormat;
+            level.levelModifiers = levelModifiers;
             level.LevelWarningLocalization = levelWarningLocalization;
             level.OnlySelectMonsters = onlySelectMonsters;
             level.ExcludeSelectMonsters = excludeSelectMonsters;

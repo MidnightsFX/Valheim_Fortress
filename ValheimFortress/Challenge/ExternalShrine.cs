@@ -1,17 +1,18 @@
 ﻿using Jotunn.Managers;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
+using ValheimFortress.Common;
 
 namespace ValheimFortress.Challenge
 {
     internal class ExternalShrine : GenericShrine
     {
-        private WildShrineConfiguration wildShrineConfiguration;
+        private IntZNetProperty ShrineSelectedLevel;
+        private ExternalShrineDefinition extShrineDef;
+        private List<ExternalShrineLevel> levels;
         private static new GameObject[] shrine_spawnpoint;
+        
         public override void Awake()
         { }
 
@@ -38,23 +39,48 @@ namespace ValheimFortress.Challenge
 
             alive_creature_list = new DictionaryZNetProperty("alive_creature_list", zNetView, new Dictionary<String, short>() { });
 
+            ShrineSelectedLevel = new IntZNetProperty("shrine_selected_level", zNetView, 0);
+
             WaveDefinitionRPC = NetworkManager.Instance.AddRPC("levelsyaml_rpc", VFConfig.OnServerRecieveConfigs, OnClientReceivePhaseConfigs);
             SynchronizationManager.Instance.AddInitialSynchronization(WaveDefinitionRPC, SendPhaseConfigs);
         }
 
         public override string GetHoverName()
         {
-            return Localization.instance.Localize(wildShrineConfiguration.wildShrineNameLocalization);
+            return Localization.instance.Localize(extShrineDef.NameLocalization);
         }
 
         public override string GetHoverText()
         {
-            throw new NotImplementedException();
+            string text = $"[<color=yellow><b>$KEY_Use</b></color>] {extShrineDef.NameLocalization}";
+            return Localization.instance.Localize(text);
         }
 
-        public override bool Interact(Humanoid user, bool hold, bool alt)
+        public override bool Interact(Humanoid user, bool hold, bool alt) {
+            if (extShrineDef.RequiresSacrifice) {
+                user.Message(MessageHud.MessageType.Center, Localization.instance.Localize(extShrineDef.RequestLocalization));
+            } else {
+                if (challenge_active.Get() == false) {
+                    if (extShrineDef.LevelSelection == LevelSelectionStrategy.Random) {
+                        RandomlySelectLevel();
+                    }
+                }
+            }
+            return false;
+        }
+
+        public void SetShrineLevel(int level)
         {
-            throw new NotImplementedException();
+            ShrineSelectedLevel.ForceSet(level);
+        }
+
+        private void RandomlySelectLevel()
+        {
+            int sel_level = UnityEngine.Random.Range(0, levels.Count);
+            siege_mode.ForceSet(levels[sel_level].levelModifiers.SiegeMode);
+            hard_mode.ForceSet(levels[sel_level].levelModifiers.HardMode);
+            selected_level.ForceSet(sel_level);
+            start_challenge.ForceSet(true);
         }
 
         public override void StartChallengeMode()

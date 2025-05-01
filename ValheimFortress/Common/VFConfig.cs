@@ -7,6 +7,7 @@ using Jotunn.Managers;
 using Jotunn.Entities;
 using System.Collections;
 using ValheimFortress.Data;
+using ValheimFortress.Common;
 
 namespace ValheimFortress
 {
@@ -68,6 +69,7 @@ namespace ValheimFortress
             cfg = Config;
             cfg.SaveOnConfigSet = true;
             CreateConfigValues(Config);
+            Logger.enableDebugLogging(); // Read the debug logging and set that now that its created and bound
             var mainfilepath = Paths.ConfigPath;
             // = Path.Combine(, $"{ValheimFortress.PluginGUID}.cfg");
             FileSystemWatcher maincfgFSWatcher = new FileSystemWatcher();
@@ -81,6 +83,12 @@ namespace ValheimFortress
             maincfgFSWatcher.EnableRaisingEvents = true;
 
             Jotunn.Logger.LogInfo("Main config filewatcher initialized.");
+        }
+
+        public static void SaveOnSet(bool enabled)
+        {
+            cfg.SaveOnConfigSet = enabled;
+            cfg.Save();
         }
 
 
@@ -120,34 +128,34 @@ namespace ValheimFortress
 
             foreach (string configFile in presentFiles)
             {
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Config file found: {configFile}"); }
+                Jotunn.Logger.LogInfo($"Config file found: {configFile}");
                 if (configFile.Contains("Rewards.yaml"))
                 {
-                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Found rewards configuration: {configFile}"); }
+                    Jotunn.Logger.LogInfo($"Found rewards configuration: {configFile}");
                     rewardFilePath = configFile;
                     hasRewardsConfig = true;
                 }
                 if (configFile.Contains("SpawnableCreatures.yaml"))
                 {
-                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Found Creature configuration: {configFile}"); }
+                    Jotunn.Logger.LogInfo($"Found Creature configuration: {configFile}");
                     creatureFilePath = configFile;
                     hasCreatureConfig = true;
                 }
                 if (configFile.Contains("WaveStyles.yaml"))
                 {
-                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Found WaveStyles configuration: {configFile}"); }
+                    Jotunn.Logger.LogInfo($"Found WaveStyles configuration: {configFile}");
                     waveStylesFilePath = configFile;
                     hasWaveStylesConfig = true;
                 }
                 if (configFile.Contains("Levels.yaml"))
                 {
-                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Found Levels configuration: {configFile}"); }
+                    Jotunn.Logger.LogInfo($"Found Levels configuration: {configFile}");
                     levelDefinitionsFilePath = configFile;
                     hasLevelsConfig = true;
                 }
                 if (configFile.Contains("WildShrines.yaml"))
                 {
-                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Found WildShrine configuration: {configFile}"); }
+                    Jotunn.Logger.LogInfo($"Found WildShrine configuration: {configFile}");
                     wildShrineConfigurationFilePath = configFile;
                     hasWildShrinesConfig = true;
                 }
@@ -403,7 +411,7 @@ namespace ValheimFortress
 
         public static IEnumerator OnServerRecieveConfigs(long sender, ZPackage package)
         {
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Server recieved config from client, rejecting due to being the server."); }
+            Jotunn.Logger.LogInfo("Server recieved config from client, rejecting due to being the server.");
             yield return null;
         }
 
@@ -509,16 +517,16 @@ namespace ValheimFortress
         private static void UpdateLevelsConfigFileOnChange(object sender, FileSystemEventArgs e)
         {
             if (!File.Exists(levelDefinitionsFilePath)) { return; }
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"{e} Creature filewatcher called, updating creature values."); }
+            Jotunn.Logger.LogInfo($"{e} Creature filewatcher called, updating creature values.");
             string levelsDefinitions = File.ReadAllText(levelDefinitionsFilePath);
             UpdateLevelsInMemory(levelsDefinitions);
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Updated levels in-memory values."); }
+            Jotunn.Logger.LogInfo("Updated levels in-memory values.");
             if (GUIManager.IsHeadless())
             {
                 try
                 {
                     LevelsSyncRPC.SendPackage(ZNet.instance.m_peers, SendLevelsConfigs());
-                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sent levels configs to clients."); }
+                    Jotunn.Logger.LogInfo("Sent levels configs to clients.");
                 }
                 catch
                 {
@@ -527,10 +535,7 @@ namespace ValheimFortress
             }
             else
             {
-                if (VFConfig.EnableDebugMode.Value)
-                {
-                    Jotunn.Logger.LogInfo("Instance is not a server, and will not send znet creature updates.");
-                }
+                Jotunn.Logger.LogInfo("Instance is not a server, and will not send znet creature updates.");
             }
 
         }
@@ -550,27 +555,24 @@ namespace ValheimFortress
         private static void UpdateCreatureConfigFileOnChange(object sender, FileSystemEventArgs e)
         {
             if (!File.Exists(creatureFilePath)) { return; }
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"{e} Creature filewatcher called, updating creature values."); }
+            Jotunn.Logger.LogInfo($"{e} Creature filewatcher called, updating creature values.");
             string spawnableCreatureConfigs = File.ReadAllText(creatureFilePath);
             SpawnableCreatureCollection creatureConfigValues;
             try
             {
                 creatureConfigValues = CONST.yamldeserializer.Deserialize<SpawnableCreatureCollection>(spawnableCreatureConfigs);
             } catch {
-                if (VFConfig.EnableDebugMode.Value)
-                {
-                    Jotunn.Logger.LogWarning("Creatures failed deserializing, skipping update."); 
-                }
+                Jotunn.Logger.LogWarning("Creatures failed deserializing, skipping update.");
                 return;
             }
             Monsters.UpdateSpawnableCreatures(creatureConfigValues);
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Updated creature in-memory values."); }
+            Jotunn.Logger.LogInfo("Updated creature in-memory values.");
             if (GUIManager.IsHeadless())
             {
                 try
                 {
                     monsterSyncRPC.SendPackage(ZNet.instance.m_peers, SendCreatureConfigs());
-                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sent creature configs to clients."); }
+                    Jotunn.Logger.LogInfo("Sent creature configs to clients.");
                 }
                 catch
                 {
@@ -578,10 +580,7 @@ namespace ValheimFortress
                 }
             } else
             {
-                if (VFConfig.EnableDebugMode.Value)
-                {
-                    Jotunn.Logger.LogInfo("Instance is not a server, and will not send znet creature updates.");
-                }
+                Jotunn.Logger.LogInfo("Instance is not a server, and will not send znet creature updates.");
             }
 
         }
@@ -589,7 +588,7 @@ namespace ValheimFortress
         private static void UpdateWavesConfigFileOnChange(object sender, FileSystemEventArgs e)
         {
             if (!File.Exists(waveStylesFilePath)) { return; }
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"{e} Wavestyles filewatcher called, updating Wavestyles values."); }
+            Jotunn.Logger.LogInfo($"{e} Wavestyles filewatcher called, updating Wavestyles values.");
             string waveStyleseConfigs = File.ReadAllText(waveStylesFilePath);
             WaveFormatCollection waveStylesConfigValues;
             try
@@ -598,32 +597,25 @@ namespace ValheimFortress
             }
             catch
             {
-                if (VFConfig.EnableDebugMode.Value)
-                {
-                    Jotunn.Logger.LogWarning("Wavestyles failed deserializing, skipping update.");
-                }
+                Jotunn.Logger.LogWarning("Wavestyles failed deserializing, skipping update.");
                 return;
             }
             WaveStyles.UpdateWaveDefinition(waveStylesConfigValues);
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Updated WaveDefinition in-memory values."); }
+            Jotunn.Logger.LogInfo("Updated WaveDefinition in-memory values.");
             if (GUIManager.IsHeadless())
             {
                 try
                 {
                     WavesSyncRPC.SendPackage(ZNet.instance.m_peers, SendWavesConfigs());
-                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sent WaveDefinition configs to clients."); }
+                    Jotunn.Logger.LogInfo("Sent WaveDefinition configs to clients.");
                 }
                 catch
                 {
                     Jotunn.Logger.LogError("Error while server syncing Wave configs");
                 }
             }
-            else
-            {
-                if (VFConfig.EnableDebugMode.Value)
-                {
-                    Jotunn.Logger.LogInfo("Instance is not a server, and will not send znet creature updates.");
-                }
+            else {
+                Jotunn.Logger.LogInfo("Instance is not a server, and will not send znet creature updates.");
             }
 
         }
@@ -631,7 +623,7 @@ namespace ValheimFortress
         private static void UpdateRewardsConfigFileOnChange(object sender, FileSystemEventArgs e)
         {
             if (!File.Exists(rewardFilePath)) { return; }
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Rewards filewatcher called, updating rewards values."); }
+            Jotunn.Logger.LogInfo("Rewards filewatcher called, updating rewards values.");
             string rewardConfigs = File.ReadAllText(rewardFilePath);
             RewardEntryCollection rewardsValues;
             try {
@@ -641,13 +633,13 @@ namespace ValheimFortress
                 return; 
             }
             RewardsData.UpdateRewardsEntries(rewardsValues);
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Updated rewards in-memory values."); }
+            Jotunn.Logger.LogInfo("Updated rewards in-memory values.");
             if (GUIManager.IsHeadless())
             {
                 try
                 {
                     rewardSyncRPC.SendPackage(ZNet.instance.m_peers, SendRewardsConfigs());
-                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sent rewards configs to clients."); }
+                    Jotunn.Logger.LogInfo("Sent rewards configs to clients.");
                 }
                 catch (Exception)
                 {
@@ -656,10 +648,7 @@ namespace ValheimFortress
             }
             else
             {
-                if (VFConfig.EnableDebugMode.Value)
-                {
-                    Jotunn.Logger.LogInfo("Instance is not a server, and will not send znet reward updates.");
-                }
+                Jotunn.Logger.LogInfo("Instance is not a server, and will not send znet reward updates.");
             }
 
         }
@@ -667,7 +656,7 @@ namespace ValheimFortress
         private static void UpdateWildShrineConfigFileOnChange(object sender, FileSystemEventArgs e)
         {
             if (!File.Exists(rewardFilePath)) { return; }
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Rewards filewatcher called, updating Wildshrines values."); }
+            Jotunn.Logger.LogInfo("Rewards filewatcher called, updating Wildshrines values.");
             string wildShrineConfigs = File.ReadAllText(wildShrineConfigurationFilePath);
             WildShrineConfigurationCollection wildshrineValues;
             try
@@ -676,17 +665,17 @@ namespace ValheimFortress
             }
             catch (Exception)
             {
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogWarning("WildShrineConfigs failed deserializing, skipping update."); }
+                Jotunn.Logger.LogWarning("WildShrineConfigs failed deserializing, skipping update.");
                 return;
             }
             WildShrineData.UpdateWildShrineDefinition(wildshrineValues);
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Updated WildshrineConfigs in-memory values."); }
+            Jotunn.Logger.LogInfo("Updated WildshrineConfigs in-memory values.");
             if (GUIManager.IsHeadless())
             {
                 try
                 {
                     WildShrineSyncRPC.SendPackage(ZNet.instance.m_peers, SendWildShrineConfigs());
-                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sent Wildshrine configs to clients."); }
+                    Jotunn.Logger.LogInfo("Sent Wildshrine configs to clients.");
                 }
                 catch (Exception)
                 {
@@ -695,10 +684,7 @@ namespace ValheimFortress
             }
             else
             {
-                if (VFConfig.EnableDebugMode.Value)
-                {
-                    Jotunn.Logger.LogInfo("Instance is not a server, and will not send znet reward updates.");
-                }
+                Jotunn.Logger.LogInfo("Instance is not a server, and will not send znet reward updates.");
             }
 
         }
@@ -848,6 +834,7 @@ namespace ValheimFortress
                 new ConfigDescription("Enables Debug logging for Valheim Fortress.",
                 null,
                 new ConfigurationManagerAttributes { IsAdvanced = true }));
+            EnableDebugMode.SettingChanged += Logger.toggleDebug;
 
             EnableTurretDebugMode = Config.Bind("Client config", "EnableTurretDebugMode", false,
                 new ConfigDescription("Enables debug mode for turrets, this can be noisy.",

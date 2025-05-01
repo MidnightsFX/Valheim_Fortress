@@ -72,13 +72,15 @@
     <Compile Include="Challenge\Spawner.cs" />
     <Compile Include="Challenge\UserInterfaceData.cs" />
     <Compile Include="Challenge\WildShrine.cs" />
+    <Compile Include="Common\JotunnPieceLoader.cs" />
     <Compile Include="Common\Logger.cs" />
+    <Compile Include="Common\PieceDefinition.cs" />
     <Compile Include="Data\ChallengeLevels.cs" />
     <Compile Include="Data\Monsters.cs" />
     <Compile Include="Data\WildShrineData.cs" />
     <Compile Include="Common\Compression.cs" />
-    <Compile Include="Common\JotunnPiece.cs" />
     <Compile Include="Data\WaveStyles.cs" />
+    <Compile Include="Defenses\BallistaOnChange.cs" />
     <Compile Include="Defenses\VFTurret.cs" />
     <Compile Include="ValheimPiece.cs" />
     <Compile Include="Properties\IgnoreAccessModifiers.cs" />

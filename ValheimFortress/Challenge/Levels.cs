@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using ValheimFortress.common;
+using ValheimFortress.Common;
 using ValheimFortress.Data;
 
 
@@ -138,7 +138,7 @@ namespace ValheimFortress.Challenge
             if (siege_mode) { phases *= 2; }
 
             Int16 max_creatures_from_previous_biomes = defined_level.maxCreatureFromPreviousBiomes;
-            String selected_biome = defined_level.biome;
+            Heightmap.Biome selected_biome = defined_level.biome;
 
             // if (level > 30 && level < 35) { selected_biome = "Ashlands"; }
             short targeted_wave_biome_level = BiomeStringToInt(selected_biome);
@@ -438,9 +438,9 @@ namespace ValheimFortress.Challenge
         }
 
 
-        public static Int16 BiomeStringToInt(String biome)
+        public static Int16 BiomeStringToInt(Heightmap.Biome biome)
         {
-            if(!biomes.Contains(biome)) { throw new ArgumentException($"Biome {biome} does not match defined biomes: {string.Join(",", biomes)}"); }
+            if(!biomes.Contains(biome.ToString())) { throw new ArgumentException($"Biome {biome} does not match defined biomes: {string.Join(",", biomes)}"); }
             return (Int16)Array.IndexOf(biomes, biome);
         }
 

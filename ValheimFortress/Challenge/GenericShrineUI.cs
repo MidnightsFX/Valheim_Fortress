@@ -175,13 +175,13 @@ namespace ValheimFortress.Challenge
         public void UpdatePanelUIOnSettingsChangedArena(object sender, EventArgs e)
         {
             CreateStaticUIObjects();
-            CreateChallengeUI("arena");
+            CreateChallengeUI(ShrineType.Arena);
         }
 
         public void UpdatePanelUIOnSettingsChangedChallenge(object sender, EventArgs e)
         {
             CreateStaticUIObjects();
-            CreateChallengeUI("challenge");
+            CreateChallengeUI(ShrineType.Challenge);
         }
 
         public void CreateStaticUIObjects()
@@ -499,7 +499,7 @@ namespace ValheimFortress.Challenge
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Adding UI Listeners"); }
         }
 
-        public void CreateChallengeUI(string shrine_type)
+        public void CreateChallengeUI(ShrineType shrine_type)
         {
             // Always want to update the rewards and challenge levels
             currentLevels = UserInterfaceData.UpdateLevels(shrine_type, Shrine.adminLevelLimits.Get());
