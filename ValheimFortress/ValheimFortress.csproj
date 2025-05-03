@@ -72,6 +72,7 @@
     <Compile Include="Challenge\Spawner.cs" />
     <Compile Include="Challenge\UserInterfaceData.cs" />
     <Compile Include="Challenge\WildShrine.cs" />
+    <Compile Include="Common\ExternalShrineDefinition.cs" />
     <Compile Include="Common\JotunnPieceLoader.cs" />
     <Compile Include="Common\Logger.cs" />
     <Compile Include="Common\PieceDefinition.cs" />

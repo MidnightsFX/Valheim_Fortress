@@ -1,9 +1,52 @@
-  **0.31.0**
+  **0.32.0**
 ---
 ```
 - Overhaul of internal level and challenge definitions
 - Improved support for piece modifications when joining a server
-- Startup optimizations
+- Startup optimizations, reduced overhead when loaded on a server
+- Improve portal disable/enable logic
+- Fixed a few bugs which could allow a wave to get stuck, especially when multiple shrines are running
+```
+
+  **0.31.3**
+---
+```
+- Fixes Menu error when building level list for shrines that do not include the selected shrine
+```
+
+  **0.31.2**
+---
+```
+- Ensures lootdrop settings are set for creatures that are reconnected due to the shrine being unloaded and reloaded
+```
+
+  **0.31.1**
+---
+```
+- Changes ballista targeting to allow shooting as long as they would hit a creature/character even if its not the primary target.
+	- Fixes a bug where the ballista would not shoot at a target if it was not the primary target.
+	- Removes ballistas psychic avoidance of shooting the player (you can now be hit in the crossfire)
+```
+
+  **0.30.5**
+---
+```
+- Improves shrine reconnection scenarios that involve zero remaining enemies or no found enemies
+```
+
+  **0.30.4**
+---
+```
+- Bog Witch update
+- Updated to Jotunn 2.21.2
+- Fixes for the new game version, this is not backwards compatible.
+```
+  **0.31.0**
+---
+```
+- Adds an admin function to all shrines of challenge and shrines of the arena
+	- Admin mode currently supports setting a shrine specific filter for what levels can be selected at that shrine
+- Adds level names, these are internal, non-unique and used to filter what levels can be selected at a shrine
 ```
 
   **0.30.3**

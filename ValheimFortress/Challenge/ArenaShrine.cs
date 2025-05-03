@@ -106,17 +106,10 @@ namespace ValheimFortress.Challenge
             // So clients and servers see the internal structure portal update
             if (challenge_active.Get() == true)
             {
-                // Only need to enable the central portal once.
-                // This is done for every client so everyone is in sync, because for some reason otherwise it doesn't show on some clients
-                if (CentralPortalActiveStatus() == false)
-                {
-                    EnablePortal();
-                }
+                EnablePortal();
             }
-            else if (end_of_challenge.Get() == true)
-            {
+            else if (portal_disabled.Get() == true) {
                 Disableportal();
-                end_of_challenge.ForceSet(false);
             }
 
             // Everything past here should only be run once, by whatever main thread is controlling the ticks in this region.
@@ -196,7 +189,7 @@ namespace ValheimFortress.Challenge
                             boss_mode.Set(false);
                             hard_mode.Set(false);
                             siege_mode.Set(false);
-                            end_of_challenge.Set(true);
+                            portal_disabled.Set(true);
                             force_next_phase.Set(false);
                             Disableportal();
                             wave_phases_definitions = new PhasedWaveTemplate() { hordePhases = new List<List<HoardConfig>> { } }; // Got to clear the template

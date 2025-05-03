@@ -28,7 +28,7 @@ namespace ValheimFortress.Challenge
             start_challenge = new BoolZNetProperty("shrine_start_challenge", zNetView, false);
             selected_level = new IntZNetProperty("shrine_selected_level", zNetView, 0);
             selected_reward = new StringZNetProperty("shrine_selected_reward", zNetView, "coins");
-            end_of_challenge = new BoolZNetProperty("end_of_challenge", zNetView, false);
+            portal_disabled = new BoolZNetProperty("end_of_challenge", zNetView, false);
             should_add_creature_beacons = new BoolZNetProperty("should_add_creature_beacons", zNetView, false);
             currentPhase = new IntZNetProperty("shrine_current_phase", zNetView, 0);
             wave_definition_ready = new BoolZNetProperty("wave_definition_ready", zNetView, false);
@@ -185,17 +185,11 @@ namespace ValheimFortress.Challenge
             // So clients and servers see the internal structure portal update
             if (challenge_active.Get() == true)
             {
-                // Only need to enable the central portal once.
-                // This is done for every client so everyone is in sync, because for some reason otherwise it doesn't show on some clients
-                if (CentralPortalActiveStatus() == false)
-                {
-                    EnablePortal();
-                }
+                EnablePortal();
             }
-            else if (end_of_challenge.Get() == true)
+            else if (portal_disabled.Get() == true)
             {
                 Disableportal();
-                end_of_challenge.ForceSet(false);
             }
             //if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Checked portal status."); }
 
@@ -300,7 +294,7 @@ namespace ValheimFortress.Challenge
                             boss_mode.Set(false);
                             hard_mode.Set(false);
                             siege_mode.Set(false);
-                            end_of_challenge.Set(true);
+                            portal_disabled.Set(true);
                             force_next_phase.Set(false);
                             Disableportal();
                             wave_phases_definitions = new PhasedWaveTemplate() { hordePhases = new List<List<HoardConfig>> { } }; // Got to clear the template

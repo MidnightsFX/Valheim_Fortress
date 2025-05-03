@@ -12,8 +12,8 @@ namespace ValheimFortress.Challenge
     // Expose more configurations around spawn timing
     class Spawner : MonoBehaviour
     {
-        private static int CurrentCompletedHordes = 0;
-        private static void CompleteHorde()
+        private int CurrentCompletedHordes = 0;
+        private void CompleteHorde()
         {
             CurrentCompletedHordes ++;
         }
@@ -56,7 +56,7 @@ namespace ValheimFortress.Challenge
             }
             CurrentCompletedHordes = 0;
             // record the wave completed
-            try { shrine.phaseCompleted(); } catch { }
+            shrine.phaseCompleted();
 
 
             yield break;

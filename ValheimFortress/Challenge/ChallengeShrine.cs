@@ -106,17 +106,11 @@ namespace ValheimFortress.Challenge
             // Jotunn.Logger.LogInfo("Checking Portal status.");
             if (challenge_active.Get() == true)
             {
-                // Only need to enable the central portal once.
-                // This is done for every client so everyone is in sync, because for some reason otherwise it doesn't show on some clients
-                if (CentralPortalActiveStatus() == false)
-                {
-                    EnablePortal();
-                }
+                EnablePortal();
             }
-            else if (end_of_challenge.Get() == true)
+            else if (portal_disabled.Get() == true)
             {
                 Disableportal();
-                end_of_challenge.ForceSet(false);
             }
 
             // Jotunn.Logger.LogInfo("Checking if this is the owner.");
@@ -203,7 +197,7 @@ namespace ValheimFortress.Challenge
                             hard_mode.Set(false);
                             siege_mode.Set(false);
                             force_next_phase.Set(false);
-                            end_of_challenge.Set(true);
+                            portal_disabled.Set(true);
                             Disableportal();
                             wave_phases_definitions = new PhasedWaveTemplate() { hordePhases = new List<List<HoardConfig>> { } }; // Got to clear the template
                             SendUpdatedPhaseConfigs();

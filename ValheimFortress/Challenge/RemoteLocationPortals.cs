@@ -120,8 +120,7 @@ namespace ValheimFortress.Challenge
             }
             Jotunn.Logger.LogInfo("Spawn locations determined");
             // If we found at least one remote location, build out the set of 3 using it.
-            if (spawn_locations.Count > 0 && spawn_locations.Count < 3)
-            {
+            if (spawn_locations.Count > 0 && spawn_locations.Count < 3) {
                 Jotunn.Logger.LogInfo("Determined spawn locations was missing 1 or more entries. Multiple waves will spawn from the same location.");
                 while (spawn_locations.Count < 2)
                 {

@@ -527,5 +527,55 @@ namespace ValheimFortress.Challenge
         }
     }
 
+    public class ListUINTZNetProperty : ZNetProperty<List<uint>>
+    {
+        BinaryFormatter binFormatter = new BinaryFormatter();
+        public ListUINTZNetProperty(string key, ZNetView zNetView, List<uint> defaultValue) : base(key, zNetView, defaultValue)
+        {
+        }
 
+        public override List<uint> Get()
+        {
+            var stored = zNetView.GetZDO().GetByteArray(Key);
+            // we can't deserialize a null buffer
+            if (stored == null) { return new List<uint>(); }
+            var mStream = new MemoryStream(stored);
+            var deserializedDictionary = (List<uint>)binFormatter.Deserialize(mStream);
+            return deserializedDictionary;
+        }
+
+        protected override void SetValue(List<uint> value)
+        {
+            var mStream = new MemoryStream();
+            binFormatter.Serialize(mStream, value);
+
+            zNetView.GetZDO().Set(Key, mStream.ToArray());
+        }
+    }
+
+    public class DictionaryZDOIDZNetProperty : ZNetProperty<Dictionary<uint, ZDOID>>
+    {
+        BinaryFormatter binFormatter = new BinaryFormatter();
+        public DictionaryZDOIDZNetProperty(string key, ZNetView zNetView, Dictionary<uint, ZDOID> defaultValue) : base(key, zNetView, defaultValue)
+        {
+        }
+
+        public override Dictionary<uint, ZDOID> Get()
+        {
+            var stored = zNetView.GetZDO().GetByteArray(Key);
+            // we can't deserialize a null buffer
+            if (stored == null) { return new Dictionary<uint, ZDOID>(); }
+            var mStream = new MemoryStream(stored);
+            var deserializedDictionary = (Dictionary<uint, ZDOID>)binFormatter.Deserialize(mStream);
+            return deserializedDictionary;
+        }
+
+        protected override void SetValue(Dictionary<uint, ZDOID> value)
+        {
+            var mStream = new MemoryStream();
+            binFormatter.Serialize(mStream, value);
+
+            zNetView.GetZDO().Set(Key, mStream.ToArray());
+        }
+    }
 }

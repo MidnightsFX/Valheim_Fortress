@@ -1,3 +1,13 @@
+  **0.32.0**
+---
+```
+- Overhaul of internal level and challenge definitions
+- Improved support for piece modifications when joining a server
+- Startup optimizations, reduced overhead when loaded on a server
+- Improve portal disable/enable logic
+- Fixed a few bugs which could allow a wave to get stuck, especially when multiple shrines are running
+```
+
   **0.31.3**
 ---
 ```

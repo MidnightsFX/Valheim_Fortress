@@ -13,14 +13,7 @@ namespace ValheimFortress.Challenge
         const String RARE = CONST.RARE;
         const String ELITE = CONST.ELITE;
         const String UNIQUE = CONST.UNIQUE;
-        const String MEADOWS = CONST.MEADOWS;
-        const String BLACKFOREST = CONST.BLACKFOREST;
-        const String SWAMP = CONST.SWAMP;
-        const String MOUNTAIN = CONST.MOUNTAIN;
-        const String PLAINS = CONST.PLAINS;
-        const String MISTLANDS = CONST.MISTLANDS;
-        const String ASHLANDS = CONST.ASHLANDS;
-        static readonly private String[] biomes = { MEADOWS, BLACKFOREST, SWAMP, MOUNTAIN, PLAINS, MISTLANDS, ASHLANDS };
+        static readonly private Heightmap.Biome[] biomes = { Heightmap.Biome.Meadows, Heightmap.Biome.BlackForest, Heightmap.Biome.Swamp, Heightmap.Biome.Mountain, Heightmap.Biome.Plains, Heightmap.Biome.Mistlands, Heightmap.Biome.AshLands };
         static readonly private String[] spawntypes = { COMMON, RARE, ELITE, UNIQUE };
 
         // Reference used to build a wave template
@@ -203,8 +196,7 @@ namespace ValheimFortress.Challenge
                         // Creature is not from the right biome, or -1 biome
                         // or we already have all the creatures we need from a previous biome
                         short current_creature_biome_level = BiomeStringToInt(Monsters.SpawnableCreatures[skey].biome);
-                        //if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"{skey} Biome check: {current_creature_biome_level} > {targeted_wave_biome_level} || {targeted_wave_biome_level} != {current_creature_biome_level}"); }
-                        //if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"{skey} Previous check: {current_creature_biome_level} != {targeted_wave_biome_level} && {creatures_selected_from_previous_biome} >= {max_creatures_from_previous_biomes}"); }
+                        Jotunn.Logger.LogInfo($"{skey} Comparing creature level to targeted wave generation level: {current_creature_biome_level} != {targeted_wave_biome_level}");
                         // Creature too high of a level
                         if (current_creature_biome_level > targeted_wave_biome_level) {
                             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"creature {skey} from a higher level biome."); }
@@ -412,7 +404,7 @@ namespace ValheimFortress.Challenge
         {
             float wavePercent = 1f;
             // Guard clause for no modifiers
-            if (waveMods.AnyEnabled()) {
+            if (waveMods == null || waveMods.AnyEnabled()) {
                 return wavePercent;
             }
 
@@ -440,7 +432,7 @@ namespace ValheimFortress.Challenge
 
         public static Int16 BiomeStringToInt(Heightmap.Biome biome)
         {
-            if(!biomes.Contains(biome.ToString())) { throw new ArgumentException($"Biome {biome} does not match defined biomes: {string.Join(",", biomes)}"); }
+            if(!biomes.Contains(biome)) { throw new ArgumentException($"Biome {biome} does not match defined biomes: {string.Join(",", biomes)}"); }
             return (Int16)Array.IndexOf(biomes, biome);
         }
 

@@ -23,7 +23,7 @@ namespace ValheimFortress.Challenge
         public IntZNetProperty selected_level { get; set; }
         public IntZNetProperty selected_level_index { get; set; }
         public StringZNetProperty selected_reward { get; set; }
-        public BoolZNetProperty end_of_challenge { get; set; }
+        public BoolZNetProperty portal_disabled { get; set; }
         public BoolZNetProperty should_add_creature_beacons { get; set; }
         public IntZNetProperty currentPhase { get; set; }
         public BoolZNetProperty wave_definition_ready { get; set; }
@@ -65,7 +65,7 @@ namespace ValheimFortress.Challenge
                 selected_level = new IntZNetProperty("shrine_selected_level", zNetView, 0);
                 selected_level_index = new IntZNetProperty("selected_level_index", zNetView, 0);
                 selected_reward = new StringZNetProperty("shrine_selected_reward", zNetView, "coins");
-                end_of_challenge = new BoolZNetProperty("end_of_challenge", zNetView, false);
+                portal_disabled = new BoolZNetProperty("end_of_challenge", zNetView, false);
                 should_add_creature_beacons = new BoolZNetProperty("should_add_creature_beacons", zNetView, false);
                 currentPhase = new IntZNetProperty("shrine_current_phase", zNetView, 0);
                 wave_definition_ready = new BoolZNetProperty("wave_definition_ready", zNetView, false);
@@ -93,7 +93,7 @@ namespace ValheimFortress.Challenge
                         Jotunn.Logger.LogInfo($"selected_level={selected_level.Get()}");
                         Jotunn.Logger.LogInfo($"selected_level_index={selected_level_index.Get()}");
                         Jotunn.Logger.LogInfo($"selected_reward={selected_reward.Get()}");
-                        Jotunn.Logger.LogInfo($"end_of_challenge={end_of_challenge.Get()}");
+                        Jotunn.Logger.LogInfo($"end_of_challenge={portal_disabled.Get()}");
                         Jotunn.Logger.LogInfo($"should_add_creature_beacons={should_add_creature_beacons.Get()}");
                         Jotunn.Logger.LogInfo($"currentPhase={currentPhase.Get()}");
                         Jotunn.Logger.LogInfo($"wave_definition_ready={wave_definition_ready.Get()}");

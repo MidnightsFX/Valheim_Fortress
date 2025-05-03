@@ -29,7 +29,7 @@ namespace ValheimFortress.Challenge
             start_challenge = new BoolZNetProperty("shrine_start_challenge", zNetView, false);
             selected_level = new IntZNetProperty("shrine_selected_level", zNetView, 0);
             selected_reward = new StringZNetProperty("shrine_selected_reward", zNetView, "coins");
-            end_of_challenge = new BoolZNetProperty("end_of_challenge", zNetView, false);
+            portal_disabled = new BoolZNetProperty("end_of_challenge", zNetView, false);
             should_add_creature_beacons = new BoolZNetProperty("should_add_creature_beacons", zNetView, false);
             currentPhase = new IntZNetProperty("shrine_current_phase", zNetView, 0);
             wave_definition_ready = new BoolZNetProperty("wave_definition_ready", zNetView, false);
