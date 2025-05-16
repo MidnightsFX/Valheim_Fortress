@@ -134,7 +134,7 @@ namespace ValheimFortress.Challenge
     [DataContract]
     public class RewardEntry
     {
-        public short resouceCost { get; set; }
+        public short resourceCost { get; set; }
         public String requiredBoss { get; set; }
         public String resourcePrefab { get; set; }
         public bool enabled { get; set; }

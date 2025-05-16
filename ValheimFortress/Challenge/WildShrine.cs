@@ -92,29 +92,14 @@ namespace ValheimFortress.Challenge
                         
                     }
                     if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"User Inventory contains {user_tribute_count} of {wlevelcfg.tributeAmount} required tribute type {wlevelcfg.tributeName}."); }
-                    if (user_tribute_count >= wlevelcfg.tributeAmount)
-                    {
-                        int tribute_required_remaining = wlevelcfg.tributeAmount;
-                        foreach (KeyValuePair<ItemDrop.ItemData, int> tribute_entries in user_tribute_indexes)
-                        {
-                            int tribute_index = user_inventory.IndexOf(tribute_entries.Key);
-                            if (tribute_required_remaining > tribute_entries.Value)
-                            {
-                                tribute_required_remaining -= tribute_entries.Value;
-                                user_inventory.Remove(tribute_entries.Key);
-                            } else
-                            {
-                                user_inventory[tribute_index].m_stack -= tribute_required_remaining;
-                                if (user_inventory[tribute_index].m_stack == 0)
-                                {
-                                    user_inventory.Remove(tribute_entries.Key);
-                                } 
-                            }
-                        }
+                    if (user_tribute_count >= wlevelcfg.tributeAmount) {
+                        user.GetInventory().RemoveItem(item, wlevelcfg.tributeAmount);
                         hard_mode.ForceSet(wlevelcfg.hardMode);
                         siege_mode.ForceSet(wlevelcfg.siegeMode);
                         selected_level.ForceSet(wild_level_index);
                         start_challenge.ForceSet(true);
+                        wave_definition_ready.ForceSet(false);
+                        spawn_locations_ready.ForceSet(false);
                         user.Message(MessageHud.MessageType.Center, Localization.instance.Localize(wlevelcfg.wildshrine_wave_start_localization));
                         Jotunn.Logger.LogInfo($"Deducted {wlevelcfg.tributeAmount} {wlevelcfg.tributeName} and enabling challenge setup.");
                         return true;
@@ -249,7 +234,8 @@ namespace ValheimFortress.Challenge
                     RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations.Get(), gameObject.GetComponent<WildShrine>());
                     return;
                 }
-                if (wave_phases_definitions.hordePhases.Count > 0)
+
+                if (wave_phases_definitions.hordePhases != null && wave_phases_definitions.hordePhases.Count > 0)
                 {
                     // We need to A. have spawned creatures & there needs to be none of those spawned creatures remaining
                     if (VFConfig.EnableDebugMode.Value && log_slower == 60) { Jotunn.Logger.LogInfo($"Checking enemies: {enemies.Count} spawned_creatures: {spawned_creatures.Get()} phase_running: {phase_running}"); }
@@ -291,6 +277,7 @@ namespace ValheimFortress.Challenge
                             WildShrineLevelConfiguration wLevelDefinition = wildShrineConfiguration.wildShrineLevelsConfig.ElementAt(selected_level.Get());
                             SpawnMultiRewardsDirectly(wLevelDefinition.rewards, wLevelDefinition.wildLevelDefinition.levelIndex, shrine_spawnpoint.transform.position, hard_mode.Get(), boss_mode.Get(), siege_mode.Get());
                             challenge_active.Set(false);
+                            enemies.Clear();
                             boss_mode.Set(false);
                             hard_mode.Set(false);
                             siege_mode.Set(false);

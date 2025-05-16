@@ -32,6 +32,7 @@ namespace ValheimFortress
         public static ConfigEntry<bool> EnableRewardsEstimate;
         public static ConfigEntry<bool> EnableMapPings;
         public static ConfigEntry<short> MaxRewardsPerSecond;
+        public static ConfigEntry<bool> ScaleRewardsFromWorldSetting;
         public static ConfigEntry<short> NotifyCreatureThreshold;
         public static ConfigEntry<short> TeleportCreatureThreshold;
         public static ConfigEntry<short> ShrineReconnectPauseBetweenAmount;
@@ -173,9 +174,9 @@ namespace ValheimFortress
 # Rewards configurations have a number of key values
 #  Coin:                                 |- The name of the reward, this will be the diplayed name if there is no localization for this reward, which is likely the case for any custom entries.
 #    enabled: true                       |- Whether or not the reward is enabled, you can use this to disable any vanilla rewards you do not want. At least 1 reward must be available at ALL times.
-#    resource_cost: 5                    |- This is the cost to gain 1 of the particular reward. Points are generated based on how many monsters are spawned.
-#    resource_prefab: ""Coins""            |- This is the unity prefab name for a resource, you will often see mods list the prefabs they have added. Prefabs are also listed on the valheim wiki.
-#    required_boss: ""None""               |- This must be one of the following values: ""None"" ""Eikythr"" ""TheElder"" ""BoneMass"" ""Moder"" ""Yagluth"" ""TheQueen""
+#    resourceCost: 5                    |- This is the cost to gain 1 of the particular reward. Points are generated based on how many monsters are spawned.
+#    resourcePrefab: ""Coins""            |- This is the unity prefab name for a resource, you will often see mods list the prefabs they have added. Prefabs are also listed on the valheim wiki.
+#    requiredBoss: ""None""               |- This must be one of the following values: ""None"" ""Eikythr"" ""TheElder"" ""BoneMass"" ""Moder"" ""Yagluth"" ""TheQueen""
 ";
                     writetext.WriteLine(header);
                     writetext.WriteLine(RewardsData.YamlRewardsDefinition());
@@ -793,9 +794,10 @@ namespace ValheimFortress
             EnableSiegeModifer = BindServerConfig("Shrine of Challenge", "EnableSiegeModifer", true, "Whether or not siege mode is available as a modifier. Siege mode gives much larger pauses between waves, and 100% larger waves for 50% more reward.", true);
             EnableMapPings = BindServerConfig("Shrine of Challenge", "EnableMapPings", false, "Whether or not waves spawning from the shrine of challenge should ping the map when they spawn.", true);
             EnableRewardsEstimate = BindServerConfig("Shrine of Challenge", "EnableRewardsEstimate", true, "Enables showing an estimate of how many rewards you will get for doing the selected level for the specified reward.", true);
-            rewardsMultiplier = BindServerConfig("Shrine of Challenge", "rewardsMultiplier", 1.1f, "The base multiplier for rewards, higher values will make every wave more rewarding", true);
+            
             rewardsDifficultyScalar = BindServerConfig("Shrine of Challenge", "rewardsDifficultyScalar", 0.02f, "Multiplier for rewards that scales with level, each level adds this to the value, making high level challenges much more rewarding.", true);
-            MaxRewardsPerSecond = BindServerConfig("Shrine of Challenge", "MaxRewardsPerSecond", 120, "Sets how fast the shrine will spawn rewards. Reducing this will reduce the performance impact of spawning so many items at once.", true, 10, 400);
+            
+            
             NotifyCreatureThreshold = BindServerConfig("Shrine of Challenge", "NotifyCreatureThreshold", 10, "Sets the level at which interacting with the shrine will add notifier to remaining creatures.", true, 1, 50);
             TeleportCreatureThreshold = BindServerConfig("Shrine of Challenge", "TeleportCreatureThreshold", 3, "Sets the level at which interacting with the shrine teleport remaining creatures to the shrine.", true, 1, 50);
             ShrineAnnouncementRange = BindServerConfig("Shrine of Challenge", "ShrineAnnouncementRange", 150f, "Sets the range at which announcements will display for shrine of challenge related activities", true, 50f, 800f);
@@ -811,6 +813,11 @@ namespace ValheimFortress
             ChallengeSlope = BindServerConfig("Difficulty Levels", "ChallengeSlope", 15.0f, "The linear regression slope which increases difficulty. If you want harder waves, add 1 and try out the difficulty again.", false, 5f, 50f);
             ChanceOfPreviousBiomeCreature = BindServerConfig("Difficulty Levels", "ChanceOfPreviousBiomeCreature", 0.05f, "The chance that a valid prior biome creature will be selected. Only 1 can be selected per wave. Setting to zero disables generating waves with previous biome creatures.", false, 0.00f, 1.0f);
             MaxCreatureStars = BindServerConfig("Difficulty Levels", "MaxCreatureStars", 2, "The max number of stars a creature can have. SLE or CLLC is required for anything over 2.", true, 0, 10); // TODO: Add the SLE API and expand the max to 100
+
+            // Rewards
+            ScaleRewardsFromWorldSetting = BindServerConfig("Rewards", "ScaleRewardsFromWorldSetting", true, "Whether or not the rewards should scale with the world setting. This will make the rewards more valuable in harder worlds.", true);
+            MaxRewardsPerSecond = BindServerConfig("Rewards", "MaxRewardsPerSecond", 120, "Sets how fast the shrine will spawn rewards. Reducing this will reduce the performance impact of spawning so many items at once.", true, 10, 400);
+            rewardsMultiplier = BindServerConfig("Rewards", "rewardsMultiplier", 1.1f, "The base multiplier for rewards, higher values will make every wave more rewarding", true);
 
 
             ChallengeShrineMaxCreaturesPerWave = BindServerConfig("Shrine of Challenge", "ChallengeShrineMaxCreaturesPerWave", (short)60, "The max number of creatures that a wave can generate with, creatures will attempt to upgrade and reduce counts based on this.", true, 12, 200);

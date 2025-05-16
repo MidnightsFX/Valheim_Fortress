@@ -186,6 +186,7 @@ namespace ValheimFortress.Challenge
                             }
                             SpawnReward(shrine_spawnpoint.transform.position);
                             challenge_active.Set(false);
+                            enemies.Clear();
                             boss_mode.Set(false);
                             hard_mode.Set(false);
                             siege_mode.Set(false);

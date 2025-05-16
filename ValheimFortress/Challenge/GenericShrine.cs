@@ -386,9 +386,9 @@ namespace ValheimFortress.Challenge
             spawned_creatures.Set(spawned_creatures.Get() + 1);
         }
 
-        public bool IsChallengeActive()
-        {
-            return challenge_active.Get();
+        public bool IsChallengeActive() {
+            // Jotunn.Logger.LogInfo($"Checking if challenge is active: {challenge_active.Get()} | phase_running {phase_running}");
+            return challenge_active.Get() || phase_running;
         }
 
         public bool ChallengeNoLongerSpawnable()

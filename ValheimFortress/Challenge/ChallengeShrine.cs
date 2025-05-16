@@ -196,6 +196,7 @@ namespace ValheimFortress.Challenge
                             boss_mode.Set(false);
                             hard_mode.Set(false);
                             siege_mode.Set(false);
+                            enemies.Clear();
                             force_next_phase.Set(false);
                             portal_disabled.Set(true);
                             Disableportal();

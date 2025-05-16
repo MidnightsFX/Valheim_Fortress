@@ -219,7 +219,7 @@ namespace ValheimFortress.Defenses
 			m_updateTargetTimer -= dt;
 			if (m_updateTargetTimer <= 0f)
 			{
-				bool character_in_range = IsCharacterInRangeAndNotPlayer(base.transform.position, 40f, Character.GetAllCharacters());
+				bool character_in_range = IsCharacterInRangeAndNotPlayer(base.transform.position, VFConfig.BallistaRange.Value, Character.GetAllCharacters());
                 m_updateTargetTimer = (character_in_range ? m_updateTargetIntervalNear : m_updateTargetIntervalFar);
 				// Character character = BaseAI.FindClosestCreature(base.transform, eye.transform.position, 0f, m_viewDistance, m_horizontalAngle, false, false);
 				// Id much prefer to get characters in range, but we need a complete list of all valid targets, instead of just avoiding the things we don't want to hit

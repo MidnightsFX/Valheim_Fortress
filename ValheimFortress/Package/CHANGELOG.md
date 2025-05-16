@@ -1,3 +1,12 @@
+
+  **0.32.1**
+---
+```
+- Improves automated turret detection range for enemies (now scales with range setting)
+- Configurable scaling of rewards based on world modifier setting (default true)
+- Small changes to the rewards definition
+```
+
   **0.32.0**
 ---
 ```

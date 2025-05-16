@@ -6,13 +6,10 @@ using UnityEngine;
 using Jotunn.Utils;
 using System.Text.RegularExpressions;
 using System.IO;
-using ValheimFortress.Challenge;
-using BepInEx.Configuration;
 using System.Collections.Generic;
 using System;
 using System.Linq;
 using BepInEx.Logging;
-using ValheimFortress.Common;
 
 namespace ValheimFortress
 {
@@ -23,7 +20,7 @@ namespace ValheimFortress
     {
         public const string PluginGUID = "MidnightsFX.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.32.0";
+        public const string PluginVersion = "0.32.2";
 
         public static AssetBundle EmbeddedResourceBundle;
         public VFConfig cfg;
