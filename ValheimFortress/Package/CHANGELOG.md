@@ -1,4 +1,11 @@
 
+  **0.32.2**
+---
+```
+- Fixes itemsize zero when providing tribute
+```
+
+
   **0.32.1**
 ---
 ```

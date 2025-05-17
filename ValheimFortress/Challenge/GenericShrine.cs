@@ -388,7 +388,7 @@ namespace ValheimFortress.Challenge
 
         public bool IsChallengeActive() {
             // Jotunn.Logger.LogInfo($"Checking if challenge is active: {challenge_active.Get()} | phase_running {phase_running}");
-            return challenge_active.Get() || phase_running;
+            return challenge_active.Get();
         }
 
         public bool ChallengeNoLongerSpawnable()
