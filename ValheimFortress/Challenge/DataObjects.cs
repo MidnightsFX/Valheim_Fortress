@@ -398,46 +398,38 @@ namespace ValheimFortress.Challenge
         }
     }
 
-    public class ArrayVectorZNetProperty : ZNetProperty<Vector3[]>
-    {
-        BinaryFormatter binFormatter = new BinaryFormatter();
-        public ArrayVectorZNetProperty(string key, ZNetView zNetView, Vector3[] defaultValue) : base(key, zNetView, defaultValue)
-        {
-        }
+	public class ArrayVectorZNetProperty : ZNetProperty<Vector3[]> {
+		public ArrayVectorZNetProperty(string key, ZNetView zNetView, Vector3[] defaultValue)
+			: base(key, zNetView, defaultValue) {
+		}
 
-        public override Vector3[] Get()
-        {
-            var stored = zNetView.GetZDO().GetByteArray(Key);
-            // we can't deserialize a null buffer
-            if (stored == null) { return new Vector3[0]; }
-            var mStream = new MemoryStream(stored);
-            var deserializedstringarr = (string[])binFormatter.Deserialize(mStream);
-            if (deserializedstringarr == null || deserializedstringarr.Length == 0) { return null; }
-            Vector3[] varr = new Vector3[deserializedstringarr.Length];
-            int i = 0;
-            foreach (var item in deserializedstringarr) {
-                string[] vvals = item.Split(',');
-                varr[i] = new Vector3(x: float.Parse(vvals[0]), y: float.Parse(vvals[1]), z: float.Parse(vvals[2]));
-                i++;
-            }
-            return varr;
-        }
+		public override Vector3[] Get() {
+			byte[] bytes = zNetView.GetZDO().GetByteArray(Key);
+			if (bytes is null)
+				return null;
 
-        protected override void SetValue(Vector3[] value)
-        {
-            string[] serializable_vectors = new string[value.Length];
-            int i = 0;
-            foreach (var v in value) {
-                serializable_vectors[i] = $"{v.x},{v.y},{v.z}";
-                i++;
-            }
-            var mStream = new MemoryStream();
-            binFormatter.Serialize(mStream, serializable_vectors);
-            
+			var result = new Vector3[bytes.Length / 12];
 
-            zNetView.GetZDO().Set(Key, mStream.ToArray());
-        }
-    }
+			for (int i = 0; i < result.Length; ++i) {
+				result[i].x = BitConverter.ToSingle(bytes, i * 12 + 0);
+				result[i].y = BitConverter.ToSingle(bytes, i * 12 + 4);
+				result[i].z = BitConverter.ToSingle(bytes, i * 12 + 8);
+			}
+			return result;
+		}
+
+		public override void SetValue(Vector3[] value) {
+			byte[] bytes = new byte[value.Length * 12];
+
+			for (int i = 0; i < value.Length; ++i) {
+				BitConverter.GetBytes(value[i].x).CopyTo(bytes, i * 12 + 0);
+				BitConverter.GetBytes(value[i].y).CopyTo(bytes, i * 12 + 4);
+				BitConverter.GetBytes(value[i].z).CopyTo(bytes, i * 12 + 8);
+			}
+
+			zNetView.GetZDO().Set(Key, bytes);
+		}
+	}
 
     public class DictionaryZNetProperty : ZNetProperty<Dictionary<String, short>>
     {
