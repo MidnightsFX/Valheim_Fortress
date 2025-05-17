@@ -1,4 +1,11 @@
 
+  **0.32.3**
+---
+```
+- Fixes array vector initialization being swapped due to separator character in constructor in some localizations
+```
+
+
   **0.32.2**
 ---
 ```

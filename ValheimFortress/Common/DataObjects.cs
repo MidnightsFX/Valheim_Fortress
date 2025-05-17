@@ -463,7 +463,7 @@ namespace ValheimFortress.Challenge
 			return result;
 		}
 
-		public override void SetValue(Vector3[] value) {
+		protected override void SetValue(Vector3[] value) {
 			byte[] bytes = new byte[value.Length * 12];
 
 			for (int i = 0; i < value.Length; ++i) {
