@@ -1,4 +1,11 @@
 
+  **0.32.4**
+---
+```
+- Adds external configuration for all localizations in `Bepinex/config/VFortress/localizations`
+```
+
+
   **0.32.3**
 ---
 ```

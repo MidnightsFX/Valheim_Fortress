@@ -20,10 +20,11 @@ namespace ValheimFortress
     {
         public const string PluginGUID = "MidnightsFX.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.32.3";
+        public const string PluginVersion = "0.32.4";
 
         public static AssetBundle EmbeddedResourceBundle;
         public VFConfig cfg;
+        internal static CustomLocalization LocalizationInstance;
         public static ManualLogSource Log;
         public static GameObject spawnPortal;
         public static GameObject creatureNotifier;
@@ -58,29 +59,74 @@ namespace ValheimFortress
         // https://valheim-modding.github.io/Jotunn/data/localization/language-list.html
         private void AddLocalizations()
         {
-            // Use this class to add your own localization to the game
-            // https://valheim-modding.github.io/Jotunn/tutorials/localization.html
-            CustomLocalization Localization = LocalizationManager.Instance.GetLocalization();
-            // ValheimFortress.localizations.English.json
+            LocalizationInstance = LocalizationManager.Instance.GetLocalization();
+            //LocalizationManager.Instance.AddLocalization(Localization);
+
+            // Ensure localization folder exists
+            var translationFolder = Path.Combine(BepInEx.Paths.ConfigPath, "VFortress", "Localizations");
+            Directory.CreateDirectory(translationFolder);
+            //SimpleJson.SimpleJson.CurrentJsonSerializerStrategy
+
+
+            // ValheimArmory.localizations.English.json,ValheimArmory.localizations.German.json,ValheimArmory.localizations.Russian.json
             // load all localization files within the localizations directory
-            Logger.LogInfo("Loading Localizations.");
             foreach (string embeddedResouce in typeof(ValheimFortress).Assembly.GetManifestResourceNames())
             {
                 if (!embeddedResouce.Contains("Localizations")) { continue; }
                 // Read the localization file
+
                 string localization = ReadEmbeddedResourceFile(embeddedResouce);
                 // since I use comments in the localization that are not valid JSON those need to be stripped
                 string cleaned_localization = Regex.Replace(localization, @"\/\/.*", "");
+                Dictionary<string, string> internal_localization = SimpleJson.SimpleJson.DeserializeObject<Dictionary<string, string>>(cleaned_localization);
                 // Just the localization name
                 var localization_name = embeddedResouce.Split('.');
-                if (VFConfig.EnableDebugMode.Value == true)
+                if (File.Exists($"{translationFolder}/{localization_name[2]}.json"))
                 {
-                    Logger.LogInfo($"Adding localization: {localization_name[2]}");
+                    string cached_translation_file = File.ReadAllText($"{translationFolder}/{localization_name[2]}.json");
+                    try
+                    {
+                        Dictionary<string, string> cached_localization = SimpleJson.SimpleJson.DeserializeObject<Dictionary<string, string>>(cached_translation_file);
+                        UpdateLocalizationWithMissingKeys(internal_localization, cached_localization);
+                        Logger.LogDebug($"Reading {translationFolder}/{localization_name[2]}.json");
+                        File.WriteAllText($"{translationFolder}/{localization_name[2]}.json", SimpleJson.SimpleJson.SerializeObject(cached_localization));
+                        string updated_local_translation = File.ReadAllText($"{translationFolder}/{localization_name[2]}.json");
+                        LocalizationInstance.AddJsonFile(localization_name[2], updated_local_translation);
+                    }
+                    catch
+                    {
+                        File.WriteAllText($"{translationFolder}/{localization_name[2]}.json", cleaned_localization);
+                        Logger.LogDebug($"Reading {embeddedResouce}");
+                        LocalizationInstance.AddJsonFile(localization_name[2], cleaned_localization);
+                    }
                 }
+                else
+                {
+                    File.WriteAllText($"{translationFolder}/{localization_name[2]}.json", cleaned_localization);
+                    Logger.LogDebug($"Reading {embeddedResouce}");
+                    LocalizationInstance.AddJsonFile(localization_name[2], cleaned_localization);
+                }
+
+                Logger.LogDebug($"Added localization: '{localization_name[2]}'");
                 // Logging some characters seem to cause issues sometimes
-                // if (VFConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"Localization Text: {cleaned_localization}"); }
+                // if (VAConfig.EnableDebugMode.Value == true) { Logger.LogInfo($"Localization Text: {cleaned_localization}"); }
                 //Localization.AddTranslation(localization_name[2], localization);
-                Localization.AddJsonFile(localization_name[2], cleaned_localization);
+                // Localization.AddJsonFile(localization_name[2], cleaned_localization);
+            }
+        }
+
+        private void UpdateLocalizationWithMissingKeys(Dictionary<string, string> internal_localization, Dictionary<string, string> cached_localization)
+        {
+            if (internal_localization.Keys.Count != cached_localization.Keys.Count)
+            {
+                Logger.LogDebug("Cached localization was missing some entries. They will be added.");
+                foreach (KeyValuePair<string, string> entry in internal_localization)
+                {
+                    if (!cached_localization.ContainsKey(entry.Key))
+                    {
+                        cached_localization.Add(entry.Key, entry.Value);
+                    }
+                }
             }
         }
 
@@ -109,13 +155,11 @@ namespace ValheimFortress
 
         public static string LocalizeOrDefault(string str_to_localize,string default_string)
         {
-            string localized = Localization.instance.Localize(str_to_localize);
-            if(localized == $"[{str_to_localize.Replace("$", "")}]")
-            {
+            string localized = LocalizationInstance.TryTranslate(str_to_localize);
+            if(localized == $"[{str_to_localize.Replace("$", "")}]") {
                 Jotunn.Logger.LogDebug($"{str_to_localize} was not localized, returning the default: {default_string}");
                 return default_string;
-            } else
-            {
+            } else {
                 return localized;
             }
         }
