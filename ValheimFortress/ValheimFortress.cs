@@ -1,15 +1,17 @@
 ﻿using BepInEx;
+using BepInEx.Logging;
+using HarmonyLib;
 using Jotunn.Entities;
 using Jotunn.Managers;
-using Logger = Jotunn.Logger;
-using UnityEngine;
 using Jotunn.Utils;
-using System.Text.RegularExpressions;
-using System.IO;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using BepInEx.Logging;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using UnityEngine;
+using Logger = Jotunn.Logger;
 
 namespace ValheimFortress
 {
@@ -20,8 +22,9 @@ namespace ValheimFortress
     {
         public const string PluginGUID = "MidnightsFX.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.32.4";
+        public const string PluginVersion = "0.32.5";
 
+        internal static Harmony Harmony = new Harmony(PluginGUID);
         public static AssetBundle EmbeddedResourceBundle;
         public VFConfig cfg;
         internal static CustomLocalization LocalizationInstance;
@@ -48,6 +51,8 @@ namespace ValheimFortress
 
             Logger.LogInfo("Valheim Fortress loaded.");
             // EmbeddedResourceBundle.Unload(false); // unload anything extra
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            Harmony.PatchAll(assembly);
         }
 
 

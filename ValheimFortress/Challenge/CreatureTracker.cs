@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using HarmonyLib;
+using System;
 using UnityEngine;
+using UnityEngine.XR;
 
 namespace ValheimFortress.Challenge
 {
+
     class CreatureTracker : MonoBehaviour
     {
         private ZNetView zNetView;
@@ -23,9 +22,14 @@ namespace ValheimFortress.Challenge
             creature_name = cname;
         }
 
+        public void SetRemoveDrops(bool remove_drops) {
+            zNetView.GetZDO().Set("VFDrops", remove_drops);
+        }
+
         public void Awake()
         {
             zNetView = GetComponent<ZNetView>();
+            //zNetView.GetZDO().Set("VFDrops", false);
         }
         // When the object is destroyed, mention
         void OnDestroy()

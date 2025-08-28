@@ -60,6 +60,7 @@
     <Compile Include="Challenge\ChallengeShrine.cs" />
     <Compile Include="Challenge\ChallengeShrineUI.cs" />
     <Compile Include="Challenge\ExternalShrine.cs" />
+    <Compile Include="Challenge\Patches.cs" />
     <Compile Include="Common\DataObjects.cs" />
     <Compile Include="Challenge\GenericShrine.cs" />
     <Compile Include="Challenge\GenericShrineUI.cs" />
@@ -168,9 +169,9 @@
     <Exec Command="powershell.exe -ExecutionPolicy RemoteSigned -File &quot;$(SolutionDir)publish.ps1&quot; -Target &quot;$(ConfigurationName)&quot; -TargetPath &quot;$(TargetDir.TrimEnd('\'))&quot; -TargetAssembly &quot;$(TargetFileName)&quot; -ValheimPath &quot;$(VALHEIM_INSTALL.TrimEnd('\'))&quot; -DeployPath &quot;$(MOD_DEPLOYPATH.TrimEnd('\'))&quot; -ProjectPath &quot;$(ProjectDir.TrimEnd('\'))&quot; " />
   </Target>
   <Target Name="CopyToModManagers" AfterTargets="ILRepacker">
-    <Copy SourceFiles="$(TargetDir)\$(TargetFileName)" DestinationFolder="C:\Users\carls\AppData\Roaming\r2modmanPlus-local\Valheim\profiles\Modtest\BepInEx\plugins" />
-    <Copy SourceFiles="$(TargetDir)\$(TargetFileName)" DestinationFolder="C:\Users\carls\AppData\Roaming\Thunderstore Mod Manager\DataFolder\Valheim\profiles\Modtesting\BepInEx\plugins" />
-    <Copy SourceFiles="$(TargetDir)\$(TargetFileName)" DestinationFolder="C:\Users\carls\AppData\Roaming\com.kesomannen.gale\valheim\profiles\Modtest\BepInEx\plugins" />
+    <Copy SourceFiles="$(TargetDir)\$(TargetFileName)" DestinationFolder="$(AppData)\com.kesomannen.gale\valheim\profiles\Modtest\BepInEx\plugins\" />
+    <Copy SourceFiles="$(TargetDir)\$(TargetFileName)" DestinationFolder="$(AppData)\r2modmanPlus-local\Valheim\profiles\Modtest\BepInEx\plugins\" />
+    <Copy SourceFiles="$(TargetDir)\$(TargetFileName)" DestinationFolder="$(AppData)\Thunderstore Mod Manager\DataFolder\Valheim\profiles\Modtesting\BepInEx\plugins\" />
     <Copy SourceFiles="$(TargetDir)\$(TargetFileName)" DestinationFolder="$(ProjectDir)\Package\plugins\" />
   </Target>
   <PropertyGroup>

@@ -108,9 +108,9 @@ namespace ValheimFortress.Challenge
                 }
 
                 // Enable drops for hoard creatures or bosses, if configured, else destroy
-                if (Monsters.SpawnableCreatures[hoard.creature].dropsEnabled == false)
-                {
-                    Destroy(creature.GetComponent<CharacterDrop>());
+                if (Monsters.SpawnableCreatures[hoard.creature].dropsEnabled == false) {
+                    if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Disabling drops for {hoard.creature}."); }
+                    //GameObject.Destroy(creature.GetComponent<CharacterDrop>());
                 }
 
                 // Set the creatures to the same faction so they don't fight each other
@@ -118,6 +118,7 @@ namespace ValheimFortress.Challenge
                 if (creature_metadata != null)
                 {
                     creature_metadata.m_faction = Character.Faction.Boss;
+                    creature_metadata.m_nview.GetZDO().Set("VFDrops", Monsters.SpawnableCreatures[hoard.creature].dropsEnabled);
                 }
                 else
                 {
@@ -148,6 +149,7 @@ namespace ValheimFortress.Challenge
                 creature.AddComponent<CreatureTracker>();
                 creature.GetComponent<CreatureTracker>().SetShrine(shrine);
                 creature.GetComponent<CreatureTracker>().setCreatureName(hoard.prefab);
+                //creature.GetComponent<CreatureTracker>().SetRemoveDrops(Monsters.SpawnableCreatures[hoard.creature].dropsEnabled);
                 try
                 {
                     shrine.addEnemy(creature);
