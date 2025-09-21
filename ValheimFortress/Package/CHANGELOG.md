@@ -1,4 +1,24 @@
 
+  **0.32.8**
+---
+```
+- Bugfix: Fixes Creature drops not being prevented
+```
+
+
+  **0.32.7**
+---
+```
+- Added external dependency for yaml.net
+- Removed internal packing of yaml.net
+```
+
+  **0.32.6**
+---
+```
+- Fixes for Modifications occurring when the game is shutting down
+```
+
   **0.32.4**
 ---
 ```

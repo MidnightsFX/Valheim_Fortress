@@ -522,21 +522,14 @@ namespace ValheimFortress
             string levelsDefinitions = File.ReadAllText(levelDefinitionsFilePath);
             UpdateLevelsInMemory(levelsDefinitions);
             Jotunn.Logger.LogInfo("Updated levels in-memory values.");
-            if (GUIManager.IsHeadless())
+            try
             {
-                try
-                {
-                    LevelsSyncRPC.SendPackage(ZNet.instance.m_peers, SendLevelsConfigs());
-                    Jotunn.Logger.LogInfo("Sent levels configs to clients.");
-                }
-                catch
-                {
-                    Jotunn.Logger.LogError("Error while server syncing creature configs");
-                }
+                LevelsSyncRPC.SendPackage(ZNet.instance.m_peers, SendLevelsConfigs());
+                Jotunn.Logger.LogInfo("Sent levels configs to clients.");
             }
-            else
+            catch
             {
-                Jotunn.Logger.LogInfo("Instance is not a server, and will not send znet creature updates.");
+                Jotunn.Logger.LogError("Error while server syncing creature configs");
             }
 
         }
@@ -568,20 +561,14 @@ namespace ValheimFortress
             }
             Monsters.UpdateSpawnableCreatures(creatureConfigValues);
             Jotunn.Logger.LogInfo("Updated creature in-memory values.");
-            if (GUIManager.IsHeadless())
+            try
             {
-                try
-                {
-                    monsterSyncRPC.SendPackage(ZNet.instance.m_peers, SendCreatureConfigs());
-                    Jotunn.Logger.LogInfo("Sent creature configs to clients.");
-                }
-                catch
-                {
-                    Jotunn.Logger.LogError("Error while server syncing creature configs");
-                }
-            } else
+                monsterSyncRPC.SendPackage(ZNet.instance.m_peers, SendCreatureConfigs());
+                Jotunn.Logger.LogInfo("Sent creature configs to clients.");
+            }
+            catch
             {
-                Jotunn.Logger.LogInfo("Instance is not a server, and will not send znet creature updates.");
+                Jotunn.Logger.LogError("Error while server syncing creature configs");
             }
 
         }
@@ -603,20 +590,14 @@ namespace ValheimFortress
             }
             WaveStyles.UpdateWaveDefinition(waveStylesConfigValues);
             Jotunn.Logger.LogInfo("Updated WaveDefinition in-memory values.");
-            if (GUIManager.IsHeadless())
+            try
             {
-                try
-                {
-                    WavesSyncRPC.SendPackage(ZNet.instance.m_peers, SendWavesConfigs());
-                    Jotunn.Logger.LogInfo("Sent WaveDefinition configs to clients.");
-                }
-                catch
-                {
-                    Jotunn.Logger.LogError("Error while server syncing Wave configs");
-                }
+                WavesSyncRPC.SendPackage(ZNet.instance.m_peers, SendWavesConfigs());
+                Jotunn.Logger.LogInfo("Sent WaveDefinition configs to clients.");
             }
-            else {
-                Jotunn.Logger.LogInfo("Instance is not a server, and will not send znet creature updates.");
+            catch
+            {
+                Jotunn.Logger.LogError("Error while server syncing Wave configs");
             }
 
         }
@@ -635,21 +616,14 @@ namespace ValheimFortress
             }
             RewardsData.UpdateRewardsEntries(rewardsValues);
             Jotunn.Logger.LogInfo("Updated rewards in-memory values.");
-            if (GUIManager.IsHeadless())
+            try
             {
-                try
-                {
-                    rewardSyncRPC.SendPackage(ZNet.instance.m_peers, SendRewardsConfigs());
-                    Jotunn.Logger.LogInfo("Sent rewards configs to clients.");
-                }
-                catch (Exception)
-                {
-                    Jotunn.Logger.LogError("Error while server syncing rewards configs");
-                }
+                rewardSyncRPC.SendPackage(ZNet.instance.m_peers, SendRewardsConfigs());
+                Jotunn.Logger.LogInfo("Sent rewards configs to clients.");
             }
-            else
+            catch (Exception)
             {
-                Jotunn.Logger.LogInfo("Instance is not a server, and will not send znet reward updates.");
+                Jotunn.Logger.LogError("Error while server syncing rewards configs");
             }
 
         }
@@ -671,21 +645,14 @@ namespace ValheimFortress
             }
             WildShrineData.UpdateWildShrineDefinition(wildshrineValues);
             Jotunn.Logger.LogInfo("Updated WildshrineConfigs in-memory values.");
-            if (GUIManager.IsHeadless())
+            try
             {
-                try
-                {
-                    WildShrineSyncRPC.SendPackage(ZNet.instance.m_peers, SendWildShrineConfigs());
-                    Jotunn.Logger.LogInfo("Sent Wildshrine configs to clients.");
-                }
-                catch (Exception)
-                {
-                    Jotunn.Logger.LogError("Error while server syncing Wildshrine configs");
-                }
+                WildShrineSyncRPC.SendPackage(ZNet.instance.m_peers, SendWildShrineConfigs());
+                Jotunn.Logger.LogInfo("Sent Wildshrine configs to clients.");
             }
-            else
+            catch (Exception)
             {
-                Jotunn.Logger.LogInfo("Instance is not a server, and will not send znet reward updates.");
+                Jotunn.Logger.LogError("Error while server syncing Wildshrine configs");
             }
 
         }

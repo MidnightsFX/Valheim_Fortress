@@ -92,6 +92,7 @@ namespace ValheimFortress.Common
 
                 // Enable/Disable the the piece from being built
                 piecedef.enabled_cfg.SettingChanged += (_, EventArgs) => {
+                    if (ZNet.instance.enabled == false) { return; }
                     Piece gopiece = PrefabManager.Instance.GetPrefab(piecedef.prefab).GetComponent<Piece>();
                     if (gopiece != null) {
                         Logger.LogInfo($"Setting {piecedef.Name} to {piecedef.enabled_cfg.Value}.");
@@ -101,11 +102,13 @@ namespace ValheimFortress.Common
 
                 // Change the required crafting station
                 piecedef.requiredWorkstation_cfg.SettingChanged += (_, EventArgs) => {
+                    if (ZNet.instance.enabled == false) { return; }
                     RequiredBench_SettingChanged(piecedef);
                 };
 
                 // Onchange crafting cost
                 piecedef.recipe.recipeConfig.SettingChanged += (_, EventArgs) => {
+                    if (ZNet.instance.enabled == false) { return; }
                     if (ValidateRecipeConfig(piecedef)) {
                         BuildRequirements(piecedef);
                         Piece gopiece = PrefabManager.Instance.GetPrefab(piecedef.prefab).GetComponent<Piece>();

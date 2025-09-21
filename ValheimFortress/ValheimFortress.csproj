@@ -97,7 +97,6 @@
     <EmbeddedResource Include="Localizations\English.json" />
     <EmbeddedResource Include="Localizations\Spanish.json" />
     <None Include="Package\CHANGELOG.md" />
-    <None Include="ILRepack.targets" />
     <EmbeddedResource Include="Localizations\Abenaki.json" />
     <EmbeddedResource Include="Localizations\Bulgarian.json" />
     <EmbeddedResource Include="Localizations\Chinese.json" />
@@ -138,22 +137,14 @@
     <PackageReference Include="HarmonyX">
       <Version>2.10.2</Version>
     </PackageReference>
-    <PackageReference Include="ILRepack.Lib">
-      <Version>2.0.26</Version>
-    </PackageReference>
-    <PackageReference Include="ILRepack.Lib.MSBuild.Task">
-      <Version>2.0.26</Version>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
     <PackageReference Include="JotunnLib">
-      <Version>2.21.2</Version>
+      <Version>2.26.1</Version>
     </PackageReference>
     <PackageReference Include="Mono.Cecil">
       <Version>0.11.5</Version>
     </PackageReference>
     <PackageReference Include="YamlDotNet">
-      <Version>13.7.1</Version>
+      <Version>16.3.0</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
@@ -168,7 +159,7 @@
   <Target Name="JotunnPostBuildTaskWin" Condition="'$(OS)' == 'Windows_NT'">
     <Exec Command="powershell.exe -ExecutionPolicy RemoteSigned -File &quot;$(SolutionDir)publish.ps1&quot; -Target &quot;$(ConfigurationName)&quot; -TargetPath &quot;$(TargetDir.TrimEnd('\'))&quot; -TargetAssembly &quot;$(TargetFileName)&quot; -ValheimPath &quot;$(VALHEIM_INSTALL.TrimEnd('\'))&quot; -DeployPath &quot;$(MOD_DEPLOYPATH.TrimEnd('\'))&quot; -ProjectPath &quot;$(ProjectDir.TrimEnd('\'))&quot; " />
   </Target>
-  <Target Name="CopyToModManagers" AfterTargets="ILRepacker">
+  <Target Name="CopyToModManagers" AfterTargets="Build">
     <Copy SourceFiles="$(TargetDir)\$(TargetFileName)" DestinationFolder="$(AppData)\com.kesomannen.gale\valheim\profiles\Modtest\BepInEx\plugins\" />
     <Copy SourceFiles="$(TargetDir)\$(TargetFileName)" DestinationFolder="$(AppData)\r2modmanPlus-local\Valheim\profiles\Modtest\BepInEx\plugins\" />
     <Copy SourceFiles="$(TargetDir)\$(TargetFileName)" DestinationFolder="$(AppData)\Thunderstore Mod Manager\DataFolder\Valheim\profiles\Modtesting\BepInEx\plugins\" />

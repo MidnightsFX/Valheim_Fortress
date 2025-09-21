@@ -110,7 +110,7 @@ namespace ValheimFortress.Challenge
                 // Enable drops for hoard creatures or bosses, if configured, else destroy
                 if (Monsters.SpawnableCreatures[hoard.creature].dropsEnabled == false) {
                     if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Disabling drops for {hoard.creature}."); }
-                    //GameObject.Destroy(creature.GetComponent<CharacterDrop>());
+                    GameObject.Destroy(creature.GetComponent<CharacterDrop>());
                 }
 
                 // Set the creatures to the same faction so they don't fight each other
