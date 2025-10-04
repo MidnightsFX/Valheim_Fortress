@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine.UI;
 using UnityEngine;
 using ValheimFortress.Data;
@@ -445,7 +443,12 @@ namespace ValheimFortress.Challenge
                     position: new Vector2(220f, 260f),
                     width: 40f,
                     height: 40f);
-                AdminMenuButtonGO.SetActive(true);
+                AdminMenuButtonGO.SetActive(false);
+
+                if (SynchronizationManager.Instance.PlayerIsAdmin)
+                {
+                    AdminMenuButtonGO.SetActive(true);
+                }
 
             } else {
                 if (startChallengeButtonGO != null) { Destroy(startChallengeButtonGO.gameObject); startChallengeButtonGO = null; }
@@ -471,17 +474,18 @@ namespace ValheimFortress.Challenge
                     height: 40f);
                 cancelButtonGO.SetActive(true);
 
-                if (SynchronizationManager.Instance.PlayerIsAdmin)
-                {
-                    // Create the admin button object
-                    AdminMenuButtonGO = GUIManager.Instance.CreateButton(
-                        text: Localization.instance.Localize("$shrine_admin_menu_button"),
-                        parent: ChallengePanel.transform,
-                        anchorMin: new Vector2(0.5f, 0.5f),
-                        anchorMax: new Vector2(0.5f, 0.5f),
-                        position: new Vector2(218f, 165f),
-                        width: 40f,
-                        height: 40f);
+                // Create the admin button object
+                AdminMenuButtonGO = GUIManager.Instance.CreateButton(
+                    text: Localization.instance.Localize("$shrine_admin_menu_button"),
+                    parent: ChallengePanel.transform,
+                    anchorMin: new Vector2(0.5f, 0.5f),
+                    anchorMax: new Vector2(0.5f, 0.5f),
+                    position: new Vector2(218f, 165f),
+                    width: 40f,
+                    height: 40f);
+                AdminMenuButtonGO.SetActive(false);
+
+                if (SynchronizationManager.Instance.PlayerIsAdmin) {
                     AdminMenuButtonGO.SetActive(true);
                 }
             }

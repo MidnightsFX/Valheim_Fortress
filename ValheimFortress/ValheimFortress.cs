@@ -22,7 +22,7 @@ namespace ValheimFortress
     {
         public const string PluginGUID = "MidnightsFX.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.32.8";
+        public const string PluginVersion = "0.32.10";
 
         internal static Harmony Harmony = new Harmony(PluginGUID);
         public static AssetBundle EmbeddedResourceBundle;

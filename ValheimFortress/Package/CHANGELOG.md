@@ -1,4 +1,17 @@
 
+  **0.32.10**
+---
+```
+- UI Generation fix for non-admin users
+```
+
+  **0.32.9**
+---
+```
+- Missing font fixes for stealth update
+```
+
+
   **0.32.8**
 ---
 ```
