@@ -35,19 +35,18 @@ namespace ValheimFortress.Challenge
         void OnDestroy()
         {
             // if the znet is shutting down we don't want to or need to do this
-            if (!zNetView.IsValid()) {
+            if (!zNetView.IsValid() && shrineReference != null) {
                 shrineReference.DecrementSpecificCreatureSpawned(creature_name);
             }
         }
 
         public void Update()
         {
-            if (!zNetView.IsValid() || !zNetView.IsOwner())
-            {
+            if (zNetView == null) { return; }
+            if (!zNetView.IsValid() || !zNetView.IsOwner()) {
                 return;
             }
-            if (shrineReference.IsChallengeActive() == false)
-            {
+            if (shrineReference != null && shrineReference.IsChallengeActive() == false) {
                 DestroySelf();
             }
         }
@@ -60,7 +59,7 @@ namespace ValheimFortress.Challenge
             }
             else
             {
-                Destroy(gameObject);
+                Destroy(base.gameObject);
             }
         }
     }

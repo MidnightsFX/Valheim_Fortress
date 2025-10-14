@@ -11,9 +11,9 @@ namespace ValheimFortress.Challenge
         {
             public static void Prefix(Character __instance)
             {
-                Jotunn.Logger.LogInfo($"[Humanoid] Checking for removal of drops {__instance.m_nview.GetZDO().GetBool("VFDrops", true)} == false ?.");
+                //Jotunn.Logger.LogInfo($"[Humanoid] Checking for removal of drops {__instance.m_nview.GetZDO().GetBool("VFDrops", true)} == false ?.");
                 if (__instance.m_nview.GetZDO().GetBool("VFDrops", true) == false) {
-                    Jotunn.Logger.LogInfo($"Skipping CharacterDrop");
+                    //Jotunn.Logger.LogInfo($"Skipping CharacterDrop");
                     __instance.m_onDeath = null;
                 }
             }

@@ -1,4 +1,10 @@
 
+  **0.32.11**
+---
+```
+- NPE fix for race conditions on creature death during challenges
+```
+
   **0.32.10**
 ---
 ```
