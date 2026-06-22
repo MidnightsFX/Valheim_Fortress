@@ -65,7 +65,6 @@
     <Compile Include="Challenge\GenericShrine.cs" />
     <Compile Include="Challenge\GenericShrineUI.cs" />
     <Compile Include="Challenge\Levels.cs" />
-    <Compile Include="Challenge\CreatureTracker.cs" />
     <Compile Include="Challenge\PortalTracker.cs" />
     <Compile Include="Challenge\RemoteLocationPortals.cs" />
     <Compile Include="Challenge\Rewards.cs" />

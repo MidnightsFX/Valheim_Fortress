@@ -38,6 +38,7 @@ namespace ValheimFortress.Challenge
             remote_spawn_locations = new ArrayVectorZNetProperty("remote_spawn_locations", zNetView, null);
 
             alive_creature_list = new DictionaryZNetProperty("alive_creature_list", zNetView, new Dictionary<String, short>() { });
+            spawned_creature_records = new SpawnedCreatureRecordsZNetProperty("spawned_creature_records", zNetView, new List<SpawnedCreatureRecord>());
 
             ShrineSelectedLevel = new IntZNetProperty("shrine_selected_level", zNetView, 0);
 

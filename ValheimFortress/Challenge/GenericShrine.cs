@@ -15,6 +15,9 @@ namespace ValheimFortress.Challenge
         protected ZNetView zNetView;
         public IntZNetProperty spawned_creatures { get; set; }
         public DictionaryZNetProperty alive_creature_list { get; set; }
+        // Authoritative, owner-reconciled set of currently-alive challenge creatures, tracked by ZDOID so
+        // counting survives creature/shrine ownership changes and shrine reload. See ReconcileSpawnedCreatures.
+        public SpawnedCreatureRecordsZNetProperty spawned_creature_records { get; set; }
         public BoolZNetProperty hard_mode { get; set; }
         public BoolZNetProperty boss_mode { get; set; }
         public BoolZNetProperty siege_mode { get; set; }
@@ -42,6 +45,9 @@ namespace ValheimFortress.Challenge
         protected Spawner spawn_controller;
         protected int availablePhases;
         protected Rewards reward_controller = new Rewards();
+        // Throttle counter for owner-side creature reconciliation (see ReconcileIfDue).
+        protected int reconcile_tick = 0;
+        protected const int reconcile_tick_interval = 20;
 
         protected CustomRPC WaveDefinitionRPC;
 
@@ -77,6 +83,7 @@ namespace ValheimFortress.Challenge
 
                 Dictionary<String, short> default_creature_dictionary = new Dictionary<String, short>() { };
                 alive_creature_list = new DictionaryZNetProperty("alive_creature_list", zNetView, default_creature_dictionary);
+                spawned_creature_records = new SpawnedCreatureRecordsZNetProperty("spawned_creature_records", zNetView, new List<SpawnedCreatureRecord>());
 
                 if (VFConfig.EnableDebugMode.Value)
                 {
@@ -145,137 +152,54 @@ namespace ValheimFortress.Challenge
             alive_creature_list.Set(new_creature_list);
         }
 
+        // Re-derives local shrine state after a reload (or after the local 'enemies' list is lost) from the
+        // persisted, owner-authoritative ZDOID records, instead of name/radius matching nearby creatures.
+        // First reconcile to prune anything that died while we were unloaded, then rebuild the local
+        // 'enemies' list (used for phase gating and notify/teleport) from survivors that are currently
+        // instantiated locally. No replacement creatures are spawned (removing the old double-spawn risk);
+        // survivors not yet loaded locally stay counted via spawned_creatures. shrine_location/shrine_ref are
+        // retained for call-site compatibility but are no longer needed.
         protected IEnumerator ReconnectUnlinkedCreatures(Vector3 shrine_location, GenericShrine shrine_ref)
         {
-            Dictionary<String, short> current_creature_list = alive_creature_list.Get();
-            Jotunn.Logger.LogDebug($"types of creatures to reconnect: {current_creature_list.Count}");
-            // Nothing to do
-            if (current_creature_list.Count == 0)
+            ReconcileSpawnedCreatures();
+            var records = spawned_creature_records.Get();
+            Jotunn.Logger.LogDebug($"creatures to reconnect: {records.Count}");
+            if (records.Count == 0)
             {
-                // No reconnection to do, but we should move to the next phase if there is one
+                // Nothing alive to reconnect to; advance to the next phase if there is one.
                 force_next_phase.Set(true);
                 yield break;
             }
-            string current_creature_entries = "";
-            foreach (KeyValuePair<String, short> entry in current_creature_list)
-            {
-                current_creature_entries += $"{entry.Key}={entry.Value}\n";
-            }
-            Jotunn.Logger.LogDebug($"Current creatures to reconnect: \n{current_creature_entries}");
 
             enemies.Clear();
-
-            List<Character> potentialTargets = new List<Character> { };
-            Character.GetCharactersInRange(shrine_location, VFConfig.ShrineReconnectRange.Value, potentialTargets);
-            Dictionary<String, short> number_of_this_creature_added = new Dictionary<String, short>();
-            foreach(String cname in current_creature_list.Keys)
+            foreach (var record in records)
             {
-                number_of_this_creature_added.Add(cname, 0);
+                GameObject instance = ZNetScene.instance.FindInstance(record.Id);
+                if (instance == null) { continue; } // alive but not loaded locally yet; still counted
+
+                Character pchar = instance.GetComponent<Character>();
+                if (pchar != null)
+                {
+                    // Re-apply the challenge creature setup (idempotent) in case this is a fresh instance.
+                    pchar.m_faction = Character.Faction.Boss;
+                    BaseAI ai = instance.GetComponent<BaseAI>();
+                    if (ai != null) { ai.SetHuntPlayer(true); }
+                    CreatureValues selected_creature_details;
+                    if (Monsters.SpawnableCreatures.TryGetValue(record.Name, out selected_creature_details)
+                        && selected_creature_details != null && selected_creature_details.dropsEnabled == false)
+                    {
+                        Destroy(instance.GetComponent<CharacterDrop>());
+                        pchar.m_onDeath = null;
+                    }
+                }
+                enemies.Add(instance);
             }
-            short total_number_currently_added = 0;
-            short total_number_to_add = (short)current_creature_list.Sum(x => x.Value);
-            short current_pause_progress = 0;
-            short current_creature_add_iteration = 0;
 
-            if (total_number_to_add == 0)
+            if (enemies.Count == 0 && spawned_creatures.Get() <= 0 && phase_running == false)
             {
-                Jotunn.Logger.LogInfo("Shrine reconnection called but no creatures requested to reconnect, starting next level.");
+                Jotunn.Logger.LogInfo("No live creatures remain after reconnection, force starting next phase.");
                 force_next_phase.ForceSet(true);
-                yield break;
             }
-
-            if (potentialTargets.Count == 0)
-            {
-                Jotunn.Logger.LogDebug($"Spawning replacement creatures for creature reconnection.");
-                foreach (KeyValuePair<string, short> needed_creature  in current_creature_list)
-                {
-                    HoardConfig replacementHoard = new HoardConfig() { creature = needed_creature.Key, prefab = Monsters.SpawnableCreatures[needed_creature.Key].prefabName, amount = needed_creature.Value };
-                    spawn_controller.SpawnAdditionalHoarde(replacementHoard, this, remote_spawn_locations.Get());
-                    // We need to remove unlinked counted creatures, since the spawning functionality will link and increment all of the requested spawns.
-                    DecrementSpawned(needed_creature.Value);
-                    // We add the number of spawned creatures to our totals so we can break out of the reconnection list at the bottom.
-                    number_of_this_creature_added[needed_creature.Key] = needed_creature.Value;
-                }
-            } else {
-                foreach (Character pchar in potentialTargets)
-                {
-                    if (current_pause_progress == VFConfig.ShrineReconnectPauseBetweenAmount.Value)
-                    {
-                        current_pause_progress = 0;
-                        Jotunn.Logger.LogDebug($"Pausing while reconnecting creatures {current_creature_add_iteration}/{potentialTargets.Count}");
-                        yield return new WaitForSeconds(1);
-                    }
-                    current_creature_add_iteration++;
-                    current_pause_progress++;
-                    string creature_name = pchar.name.Replace("(Clone)", "");
-                    Jotunn.Logger.LogDebug($"checking reconnection for: {creature_name}");
-
-                    // we might need some of this entry
-                    if (current_creature_list.ContainsKey(creature_name))
-                    {
-                        // can merge this up with safe navigation
-                        // we do need this entry
-                        if (current_creature_list[creature_name] > 0)
-                        {
-                            // we need more of this entry
-                            if (number_of_this_creature_added[creature_name] < current_creature_list[creature_name])
-                            {
-                                Jotunn.Logger.LogDebug($"locating parent GO: {pchar.gameObject.name}");
-                                // Destroy item drop for this creature
-                                Destroy(pchar.gameObject.GetComponent<CharacterDrop>());
-                                pchar.m_onDeath = null;
-                                // Set faction to boss to avoid fighting other creatures
-                                pchar.m_faction = Character.Faction.Boss;
-                                // Set the AI to hunt the nearby player
-                                BaseAI ai = pchar.gameObject.GetComponent<BaseAI>();
-                                if (ai != null)
-                                {
-                                    ai.SetHuntPlayer(true);
-                                }
-                                // Add the rewards tracker, and set the reference shrine
-                                pchar.gameObject.AddComponent<CreatureTracker>();
-                                pchar.gameObject.GetComponent<CreatureTracker>().SetShrine(shrine_ref);
-                                pchar.gameObject.GetComponent<CreatureTracker>().setCreatureName(creature_name);
-                                // Add the enemy to the locally tracked list for shrine operations
-                                enemies.Add(pchar.gameObject);
-                                // Increment the number of characters spawned
-                                number_of_this_creature_added[creature_name]++;
-                                total_number_currently_added++;
-
-                                // Destroy drops for reconnected creatures that don't have drops enabled
-                                CreatureValues selected_creature_details;
-                                Monsters.SpawnableCreatures.TryGetValue(creature_name, out selected_creature_details);
-                                if (selected_creature_details != null)
-                                {
-                                    if (selected_creature_details.dropsEnabled == false)
-                                    {
-                                        Destroy(pchar.gameObject.GetComponent<CharacterDrop>());
-                                    }
-                                }
-
-                                // exit the loop if we now have enough creatures
-                                if (total_number_currently_added == total_number_to_add)
-                                {
-                                    break;
-                                }
-                            }
-
-                        }
-                    }
-                }
-            }
-
-            if (total_number_currently_added != total_number_to_add)
-            {
-                short unfound_creatures = (short)(total_number_to_add - total_number_currently_added);
-                Jotunn.Logger.LogInfo($"Could not locate: {unfound_creatures} reducing remaining creatures.");
-                DecrementSpawned(unfound_creatures);
-                if (enemies.Count == 0 && spawned_creatures.Get() <= 0 && phase_running == false) {
-                    Jotunn.Logger.LogInfo($"No Enemies exist and no phase is running, force starting next phase.");
-                    force_next_phase.ForceSet(true);
-                }
-            }
-
             yield break;
         }
 
@@ -381,9 +305,97 @@ namespace ValheimFortress.Challenge
             spawned_creatures.ForceSet(0);
         }
 
-        public void IncrementSpawned()
+        // Registers a freshly spawned challenge creature with the shrine owner. Called from the spawn
+        // coroutine (which runs on the shrine owner), so plain Set on the shrine ZDO is correct here.
+        // spawned_creatures is always kept equal to the live record count so it can never drift.
+        public void RegisterSpawnedCreature(ZDOID creature_id, string prefab_name)
         {
-            spawned_creatures.Set(spawned_creatures.Get() + 1);
+            if (creature_id == ZDOID.None) { return; }
+            var records = spawned_creature_records.Get();
+            records.Add(new SpawnedCreatureRecord(creature_id, prefab_name));
+            spawned_creature_records.Set(records);
+            spawned_creatures.Set(records.Count);
+        }
+
+        // Throttled entry point for owner-side reconciliation; call once per Update from the owner region.
+        public void ReconcileIfDue()
+        {
+            reconcile_tick++;
+            if (reconcile_tick < reconcile_tick_interval) { return; }
+            reconcile_tick = 0;
+            ReconcileSpawnedCreatures();
+        }
+
+        // Owner-authoritative alive-count reconciliation. Walks the tracked ZDOIDs and asks ZDOMan whether
+        // each ZDO still exists; any that no longer resolve have been destroyed network-wide (combat death,
+        // remote removal) and are pruned. This is independent of which client owns each creature and of
+        // whether a per-creature tracker component exists, which is what makes it robust to ZDO ownership
+        // changes. Must only be called by the shrine owner.
+        public void ReconcileSpawnedCreatures()
+        {
+            if (zNetView == null || !zNetView.IsValid() || !zNetView.IsOwner()) { return; }
+            var records = spawned_creature_records.Get();
+            if (records.Count == 0)
+            {
+                if (spawned_creatures.Get() != 0) { spawned_creatures.Set(0); }
+                return;
+            }
+
+            var survivors = new List<SpawnedCreatureRecord>(records.Count);
+            var alive_by_prefab = new Dictionary<string, short>();
+            foreach (var record in records)
+            {
+                ZDO zdo = ZDOMan.instance.GetZDO(record.Id);
+                // A null ZDO means the creature has been destroyed everywhere on the network.
+                if (zdo == null) { continue; }
+                survivors.Add(record);
+                if (alive_by_prefab.ContainsKey(record.Name)) { alive_by_prefab[record.Name] += 1; }
+                else { alive_by_prefab[record.Name] = 1; }
+            }
+
+            if (survivors.Count != records.Count)
+            {
+                spawned_creature_records.Set(survivors);
+                alive_creature_list.Set(alive_by_prefab);
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Reconciled challenge creatures: {records.Count} -> {survivors.Count} alive."); }
+            }
+            if (spawned_creatures.Get() != survivors.Count) { spawned_creatures.Set(survivors.Count); }
+        }
+
+        // Authoritative cleanup used when a run ends or is cancelled. Destroys every still-tracked creature
+        // regardless of which client owns it: claim ownership of the local instance (or the bare ZDO) and
+        // route through ZNetScene/ZDOMan so the removal propagates. Replaces the per-creature, owner-gated
+        // CreatureTracker self-destruct. Must only be called by the shrine owner.
+        public void DestroyAllSpawnedCreatures()
+        {
+            if (zNetView == null || !zNetView.IsValid() || !zNetView.IsOwner()) { return; }
+            foreach (var record in spawned_creature_records.Get())
+            {
+                GameObject instance = ZNetScene.instance.FindInstance(record.Id);
+                if (instance != null)
+                {
+                    ZNetView creature_nview = instance.GetComponent<ZNetView>();
+                    if (creature_nview != null && creature_nview.IsValid() && !creature_nview.IsOwner())
+                    {
+                        creature_nview.ClaimOwnership();
+                    }
+                    ZNetScene.instance.Destroy(instance);
+                }
+                else
+                {
+                    ZDO zdo = ZDOMan.instance.GetZDO(record.Id);
+                    if (zdo != null)
+                    {
+                        // Take ownership before requesting destruction; ZDOMan.DestroyZDO no-ops for non-owners.
+                        zdo.SetOwner(ZDOMan.GetSessionID());
+                        ZDOMan.instance.DestroyZDO(zdo);
+                    }
+                }
+            }
+            spawned_creature_records.Set(new List<SpawnedCreatureRecord>());
+            spawned_creatures.Set(0);
+            alive_creature_list.Set(new Dictionary<string, short>());
+            enemies.Clear();
         }
 
         public bool IsChallengeActive() {
@@ -481,38 +493,6 @@ namespace ValheimFortress.Challenge
             }
         }
 
-        public void DecrementSpawned(short decrease_value = 1)
-        {
-            // We don't want to try to decrease this past what is expected.
-            // The spawned creatures data could be lost at some point so lets avoid going negative.
-            if (spawned_creatures.Get() > 0)
-            {
-                spawned_creatures.Set(spawned_creatures.Get() - decrease_value);
-            }
-        }
-
-        public void DecrementSpecificCreatureSpawned(string creature_name, bool decrement_spawned = true)
-        {
-            if (!zNetView.IsOwner())
-            {
-                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Not zview owner, not decrementing."); }
-                return;
-            }
-            
-            if (decrement_spawned)
-            {
-                DecrementSpawned();
-            }
-            var active_creature_list = alive_creature_list.Get();
-            // can only modify the creature list key if it actually has it- otherwise decrementing it doesn't matter...
-            if (active_creature_list != null && active_creature_list.ContainsKey(creature_name))
-            {
-                active_creature_list[creature_name] = (short)(active_creature_list[creature_name] - 1);
-                alive_creature_list.Set(active_creature_list);
-            }
-
-        }
-
         public abstract void Update();
 
         public abstract string GetHoverText();
@@ -532,6 +512,9 @@ namespace ValheimFortress.Challenge
             boss_mode.ForceSet(false);
             hard_mode.ForceSet(false);
             siege_mode.ForceSet(false);
+            // Authoritatively remove any still-living challenge creatures (ForceSet above guarantees we own
+            // the shrine ZDO at this point). Replaces the old per-creature, owner-gated CreatureTracker cleanup.
+            DestroyAllSpawnedCreatures();
             Disableportal();
             wave_phases_definitions = new PhasedWaveTemplate(); // Got to clear the template
             wave_definition_ready.Set(false);

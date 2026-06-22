@@ -145,6 +145,9 @@ namespace ValheimFortress.Challenge
 
             if (challenge_active.Get() == true)
             {
+                // Authoritatively reconcile the alive creature count from tracked ZDOIDs (throttled). This is
+                // what advances phases when creatures die, independent of creature/shrine ZDO ownership.
+                ReconcileIfDue();
                 // the challenge should be running but there are no phase definitions. This happens when the shrine has become disconnected.
                 if (wave_phases_definitions == null || enemies.Count == 0 && spawned_creatures.Get() > 0 && phase_running == false)
                 {
@@ -186,7 +189,8 @@ namespace ValheimFortress.Challenge
                             }
                             SpawnReward(shrine_spawnpoint.transform.position);
                             challenge_active.Set(false);
-                            enemies.Clear();
+                            // Clear records/enemies and destroy any creatures still alive (e.g. a forced finish).
+                            DestroyAllSpawnedCreatures();
                             boss_mode.Set(false);
                             hard_mode.Set(false);
                             siege_mode.Set(false);

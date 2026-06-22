@@ -145,15 +145,12 @@ namespace ValheimFortress.Challenge
                     continue;
                 }
 
-                // Add the rewards tracker, and set the reference shrine
-                creature.AddComponent<CreatureTracker>();
-                creature.GetComponent<CreatureTracker>().SetShrine(shrine);
-                creature.GetComponent<CreatureTracker>().setCreatureName(hoard.prefab);
-                //creature.GetComponent<CreatureTracker>().SetRemoveDrops(Monsters.SpawnableCreatures[hoard.creature].dropsEnabled);
+                // Register the creature with the shrine owner by ZDOID. The shrine reconciles the alive count
+                // itself from these records, so counting is robust to creature/shrine ZDO ownership changes.
                 try
                 {
                     shrine.addEnemy(creature);
-                    shrine.IncrementSpawned();
+                    shrine.RegisterSpawnedCreature(creature_metadata.GetZDOID(), hoard.prefab);
                 }
                 catch { }
 
