@@ -1,10 +1,9 @@
 ﻿using BepInEx.Logging;
 using System;
 
-namespace ValheimFortress.Common
+namespace ValheimFortress
 {
-    internal static class Logger
-    {
+    internal static class Logger {
 
         public static LogLevel Level = LogLevel.Warning;
 

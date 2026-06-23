@@ -1,4 +1,12 @@
 
+  **0.33.0**
+---
+```
+- Significantly improves owner transition of objects to prevent challenge tracking disconnects
+- Fixes some caching issues with the AutoBallista which would prevent it from changing targets in a timely manner
+- Adds a public API to allow generating and building wave based challenges
+```
+
   **0.32.11**
 ---
 ```

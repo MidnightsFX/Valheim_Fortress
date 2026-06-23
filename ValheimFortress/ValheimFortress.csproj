@@ -54,7 +54,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="API.cs" />
+    <Compile Include="API\API.cs" />
+    <Compile Include="Common\APIReceiver.cs" />
     <Compile Include="Challenge\ArenaShrine.cs" />
     <Compile Include="Challenge\ArenaShrineUI.cs" />
     <Compile Include="Challenge\ChallengeShrine.cs" />
@@ -65,7 +66,6 @@
     <Compile Include="Challenge\GenericShrine.cs" />
     <Compile Include="Challenge\GenericShrineUI.cs" />
     <Compile Include="Challenge\Levels.cs" />
-    <Compile Include="Challenge\CreatureTracker.cs" />
     <Compile Include="Challenge\PortalTracker.cs" />
     <Compile Include="Challenge\RemoteLocationPortals.cs" />
     <Compile Include="Challenge\Rewards.cs" />

@@ -419,27 +419,38 @@ namespace ValheimFortress.Challenge
 
     public class ListStringZNetProperty : ZNetProperty<List<string>>
     {
-        BinaryFormatter binFormatter = new BinaryFormatter();
         public ListStringZNetProperty(string key, ZNetView zNetView, List<string> defaultValue) : base(key, zNetView, defaultValue)
         {
         }
 
+        // NOTE: encoded with a manual length-prefixed format (count + per-entry length-prefixed UTF-8)
+        // rather than BinaryFormatter, which is reflection/allocation heavy on hot paths. This format is
+        // NOT backwards compatible with values previously persisted by BinaryFormatter under the same key;
+        // those keys hold transient per-run state so a one-time reset on upgrade is acceptable.
         public override List<string> Get()
         {
             var stored = zNetView.GetZDO().GetByteArray(Key);
-            // we can't deserialize a null buffer
-            if (stored == null) { return new List<string>(); }
-            var mStream = new MemoryStream(stored);
-            var deserializedDictionary = (List<String>)binFormatter.Deserialize(mStream);
-            return deserializedDictionary;
+            var result = new List<string>();
+            // we can't deserialize a null/empty buffer
+            if (stored == null || stored.Length == 0) { return result; }
+            using (var mStream = new MemoryStream(stored))
+            using (var reader = new BinaryReader(mStream))
+            {
+                int count = reader.ReadInt32();
+                for (int i = 0; i < count; i++) { result.Add(reader.ReadString()); }
+            }
+            return result;
         }
 
         protected override void SetValue(List<string> value)
         {
-            var mStream = new MemoryStream();
-            binFormatter.Serialize(mStream, value);
-
-            zNetView.GetZDO().Set(Key, mStream.ToArray());
+            using (var mStream = new MemoryStream())
+            using (var writer = new BinaryWriter(mStream))
+            {
+                writer.Write(value.Count);
+                foreach (var entry in value) { writer.Write(entry ?? ""); }
+                zNetView.GetZDO().Set(Key, mStream.ToArray());
+            }
         }
     }
 
@@ -478,27 +489,107 @@ namespace ValheimFortress.Challenge
 
     public class DictionaryZNetProperty : ZNetProperty<Dictionary<String, short>>
     {
-        BinaryFormatter binFormatter = new BinaryFormatter();
         public DictionaryZNetProperty(string key, ZNetView zNetView, Dictionary<String, short> defaultValue) : base(key, zNetView, defaultValue)
         {
         }
 
+        // NOTE: encoded with a manual length-prefixed format (count + per-entry length-prefixed UTF-8 key
+        // and a short value) rather than BinaryFormatter. BinaryFormatter (de)serialization was happening
+        // on every creature death and is reflection/allocation heavy. This format is NOT backwards
+        // compatible with values previously persisted by BinaryFormatter under the same key; those keys
+        // hold transient per-run state so a one-time reset on upgrade is acceptable.
         public override Dictionary<String, short> Get()
         {
             var stored = zNetView.GetZDO().GetByteArray(Key);
-            // we can't deserialize a null buffer
-            if (stored == null) { return new Dictionary<string, short>(); }
-            var mStream = new MemoryStream(stored);
-            var deserializedDictionary = (Dictionary<String, short>)binFormatter.Deserialize(mStream);
-            return deserializedDictionary;
+            var result = new Dictionary<string, short>();
+            // we can't deserialize a null/empty buffer
+            if (stored == null || stored.Length == 0) { return result; }
+            using (var mStream = new MemoryStream(stored))
+            using (var reader = new BinaryReader(mStream))
+            {
+                int count = reader.ReadInt32();
+                for (int i = 0; i < count; i++)
+                {
+                    string entry_key = reader.ReadString();
+                    short entry_value = reader.ReadInt16();
+                    result[entry_key] = entry_value;
+                }
+            }
+            return result;
         }
 
         protected override void SetValue(Dictionary<String, short> value)
         {
-            var mStream = new MemoryStream();
-            binFormatter.Serialize(mStream, value);
+            using (var mStream = new MemoryStream())
+            using (var writer = new BinaryWriter(mStream))
+            {
+                writer.Write(value.Count);
+                foreach (var entry in value)
+                {
+                    writer.Write(entry.Key);
+                    writer.Write(entry.Value);
+                }
+                zNetView.GetZDO().Set(Key, mStream.ToArray());
+            }
+        }
+    }
 
-            zNetView.GetZDO().Set(Key, mStream.ToArray());
+    // A spawned challenge creature tracked authoritatively by the shrine owner. Stored by ZDOID so the
+    // shrine can reconcile the alive count itself (via ZDOMan) regardless of which client owns the
+    // creature, and so the set survives shrine reload (persisted on the shrine ZDO). Name is the spawn
+    // prefab name, used to keep the per-prefab alive_creature_list in sync.
+    public struct SpawnedCreatureRecord
+    {
+        public ZDOID Id;
+        public string Name;
+        public SpawnedCreatureRecord(ZDOID id, string name)
+        {
+            Id = id;
+            Name = name;
+        }
+    }
+
+    public class SpawnedCreatureRecordsZNetProperty : ZNetProperty<List<SpawnedCreatureRecord>>
+    {
+        public SpawnedCreatureRecordsZNetProperty(string key, ZNetView zNetView, List<SpawnedCreatureRecord> defaultValue) : base(key, zNetView, defaultValue)
+        {
+        }
+
+        // Per entry: ZDOID.UserID (long, 8 bytes) + ZDOID.ID (uint, 4 bytes) + length-prefixed UTF-8 name.
+        public override List<SpawnedCreatureRecord> Get()
+        {
+            var stored = zNetView.GetZDO().GetByteArray(Key);
+            var result = new List<SpawnedCreatureRecord>();
+            if (stored == null || stored.Length == 0) { return result; }
+            using (var mStream = new MemoryStream(stored))
+            using (var reader = new BinaryReader(mStream))
+            {
+                int count = reader.ReadInt32();
+                for (int i = 0; i < count; i++)
+                {
+                    long user_id = reader.ReadInt64();
+                    uint id = reader.ReadUInt32();
+                    string name = reader.ReadString();
+                    result.Add(new SpawnedCreatureRecord(new ZDOID(user_id, id), name));
+                }
+            }
+            return result;
+        }
+
+        protected override void SetValue(List<SpawnedCreatureRecord> value)
+        {
+            using (var mStream = new MemoryStream())
+            using (var writer = new BinaryWriter(mStream))
+            {
+                writer.Write(value.Count);
+                foreach (var record in value)
+                {
+                    writer.Write(record.Id.UserID);
+                    writer.Write(record.Id.ID);
+                    writer.Write(record.Name ?? "");
+                }
+                zNetView.GetZDO().Set(Key, mStream.ToArray());
+            }
         }
     }
 

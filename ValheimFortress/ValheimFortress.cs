@@ -11,7 +11,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEngine;
-using Logger = Jotunn.Logger;
+using ValheimFortress.Challenge;
+using Logger = ValheimFortress.Logger;
 
 namespace ValheimFortress
 {
@@ -23,6 +24,9 @@ namespace ValheimFortress
         public const string PluginGUID = "MidnightsFX.ValheimFortress";
         public const string PluginName = "ValheimFortress";
         public const string PluginVersion = "0.32.11";
+
+        // Networked prefab the public API instantiates to host API-driven challenges (see APIReceiver / ExternalShrine).
+        public const string ApiChallengeRunnerPrefab = "VF_api_challenge_runner";
 
         internal static Harmony Harmony = new Harmony(PluginGUID);
         public static AssetBundle EmbeddedResourceBundle;
@@ -42,6 +46,7 @@ namespace ValheimFortress
             AddLocalizations();
             new ValheimFortressPieces();
             SetupVFXObjects(EmbeddedResourceBundle);
+            SetupAPIRunnerPrefab();
             new VFLocations(EmbeddedResourceBundle, cfg);
 
             // Yaml configs
@@ -156,6 +161,29 @@ namespace ValheimFortress
             CustomPrefab notify_custom_prefab = new CustomPrefab(notify_ga, false);
             PrefabManager.Instance.AddPrefab(notify_custom_prefab);
             creatureNotifier = notify_custom_prefab.Prefab;
+        }
+
+        // Registers the lightweight, networked prefab used by the public API to host challenges. It carries
+        // a ZNetView (for ownership + multiplayer state sync), a Spawner, and the ExternalShrine runner, but
+        // no visible mesh or collider. The API instantiates this at runtime and feeds it a wave definition.
+        private static void SetupAPIRunnerPrefab()
+        {
+            GameObject runner = PrefabManager.Instance.CreateEmptyPrefab(ApiChallengeRunnerPrefab, true);
+            if (runner == null) {
+                return;
+            }
+            // Strip the default visible primitive that CreateEmptyPrefab attaches; the runner is invisible.
+            foreach (MeshRenderer mr in runner.GetComponentsInChildren<MeshRenderer>(true)) { UnityEngine.Object.DestroyImmediate(mr); }
+            foreach (MeshFilter mf in runner.GetComponentsInChildren<MeshFilter>(true)) { UnityEngine.Object.DestroyImmediate(mf); }
+            foreach (Collider col in runner.GetComponentsInChildren<Collider>(true)) { UnityEngine.Object.DestroyImmediate(col); }
+
+            ZNetView znv = runner.GetComponent<ZNetView>();
+            if (znv != null) { znv.m_persistent = true; }
+
+            runner.AddComponent<Spawner>();
+            runner.AddComponent<ExternalShrine>();
+
+            PrefabManager.Instance.AddPrefab(new CustomPrefab(runner, false));
         }
 
         public static string LocalizeOrDefault(string str_to_localize,string default_string)

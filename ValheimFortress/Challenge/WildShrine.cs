@@ -39,6 +39,7 @@ namespace ValheimFortress.Challenge
 
             Dictionary<String, short> default_creature_dictionary = new Dictionary<String, short>() { };
             alive_creature_list = new DictionaryZNetProperty("alive_creature_list", zNetView, default_creature_dictionary);
+            spawned_creature_records = new SpawnedCreatureRecordsZNetProperty("spawned_creature_records", zNetView, new List<SpawnedCreatureRecord>());
 
             WaveDefinitionRPC = NetworkManager.Instance.AddRPC("levelsyaml_rpc", VFConfig.OnServerRecieveConfigs, OnClientReceivePhaseConfigs);
             SynchronizationManager.Instance.AddInitialSynchronization(WaveDefinitionRPC, SendPhaseConfigs);
@@ -224,6 +225,9 @@ namespace ValheimFortress.Challenge
             if (challenge_active.Get() == true)
             {
                 //if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Challenge active."); }
+                // Authoritatively reconcile the alive creature count from tracked ZDOIDs (throttled). This is
+                // what advances phases when creatures die, independent of creature/shrine ZDO ownership.
+                ReconcileIfDue();
                 // Generally this mode is entered when the shrine does not have wave information, but has passed the generation phase
                 if (wave_phases_definitions == null || enemies.Count == 0 && spawned_creatures.Get() > 0 && phase_running == false)
                 {
@@ -277,7 +281,8 @@ namespace ValheimFortress.Challenge
                             WildShrineLevelConfiguration wLevelDefinition = wildShrineConfiguration.wildShrineLevelsConfig.ElementAt(selected_level.Get());
                             SpawnMultiRewardsDirectly(wLevelDefinition.rewards, wLevelDefinition.wildLevelDefinition.levelIndex, shrine_spawnpoint.transform.position, hard_mode.Get(), boss_mode.Get(), siege_mode.Get());
                             challenge_active.Set(false);
-                            enemies.Clear();
+                            // Clear records/enemies and destroy any creatures still alive (e.g. a forced finish).
+                            DestroyAllSpawnedCreatures();
                             boss_mode.Set(false);
                             hard_mode.Set(false);
                             siege_mode.Set(false);

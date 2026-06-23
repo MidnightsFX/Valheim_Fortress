@@ -22,7 +22,6 @@ namespace ValheimFortress.Defenses
         public float m_viewDistance = VFConfig.BallistaRange.Value;
         public float m_attackCooldown = VFConfig.BallistaCooldownTime.Value;
         public float m_ammo_accuracy = VFConfig.BallistaAmmoAccuracyPenalty.Value; // Ammo will be perfectly accurate minus this percent, right now 95% accuracy
-        private static int max_ticks_between_target_cache_update = VFConfig.BallistaTargetUpdateCacheInterval.Value;
 
 		private static LayerMask lmsk;
 
@@ -47,8 +46,6 @@ namespace ValheimFortress.Defenses
 
 		// These must be instanced
 		private List<Character> nearby_targets = new List<Character>();
-		private int update_target_cache_interval = 0;
-        private int current_cache_check_tick = 0;
         private bool m_haveTarget = false;
 		private float m_updateTargetTimer = 0f;
 		private float m_scan = 0f;
@@ -108,7 +105,6 @@ namespace ValheimFortress.Defenses
 
                 // Randomize which tick this turret uses for its update
                 m_noTargetScanRate = (float)UnityEngine.Random.Range(8, 16);
-                update_target_cache_interval = UnityEngine.Random.Range(1, VFConfig.BallistaTargetUpdateCacheInterval.Value);
 
 				// Invert bit mask to check collisions
 				// lmsk |= (1 << 0); // ignore default
@@ -219,10 +215,14 @@ namespace ValheimFortress.Defenses
 			m_updateTargetTimer -= dt;
 			if (m_updateTargetTimer <= 0f)
 			{
-				bool character_in_range = IsCharacterInRangeAndNotPlayer(base.transform.position, VFConfig.BallistaRange.Value, Character.GetAllCharacters());
+				// Refresh the in-range target list once and reuse it for both the rescan cadence and target
+				// selection, rather than separately scanning the entire character list via GetAllCharacters.
+				Character.GetCharactersInRange(base.transform.position, m_viewDistance, nearby_targets);
+				// Order targets nearest-first so selection prefers the closest hittable enemy (squared distance
+				// avoids the sqrt in Vector3.Distance; sort in place to avoid a LINQ allocation).
+				nearby_targets.Sort((a, b) => Vector3.SqrMagnitude(base.transform.position - a.transform.position).CompareTo(Vector3.SqrMagnitude(base.transform.position - b.transform.position)));
+				bool character_in_range = IsCharacterInRangeAndNotPlayer(base.transform.position, VFConfig.BallistaRange.Value, nearby_targets);
                 m_updateTargetTimer = (character_in_range ? m_updateTargetIntervalNear : m_updateTargetIntervalFar);
-				// Character character = BaseAI.FindClosestCreature(base.transform, eye.transform.position, 0f, m_viewDistance, m_horizontalAngle, false, false);
-				// Id much prefer to get characters in range, but we need a complete list of all valid targets, instead of just avoiding the things we don't want to hit
 				Character selectedTarget = selectTarget(character_in_range);
 
 				if (selectedTarget != null && selectedTarget != m_target)
@@ -284,48 +284,17 @@ namespace ValheimFortress.Defenses
 
 		private Character selectTarget(bool character_in_range)
 		{
-			// if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Selecting Target"); }
-			//Jotunn.Logger.LogInfo("selecting target");
-			// List<Character> potentialTargets = Character.GetAllCharacters();
-			//List<Character> potentialTargets = new List<Character>();
-
-			//if (character_in_range)
-			//{
-			//	if (update_target_cache_interval == current_cache_check_tick)
-			//	{
-			//                 Character.GetCharactersInRange(base.transform.position, m_viewDistance, nearby_targets);
-			//             } else
-			//	{
-			//		current_cache_check_tick++;
-			//             }
-			//         }
-
-
 			// nothing is in range, nothing to do.
 			if (!character_in_range) { return null; }
 
-            // rebuild the list of targets to check once we've emptied out our current target list OR we've hit the cache update
-            if (nearby_targets.Count == 0 || update_target_cache_interval == current_cache_check_tick)
-			{
-                if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Updating Turret target cache."); }
-                Character.GetCharactersInRange(base.transform.position, m_viewDistance, nearby_targets);
-				// Order the list of targets by whoever is closest
-				nearby_targets.OrderBy(o => Vector3.Distance(base.transform.position, o.gameObject.transform.position));
-
-            }
-            List<Character> targets_to_check = new List<Character>(nearby_targets);
-            // Reset the cache tick, or increment it
-            if (max_ticks_between_target_cache_update <= current_cache_check_tick) { current_cache_check_tick = 0; } else { current_cache_check_tick++; }
-
+			// nearby_targets is refreshed and ordered nearest-first by the caller (UpdateTarget); iterate it
+			// directly and pick the closest enemy with a clear line of sight.
             Character selectedTarget = null;
-            if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"checking targets {targets_to_check.Count}"); }
-            foreach (Character ptarget in targets_to_check)
+            if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"checking targets {nearby_targets.Count}"); }
+            foreach (Character ptarget in nearby_targets)
 			{
 				if (!IsValidTarget(ptarget))
 				{
-                    // if (VFConfig.EnableTurretDebugMode.Value) { Jotunn.Logger.LogInfo($"Removing invalid target"); }
-                    // Remove invalid entries so we don't need to recheck them in the future
-                    nearby_targets.Remove(ptarget);
 					continue;
 				}
 				BaseAI ptargetAI = ptarget.GetBaseAI();
@@ -439,9 +408,9 @@ namespace ValheimFortress.Defenses
                 GameObject gameObject = ZNetScene.instance.FindInstance(target.Get());
                 // Jotunn.Logger.LogInfo($"Found target in the scene? {(bool)gameObject}");
                 if ((bool)gameObject) {
-					bool target_within_range = Vector3.Distance(eye.transform.position, gameObject.transform.position) > m_viewDistance;
+					bool target_within_range = Vector3.Distance(eye.transform.position, gameObject.transform.position) <= m_viewDistance;
                     // Jotunn.Logger.LogInfo($"ZDO target is within range? ({target_within_range})");
-                    // We don't take the group target if its outside of our shooting range
+                    // We only adopt the shared group target if it is inside our shooting range
                     if (target_within_range)
 					{
                         Character component = gameObject.GetComponent<Character>();
