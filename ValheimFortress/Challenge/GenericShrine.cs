@@ -590,6 +590,20 @@ namespace ValheimFortress.Challenge
             StartCoroutine(reward_controller.InitReward(reward_prefab, number_of_rewards, spawn_position));
         }
 
+        // Spawns rewards at exactly the supplied amounts, with no level/mode scaling. Used by the API
+        // challenge runner for caller-defined "fixed" rewards. Keys are item prefab names, values are
+        // the exact counts to spawn.
+        public void SpawnFixedRewardsDirectly(Dictionary<String, short> rewards_and_amounts, Vector3 spawn_position)
+        {
+            if (rewards_and_amounts == null) { return; }
+            foreach (KeyValuePair<String, short> reward_entry in rewards_and_amounts)
+            {
+                if (reward_entry.Value <= 0) { continue; }
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Spawning fixed reward {reward_entry.Value} {reward_entry.Key}"); }
+                StartCoroutine(reward_controller.InitReward(reward_entry.Key, reward_entry.Value, spawn_position));
+            }
+        }
+
         public float DetermineMultiplayerBonus()
         {
             List<Player> nearby_players = new List<Player> { };

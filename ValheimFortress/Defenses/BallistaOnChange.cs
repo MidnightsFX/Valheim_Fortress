@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using Logger = ValheimFortress.Common.Logger;
+using Logger = ValheimFortress.Logger;
 
 namespace ValheimFortress.Defenses
 {

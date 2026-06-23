@@ -54,7 +54,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="API.cs" />
+    <Compile Include="API\API.cs" />
+    <Compile Include="Common\APIReceiver.cs" />
     <Compile Include="Challenge\ArenaShrine.cs" />
     <Compile Include="Challenge\ArenaShrineUI.cs" />
     <Compile Include="Challenge\ChallengeShrine.cs" />
