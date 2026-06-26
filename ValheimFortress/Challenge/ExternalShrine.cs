@@ -20,9 +20,20 @@ namespace ValheimFortress.Challenge
         private DictionaryZNetProperty api_scaled_rewards;
         private DictionaryZNetProperty api_fixed_rewards;
 
+        // Whether challenge creatures keep their normal loot drops. Held on the ZDO so the spawning/reconnect
+        // logic honors it regardless of which instance owns the run. Defaults to false (no drops), matching
+        // the physical shrines. Per-creature overrides (creature name -> 1/0) take precedence over the global
+        // toggle; creatures without an override fall back to it.
+        private BoolZNetProperty api_creature_drops_enabled;
+        private DictionaryZNetProperty api_creature_drop_overrides;
+
         // Player-facing messages are transient and only used by the owner that started the run.
         private string api_wave_start_msg;
         private string api_wave_end_msg;
+
+        // Whether to mark the spawn points on the minimap for the duration of the run. Transient: the overlay
+        // is client-local and only drawn/cleared by the owner that drives the run (see DrawSpawnLocationOverlay).
+        private bool api_draw_map_overlay;
 
         public override void Awake()
         {
@@ -54,6 +65,8 @@ namespace ValheimFortress.Challenge
             api_reward_location = new Vector3ZNetProperty("api_reward_location", zNetView, Vector3.zero);
             api_scaled_rewards = new DictionaryZNetProperty("api_scaled_rewards", zNetView, new Dictionary<String, short>() { });
             api_fixed_rewards = new DictionaryZNetProperty("api_fixed_rewards", zNetView, new Dictionary<String, short>() { });
+            api_creature_drops_enabled = new BoolZNetProperty("api_creature_drops_enabled", zNetView, false);
+            api_creature_drop_overrides = new DictionaryZNetProperty("api_creature_drop_overrides", zNetView, new Dictionary<String, short>() { });
 
             // Reuse the same wave-config RPC the other shrines use; Jotunn returns the existing RPC for a
             // repeated name so registering it again here is safe.
@@ -70,7 +83,9 @@ namespace ValheimFortress.Challenge
         // it up and starts the challenge.
         public void BeginApiChallenge(PhasedWaveTemplate waves, Vector3[] spawnPoints, Vector3 rewardLocation,
             Dictionary<String, short> scaledRewards, Dictionary<String, short> fixedRewards,
-            short difficulty, bool hard, bool boss, bool siege, string startMessage, string endMessage)
+            short difficulty, bool hard, bool boss, bool siege, bool enableCreatureDrops,
+            Dictionary<String, short> creatureDropOverrides, string startMessage, string endMessage,
+            bool drawMapOverlay)
         {
             wave_phases_definitions = waves;
             availablePhases = waves.hordePhases.Count;
@@ -87,9 +102,12 @@ namespace ValheimFortress.Challenge
             hard_mode.ForceSet(hard);
             boss_mode.ForceSet(boss);
             siege_mode.ForceSet(siege);
+            api_creature_drops_enabled.ForceSet(enableCreatureDrops);
+            api_creature_drop_overrides.ForceSet(creatureDropOverrides ?? new Dictionary<String, short>() { });
 
             api_wave_start_msg = startMessage;
             api_wave_end_msg = endMessage;
+            api_draw_map_overlay = drawMapOverlay;
 
             start_challenge.ForceSet(true);
         }
@@ -99,6 +117,9 @@ namespace ValheimFortress.Challenge
             currentPhase.Set(0);
             challenge_active.Set(true);
             phase_running = true;
+            // The runner has no in-world portals; when the caller opts in, just mark the spawn points on the
+            // minimap (cleared in FinishChallenge). Local/cosmetic and a no-op without a minimap.
+            if (api_draw_map_overlay) { RemoteLocationPortals.DrawSpawnLocationOverlay(remote_spawn_locations.Get(), this.gameObject.transform.position); }
             spawn_controller.TrySpawningPhase(5f, false, wave_phases_definitions.hordePhases[currentPhase.Get()], gameObject, remote_spawn_locations.Get());
             SetCurrentCreatureList(wave_phases_definitions.hordePhases[currentPhase.Get()]);
             start_challenge.Set(false);
@@ -189,6 +210,7 @@ namespace ValheimFortress.Challenge
             }
 
             challenge_active.Set(false);
+            RemoteLocationPortals.ClearMapOverlay();
             DestroyAllSpawnedCreatures();
             boss_mode.Set(false);
             hard_mode.Set(false);
@@ -223,6 +245,19 @@ namespace ValheimFortress.Challenge
             {
                 localplayer.Message(MessageHud.MessageType.Center, Localization.instance.Localize(message));
             }
+        }
+
+        // Unlike the physical shrines, loot drops are an API-supplied per-run setting: a global toggle
+        // (default false) with optional per-creature overrides. A creature listed in the override map uses
+        // its mapped value; everything else falls back to the global toggle.
+        public override bool ShouldDropLoot(string creature)
+        {
+            Dictionary<String, short> overrides = api_creature_drop_overrides.Get();
+            if (overrides != null && overrides.TryGetValue(creature, out short value))
+            {
+                return value != 0;
+            }
+            return api_creature_drops_enabled.Get();
         }
 
         // The runner has no world-interaction surface; it is spawned and driven entirely by the API.

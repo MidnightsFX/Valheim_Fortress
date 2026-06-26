@@ -1,4 +1,11 @@
 
+  **0.34.0**
+---
+```
+- Shrines now mark each creature spawn location on the minimap (vanilla event-area circle and animated event icon) while a challenge is active (toggle: EnableShrineMapOverlay)
+- API: VFChallengeDefinition gains a DrawMapOverlay flag to opt API-driven challenges into the same spawn-point minimap markers
+```
+
   **0.33.0**
 ---
 ```

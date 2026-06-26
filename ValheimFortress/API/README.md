@@ -69,6 +69,9 @@ Vector3[] spawnPoints = {
 ValheimFortress.API.RunChallenge(definition, spawnPoints, rewardsLocation);
 ```
 
+You can supply any number of spawn points (at least one). Each creature emerges from a randomly chosen
+point, so more points spread the horde over a wider area.
+
 ### Run an explicit challenge with fixed rewards
 
 Specify the exact creatures, counts, and stars per phase. When `ExplicitPhases` is set it overrides
@@ -113,8 +116,19 @@ Tuned mode: `Biome`, `Difficulty`, `WaveStyle`, `NumPhases`, `MaxCreaturesPerPha
 
 Explicit mode: `ExplicitPhases` (overrides tuned fields when set).
 
+Creature behavior: `EnableCreatureDrops` — global toggle; when true, challenge creatures drop their
+normal loot on death. Defaults to false (creatures drop nothing; players are rewarded only via the
+challenge rewards). `CreatureDropOverrides` — optional `creature name → bool` map that overrides the
+global toggle per creature (creatures not listed use the global value; unknown names are ignored).
+
 Rewards: `ScaledRewards` (item → per-unit cost) and/or `FixedRewards` (item → exact count).
 
 Messaging: `WaveStartMessage`, `WaveEndMessage` (support `$localization` keys).
+
+Presentation: `DrawMapOverlay` — when true, marks each spawn point on the minimap for the duration of
+the run using the vanilla event markers (shaded event-area circle plus the animated event icon, the same
+markers the physical shrines and SLS raids use), cleared automatically on completion. Local/cosmetic
+only: renders for the instance driving the run (single-player or the P2P host) and is skipped on a
+headless dedicated server. Defaults to false.
 
 Supported biomes for generation: Meadows, BlackForest, Swamp, Mountain, Plains, Mistlands, AshLands.

@@ -124,7 +124,7 @@ namespace ValheimFortress.Challenge
             challenge_active.Set(true);
             // Should be before the phase starts
             phase_running = true;
-            RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations.Get(), gameObject.GetComponent<WildShrine>());
+            RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations.Get(), gameObject.GetComponent<WildShrine>(), VFConfig.EnableShrineMapOverlay.Value);
             spawn_controller.TrySpawningPhase(5f, false, wave_phases_definitions.hordePhases[currentPhase.Get()], gameObject, remote_spawn_locations.Get());
             SetCurrentCreatureList(wave_phases_definitions.hordePhases[currentPhase.Get()]);
             start_challenge.Set(false);
@@ -235,7 +235,7 @@ namespace ValheimFortress.Challenge
                     StartCoroutine(ReconnectUnlinkedCreatures(shrine_spawnpoint.transform.position, gameObject.GetComponent<WildShrine>()));
                     WildShrineLevelConfiguration wLevelDefinition = wildShrineConfiguration.wildShrineLevelsConfig.ElementAt(selected_level.Get());
                     wave_phases_definitions = Levels.generateRandomWaveWithOptions(wLevelDefinition.wildLevelDefinition.ToChallengeLevelDefinition(), hard_mode.Get(), false, siege_mode.Get(), wLevelDefinition.wildLevelDefinition.maxCreaturesPerPhaseOverride);
-                    RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations.Get(), gameObject.GetComponent<WildShrine>());
+                    RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations.Get(), gameObject.GetComponent<WildShrine>(), VFConfig.EnableShrineMapOverlay.Value);
                     return;
                 }
 
@@ -281,6 +281,7 @@ namespace ValheimFortress.Challenge
                             WildShrineLevelConfiguration wLevelDefinition = wildShrineConfiguration.wildShrineLevelsConfig.ElementAt(selected_level.Get());
                             SpawnMultiRewardsDirectly(wLevelDefinition.rewards, wLevelDefinition.wildLevelDefinition.levelIndex, shrine_spawnpoint.transform.position, hard_mode.Get(), boss_mode.Get(), siege_mode.Get());
                             challenge_active.Set(false);
+                            RemoteLocationPortals.ClearMapOverlay();
                             // Clear records/enemies and destroy any creatures still alive (e.g. a forced finish).
                             DestroyAllSpawnedCreatures();
                             boss_mode.Set(false);

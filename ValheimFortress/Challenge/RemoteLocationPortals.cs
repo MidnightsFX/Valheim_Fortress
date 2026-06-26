@@ -1,4 +1,5 @@
 ﻿using Jotunn;
+using Splatform;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,14 +12,16 @@ namespace ValheimFortress.Challenge
 {
     internal class RemoteLocationPortals : MonoBehaviour
     {
-        public static List<GameObject> DrawMapOverlayAndPortals(Vector3[] remote_spawns, GenericShrine shrine)
+        // Vanilla map markers placed at active challenge spawn points -- the same markers SLS raids use: the
+        // shaded EventArea image plus the animated RandomEvent icon. Tracked here so they can be removed when
+        // the run ends. Pins are client-local, so this set lives on whatever instance drives the run.
+        private static readonly List<Minimap.PinData> active_spawn_pins = new List<Minimap.PinData>();
+        // Diameter (world units) of the shaded EventArea circle drawn at each spawn point.
+        private const float SpawnPinAreaDiameter = 80f;
+
+        public static List<GameObject> DrawMapOverlayAndPortals(Vector3[] remote_spawns, GenericShrine shrine, bool drawOverlay = true)
         {
             List<GameObject> portals = new List<GameObject> { };
-
-            int circle_radius = 32;
-            // MapDrawing attackOverlay = MinimapManager.Instance.GetMapDrawing("AttackOverlay");
-            // Color color = Color.magenta;
-            Color[] colorPixels = new Color[circle_radius * circle_radius].Populate(Color.magenta);
 
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Starting spawn portal placement."); }
             foreach (Vector3 spawn_location in remote_spawns)
@@ -29,16 +32,56 @@ namespace ValheimFortress.Challenge
                 // We are going to manipulate the lifetime of this object outside of its timed life.
                 Destroy(tempportal.GetComponent<TimedDestruction>());
                 tempportal.AddComponent<PortalTracker>();
-                tempportal.GetComponent<PortalTracker>().SetShrine(shrine); ;
+                tempportal.GetComponent<PortalTracker>().SetShrine(shrine);
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Created portal at {spawn_location}."); }
                 if (VFConfig.EnableMapPings.Value) { Chat.instance.SendPing(spawn_location); }
-                // attackOverlay.ForestFilter.SetPixels((int)spawn_location.x, (int)spawn_location.y, circle_radius, circle_radius, colorPixels);
             }
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Done placing portals"); }
-            // Apply the overlay and start the coroutine for deleting it in the future
-            // attackOverlay.ForestFilter.Apply();
-            // StartCoroutine(CleanUpSpawnNotifiers(portals));
+
+            if (drawOverlay) { DrawSpawnLocationOverlay(remote_spawns, shrine.transform.position); }
             return portals;
+        }
+
+        // Marks each remote spawn location on the minimap with the vanilla event markers used by SLS raids: a
+        // shaded EventArea circle plus the animated RandomEvent icon. Existing markers are cleared first so only
+        // the current run's points show. Map pins are client-local and cosmetic, so this is a no-op on a
+        // headless/dedicated instance (no Minimap) -- the markers render for whatever instance owns/drives the
+        // run (single-player or the P2P host).
+        public static void DrawSpawnLocationOverlay(Vector3[] remote_spawns, Vector3 origin)
+        {
+            if (remote_spawns == null || remote_spawns.Length == 0) { return; }
+            if (Minimap.instance == null) { return; }
+
+            ClearMapOverlay();
+
+            // The shaded event-area image (the vanilla raid/event circle).
+            Minimap.PinData area_pin = Minimap.instance.AddPin(origin, Minimap.PinType.EventArea, "", false, false, author: new PlatformUserID());
+            area_pin.m_worldSize = SpawnPinAreaDiameter;
+            active_spawn_pins.Add(area_pin);
+
+            foreach (Vector3 spawn_location in remote_spawns) {
+                // The animated random-event icon.
+                Minimap.PinData icon_pin = Minimap.instance.AddPin(spawn_location, Minimap.PinType.RandomEvent, "", false, false, author: new PlatformUserID());
+                icon_pin.m_animate = true;
+                icon_pin.m_doubleSize = true;
+                active_spawn_pins.Add(icon_pin);
+            }
+            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Placed spawn-location map pins for {remote_spawns.Length} location(s)."); }
+        }
+
+        // Removes the spawn-location map markers placed by DrawSpawnLocationOverlay. Safe to call from any
+        // instance and whether or not any markers were placed. Invoked when a challenge ends or is cancelled.
+        public static void ClearMapOverlay()
+        {
+            if (active_spawn_pins.Count == 0) { return; }
+            if (Minimap.instance != null)
+            {
+                foreach (Minimap.PinData pin in active_spawn_pins)
+                {
+                    if (pin != null) { Minimap.instance.RemovePin(pin); }
+                }
+            }
+            active_spawn_pins.Clear();
         }
 
         static IEnumerator CleanUpSpawnNotifiers(List<GameObject> portals)
@@ -73,10 +116,12 @@ namespace ValheimFortress.Challenge
 
 
             List<Vector3> spawn_locations = new List<Vector3>();
+            // How many distinct remote spawn points to look for; creatures emerge from a randomly chosen one.
+            int target_spawn_points = Mathf.Max(1, VFConfig.NumberOfRemoteSpawnPoints.Value);
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Starting spawn destination in incrments of {range_increment} from x{shrine_gladiator_spawn_position.x} y{shrine_gladiator_spawn_position.y} z{shrine_gladiator_spawn_position.z}"); }
             int spawn_location_attempts = 0;
-            // We want three remote spawn locations, each one will be a wave
-            while (spawn_location_attempts < 100 && spawn_locations.Count < 3)
+            // We want target_spawn_points remote spawn locations to draw portals/waves from.
+            while (spawn_location_attempts < 100 && spawn_locations.Count < target_spawn_points)
             {
                 if ((spawn_location_attempts % 10) == 0 && spawn_location_attempts > 1)
                 {
@@ -119,13 +164,10 @@ namespace ValheimFortress.Challenge
                 spawn_locations.Add(potential_spawn);
             }
             Jotunn.Logger.LogInfo("Spawn locations determined");
-            // If we found at least one remote location, build out the set of 3 using it.
-            if (spawn_locations.Count > 0 && spawn_locations.Count < 3) {
-                Jotunn.Logger.LogInfo("Determined spawn locations was missing 1 or more entries. Multiple waves will spawn from the same location.");
-                while (spawn_locations.Count < 2)
-                {
-                    spawn_locations.Add(spawn_locations[0]);
-                }
+            // The spawner randomly indexes into whatever it's given, so any count >= 1 is fine; we don't need
+            // to pad up to the target. If we found fewer than requested, creatures simply share those points.
+            if (spawn_locations.Count > 0 && spawn_locations.Count < target_spawn_points) {
+                Jotunn.Logger.LogInfo($"Found {spawn_locations.Count} of {target_spawn_points} requested spawn locations. Creatures will share the available points.");
             }
 
             // If we never found a valid remote location, log it and set the spawn to the gladiator point.
@@ -133,7 +175,7 @@ namespace ValheimFortress.Challenge
             {
                 // This is a fallback to use the shrines central spawn location if we can't determine anywhere else valid to spawn.
                 Jotunn.Logger.LogWarning("No Valid remote spawn locations found, will force-spawn on the shrine.");
-                Vector3[] gladiator_spawn = { shrine_gladiator_spawn_position, shrine_gladiator_spawn_position, shrine_gladiator_spawn_position };
+                Vector3[] gladiator_spawn = { shrine_gladiator_spawn_position };
                 challengeShrine.SetWaveSpawnPoints(gladiator_spawn);
                 yield break;
             }

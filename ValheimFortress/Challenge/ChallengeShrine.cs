@@ -51,7 +51,7 @@ namespace ValheimFortress.Challenge
         {
             if (challenge_active.Get() == false)
             {
-                RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations.Get(), gameObject.GetComponent<ChallengeShrine>());
+                RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations.Get(), gameObject.GetComponent<ChallengeShrine>(), VFConfig.EnableShrineMapOverlay.Value);
                 currentPhase.Set(0); //ensure this is zero
                 challenge_active.Set(true);
                 spawn_controller.TrySpawningPhase(5f, false, wave_phases_definitions.hordePhases[currentPhase.Get()], gameObject, remote_spawn_locations.Get());
@@ -160,7 +160,7 @@ namespace ValheimFortress.Challenge
                     List<ChallengeLevelDefinition> clevels = ChallengeLevels.GetChallengeLevelDefinitions();
                     ChallengeLevelDefinition levelDefinition = clevels.ElementAt(selected_level.Get());
                     wave_phases_definitions = Levels.generateRandomWaveWithOptions(levelDefinition, hard_mode.Get(), boss_mode.Get(), siege_mode.Get(), VFConfig.ChallengeShrineMaxCreaturesPerWave.Value);
-                    RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations.Get(), gameObject.GetComponent<ChallengeShrine>());
+                    RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations.Get(), gameObject.GetComponent<ChallengeShrine>(), VFConfig.EnableShrineMapOverlay.Value);
                     wave_definition_ready.Set(true);
                     return;
                     // Ideally everything else is currently still correct since the last time this object was loaded
@@ -196,6 +196,7 @@ namespace ValheimFortress.Challenge
                             }
                             SpawnReward(shrine_spawnpoint.transform.position);
                             challenge_active.Set(false);
+                            RemoteLocationPortals.ClearMapOverlay();
                             boss_mode.Set(false);
                             hard_mode.Set(false);
                             siege_mode.Set(false);

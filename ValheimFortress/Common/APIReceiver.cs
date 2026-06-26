@@ -48,10 +48,8 @@ namespace ValheimFortress
                 return false;
             }
 
-            // Spawner.SpawnHorde randomly indexes one of three spawn locations; pad up to three so a
-            // caller can supply 1-2 points without an index-out-of-range.
-            Vector3[] normalized_spawn_points = NormalizeSpawnPoints(spawnPoints);
-
+            // Spawner.SpawnHorde randomly indexes into whatever spawn locations it's given, so any number
+            // (>= 1, already validated above) is fine; creatures emerge from a randomly chosen point per spawn.
             PhasedWaveTemplate waves = BuildWaveTemplate(def);
             if (waves == null || waves.hordePhases == null || waves.hordePhases.Count == 0)
             {
@@ -75,8 +73,11 @@ namespace ValheimFortress
                 return false;
             }
 
-            shrine.BeginApiChallenge(waves, normalized_spawn_points, rewardLocation, def.ScaledRewards, def.FixedRewards,
-                def.Difficulty, def.HardMode, def.BossMode, def.SiegeMode, def.WaveStartMessage, def.WaveEndMessage);
+            Dictionary<string, short> creature_drop_overrides = BuildDropOverrides(def.CreatureDropOverrides);
+
+            shrine.BeginApiChallenge(waves, spawnPoints, rewardLocation, def.ScaledRewards, def.FixedRewards,
+                def.Difficulty, def.HardMode, def.BossMode, def.SiegeMode, def.EnableCreatureDrops, creature_drop_overrides,
+                def.WaveStartMessage, def.WaveEndMessage, def.DrawMapOverlay);
 
             Jotunn.Logger.LogInfo($"VF-API: started challenge with {waves.hordePhases.Count} phases at {rewardLocation}.");
             return true;
@@ -181,15 +182,24 @@ namespace ValheimFortress
             return new PhasedWaveTemplate { hordePhases = horde_phases };
         }
 
-        private static Vector3[] NormalizeSpawnPoints(Vector3[] spawnPoints)
+        // Converts the public per-creature drop override map (creature name -> bool) into the short-encoded
+        // form stored on the runner ZDO (1 = drops, 0 = no drops). Unknown creature names are skipped with a
+        // warning, mirroring the explicit-creature validation above.
+        private static Dictionary<string, short> BuildDropOverrides(Dictionary<string, bool> overrides)
         {
-            if (spawnPoints.Length >= 3) { return spawnPoints; }
-            Vector3[] padded = new Vector3[3];
-            for (int i = 0; i < 3; i++)
+            Dictionary<string, short> result = new Dictionary<string, short>();
+            if (overrides == null) { return result; }
+            foreach (KeyValuePair<string, bool> entry in overrides)
             {
-                padded[i] = spawnPoints[i % spawnPoints.Length];
+                if (string.IsNullOrEmpty(entry.Key)) { continue; }
+                if (!Monsters.SpawnableCreatures.ContainsKey(entry.Key))
+                {
+                    Jotunn.Logger.LogWarning($"VF-API: creature drop override '{entry.Key}' is not a known VF creature, skipping. Use GetSpawnableCreatures() for valid names.");
+                    continue;
+                }
+                result[entry.Key] = (short)(entry.Value ? 1 : 0);
             }
-            return padded;
+            return result;
         }
 
         private static VFChallengeDefinition Deserialize(string json)

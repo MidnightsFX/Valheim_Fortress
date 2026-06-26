@@ -39,8 +39,8 @@ namespace ValheimFortress
 
         /// <summary>
         /// Runs a wave-based challenge. Creatures emerge from <paramref name="spawnPoints"/> (one is
-        /// chosen at random per creature; supply up to three for variety), waves advance as creatures die,
-        /// and when the final phase is cleared the configured rewards are dropped at
+        /// chosen at random per creature; supply as many as you like for variety), waves advance as creatures
+        /// die, and when the final phase is cleared the configured rewards are dropped at
         /// <paramref name="rewardLocation"/>. The runner is networked and self-destroys on completion.
         ///
         /// Must be called in-world. Like the physical shrines this is owner-authoritative, so call it on
@@ -154,6 +154,20 @@ namespace ValheimFortress
         /// <summary>Doubles the number of phases and applies the siege reward multiplier.</summary>
         public bool SiegeMode { get; set; } = false;
 
+        // ---- Creature behavior ----
+
+        /// <summary>Global toggle: when true, challenge creatures drop their normal loot on death. Defaults
+        /// to false, so (like the physical shrines) challenge creatures drop nothing and players are rewarded
+        /// only via the configured challenge rewards. Can be overridden per creature via
+        /// <see cref="CreatureDropOverrides"/>.</summary>
+        public bool EnableCreatureDrops { get; set; } = false;
+
+        /// <summary>Optional per-creature loot-drop overrides, keyed by creature name (see
+        /// <see cref="API.GetSpawnableCreatures"/>). A creature listed here uses its mapped value instead of
+        /// <see cref="EnableCreatureDrops"/> (true = drops, false = no drops); creatures not listed fall back
+        /// to the global value. Unknown creature names are ignored.</summary>
+        public Dictionary<string, bool> CreatureDropOverrides { get; set; }
+
         // ---- Explicit mode (overrides the tuned fields when set) ----
 
         /// <summary>Explicit per-phase creature lists. Each inner list is one phase. When non-empty this
@@ -176,6 +190,16 @@ namespace ValheimFortress
 
         /// <summary>Optional message shown to nearby players when the challenge completes (supports $localization keys).</summary>
         public string WaveEndMessage { get; set; }
+
+        // ---- Presentation (optional) ----
+
+        /// <summary>When true, each spawn point is marked on the minimap for the duration of the run (cleared
+        /// automatically when the challenge finishes) using the vanilla event markers -- the shaded event-area
+        /// circle plus the animated event icon -- the same markers the physical shrines and SLS raids use. The
+        /// markers are client-local and cosmetic: they only render for the instance that drives the run (the
+        /// caller in single-player or on a P2P host), and are skipped on a headless dedicated server. Defaults
+        /// to false.</summary>
+        public bool DrawMapOverlay { get; set; } = false;
     }
 
     /// <summary>A single creature entry in an explicit wave phase.</summary>

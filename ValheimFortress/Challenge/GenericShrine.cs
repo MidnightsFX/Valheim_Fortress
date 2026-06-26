@@ -152,6 +152,16 @@ namespace ValheimFortress.Challenge
             alive_creature_list.Set(new_creature_list);
         }
 
+        // The spawn-time decision for whether a freshly spawned challenge creature should keep its normal loot
+        // drops. Physical shrines defer to the per-creature drop configuration; an unknown creature keeps its
+        // drops (matching prior behavior). The API runner overrides this with the caller's global toggle plus
+        // any per-creature overrides. The spawner persists the result to the creature's VFDrops ZDO flag,
+        // which is the authoritative runtime gate (read on death and on reload).
+        public virtual bool ShouldDropLoot(string creature)
+        {
+            return !Monsters.SpawnableCreatures.TryGetValue(creature, out CreatureValues values) || values == null || values.dropsEnabled;
+        }
+
         // Re-derives local shrine state after a reload (or after the local 'enemies' list is lost) from the
         // persisted, owner-authoritative ZDOID records, instead of name/radius matching nearby creatures.
         // First reconcile to prune anything that died while we were unloaded, then rebuild the local
@@ -184,9 +194,12 @@ namespace ValheimFortress.Challenge
                     pchar.m_faction = Character.Faction.Boss;
                     BaseAI ai = instance.GetComponent<BaseAI>();
                     if (ai != null) { ai.SetHuntPlayer(true); }
-                    CreatureValues selected_creature_details;
-                    if (Monsters.SpawnableCreatures.TryGetValue(record.Name, out selected_creature_details)
-                        && selected_creature_details != null && selected_creature_details.dropsEnabled == false)
+                    // Re-apply drop suppression from the creature's own authoritative VFDrops flag, which was
+                    // set at spawn from the shrine's drop decision (per-creature config, or the API runner's
+                    // global toggle + per-creature overrides). Reading it back here is keyed off the creature
+                    // ZDO, so it stays correct regardless of prefab/creature-name differences.
+                    if (pchar.m_nview != null && pchar.m_nview.GetZDO() != null
+                        && pchar.m_nview.GetZDO().GetBool("VFDrops", true) == false)
                     {
                         Destroy(instance.GetComponent<CharacterDrop>());
                         pchar.m_onDeath = null;
@@ -516,6 +529,7 @@ namespace ValheimFortress.Challenge
             // the shrine ZDO at this point). Replaces the old per-creature, owner-gated CreatureTracker cleanup.
             DestroyAllSpawnedCreatures();
             Disableportal();
+            RemoteLocationPortals.ClearMapOverlay();
             wave_phases_definitions = new PhasedWaveTemplate(); // Got to clear the template
             wave_definition_ready.Set(false);
             spawn_locations_ready.Set(false);

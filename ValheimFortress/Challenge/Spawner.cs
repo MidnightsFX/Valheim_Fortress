@@ -75,6 +75,13 @@ namespace ValheimFortress.Challenge
             int pause_between_segments = UnityEngine.Random.Range(2, 5);
             int amount_spawned = 0;
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Starting hoardspawn for {hoard.creature} - {hoard.amount}"); }
+            // Guard against an empty location set so the phase still completes instead of hanging or throwing.
+            if (remote_spawn_locations == null || remote_spawn_locations.Length == 0)
+            {
+                Jotunn.Logger.LogWarning($"No spawn locations available to spawn {hoard.creature}; skipping horde.");
+                CompleteHorde();
+                yield break;
+            }
             GameObject gameObject = PrefabManager.Instance.GetPrefab(hoard.prefab);
             for (int i = 0; i < hoard.amount; i++)
             {
@@ -91,8 +98,8 @@ namespace ValheimFortress.Challenge
                 }
                 // Randomize the rotation of this individual spawn, this helps prevent spawn towers
                 Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
-                // Randomly select one of the 3 spawn portals as the location for this mob to come out of
-                int spawn_location_selected = UnityEngine.Random.Range(0, 3);
+                // Randomly select one of the available spawn portals as the location for this mob to come out of
+                int spawn_location_selected = UnityEngine.Random.Range(0, remote_spawn_locations.Length);
                 if (spawn_failures > 10)
                 {
                     Jotunn.Logger.LogWarning($"Too many spawn failures when trying to spawn {hoard.creature} wave.");
@@ -107,8 +114,10 @@ namespace ValheimFortress.Challenge
                     if ((bool)creature_character) { creature_character.m_level = (hoard.stars + 1); }
                 }
 
-                // Enable drops for hoard creatures or bosses, if configured, else destroy
-                if (Monsters.SpawnableCreatures[hoard.creature].dropsEnabled == false) {
+                // Enable drops for hoard creatures or bosses, if configured, else destroy. The shrine decides:
+                // physical shrines use the per-creature config, the API runner uses its per-run toggle.
+                bool drops_enabled = shrine.ShouldDropLoot(hoard.creature);
+                if (drops_enabled == false) {
                     if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Disabling drops for {hoard.creature}."); }
                     GameObject.Destroy(creature.GetComponent<CharacterDrop>());
                 }
@@ -118,7 +127,7 @@ namespace ValheimFortress.Challenge
                 if (creature_metadata != null)
                 {
                     creature_metadata.m_faction = Character.Faction.Boss;
-                    creature_metadata.m_nview.GetZDO().Set("VFDrops", Monsters.SpawnableCreatures[hoard.creature].dropsEnabled);
+                    creature_metadata.m_nview.GetZDO().Set("VFDrops", drops_enabled);
                 }
                 else
                 {

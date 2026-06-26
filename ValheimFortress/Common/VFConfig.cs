@@ -24,6 +24,7 @@ namespace ValheimFortress
         public static ConfigEntry<bool> BallistaEnableShotSafetyCheck;
         public static ConfigEntry<float> BallistaCooldownTime;
         public static ConfigEntry<short> MaxSpawnRange;
+        public static ConfigEntry<short> NumberOfRemoteSpawnPoints;
         public static ConfigEntry<float> rewardsMultiplier;
         public static ConfigEntry<float> rewardsDifficultyScalar;
         public static ConfigEntry<bool> EnableBossModifier;
@@ -31,6 +32,7 @@ namespace ValheimFortress
         public static ConfigEntry<bool> EnableSiegeModifer;
         public static ConfigEntry<bool> EnableRewardsEstimate;
         public static ConfigEntry<bool> EnableMapPings;
+        public static ConfigEntry<bool> EnableShrineMapOverlay;
         public static ConfigEntry<short> MaxRewardsPerSecond;
         public static ConfigEntry<bool> ScaleRewardsFromWorldSetting;
         public static ConfigEntry<short> NotifyCreatureThreshold;
@@ -755,11 +757,13 @@ namespace ValheimFortress
         {
 
             MaxSpawnRange = BindServerConfig("Shrine of Challenge", "MaxSpawnRange", 100, "The radius around the shrine that enemies can spawn in.", false, 10, 800);
+            NumberOfRemoteSpawnPoints = BindServerConfig("Shrine of Challenge", "NumberOfRemoteSpawnPoints", 3, "How many remote spawn points (portals) the challenge and wild shrines attempt to place. Creatures emerge from a randomly chosen point each spawn.", false, 1, 20);
             // Max level the shrine can be set to / min level it can be set to
             EnableHardModifier = BindServerConfig("Shrine of Challenge", "EnableHardModifier", true, "Whether or not the hard mode modifier is available (100% bigger wave size for 50% more rewards)", true);
             EnableBossModifier = BindServerConfig("Shrine of Challenge", "EnableBossModifier", true, "Whether or not boss mod is available as a level modifier (more rewards & spawns the biome specific boss)", true);
             EnableSiegeModifer = BindServerConfig("Shrine of Challenge", "EnableSiegeModifer", true, "Whether or not siege mode is available as a modifier. Siege mode gives much larger pauses between waves, and 100% larger waves for 50% more reward.", true);
             EnableMapPings = BindServerConfig("Shrine of Challenge", "EnableMapPings", false, "Whether or not waves spawning from the shrine of challenge should ping the map when they spawn.", true);
+            EnableShrineMapOverlay = BindServerConfig("Shrine of Challenge", "EnableShrineMapOverlay", true, "Whether the shrines should mark each creature spawn location on the minimap (using the vanilla event-area circle and animated event icon) while a challenge is active. Local/cosmetic only; only renders for the instance driving the challenge (singleplayer or the P2P host).", true);
             EnableRewardsEstimate = BindServerConfig("Shrine of Challenge", "EnableRewardsEstimate", true, "Enables showing an estimate of how many rewards you will get for doing the selected level for the specified reward.", true);
             
             rewardsDifficultyScalar = BindServerConfig("Shrine of Challenge", "rewardsDifficultyScalar", 0.02f, "Multiplier for rewards that scales with level, each level adds this to the value, making high level challenges much more rewarding.", true);
