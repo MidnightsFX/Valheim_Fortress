@@ -31,6 +31,13 @@ namespace ValheimFortress.Challenge
         private string api_wave_start_msg;
         private string api_wave_end_msg;
 
+        // Caller-supplied between-wave phrases (each a $localization key or literal). Held on the ZDO so the
+        // phrases, the ordered/random flag, and the sequential cursor survive an ownership change mid-run
+        // (same durability rationale as the reward/mode state above). Empty list -> built-in phrase pool.
+        private ListStringZNetProperty api_between_wave_phrases;
+        private BoolZNetProperty api_ordered_phrases;
+        private IntZNetProperty api_phase_message_index;
+
         // Whether to mark the spawn points on the minimap for the duration of the run. Transient: the overlay
         // is client-local and only drawn/cleared by the owner that drives the run (see DrawSpawnLocationOverlay).
         private bool api_draw_map_overlay;
@@ -67,6 +74,9 @@ namespace ValheimFortress.Challenge
             api_fixed_rewards = new DictionaryZNetProperty("api_fixed_rewards", zNetView, new Dictionary<String, short>() { });
             api_creature_drops_enabled = new BoolZNetProperty("api_creature_drops_enabled", zNetView, false);
             api_creature_drop_overrides = new DictionaryZNetProperty("api_creature_drop_overrides", zNetView, new Dictionary<String, short>() { });
+            api_between_wave_phrases = new ListStringZNetProperty("api_between_wave_phrases", zNetView, new List<string>() { });
+            api_ordered_phrases = new BoolZNetProperty("api_ordered_phrases", zNetView, false);
+            api_phase_message_index = new IntZNetProperty("api_phase_message_index", zNetView, 0);
 
             // Reuse the same wave-config RPC the other shrines use; Jotunn returns the existing RPC for a
             // repeated name so registering it again here is safe.
@@ -85,7 +95,7 @@ namespace ValheimFortress.Challenge
             Dictionary<String, short> scaledRewards, Dictionary<String, short> fixedRewards,
             short difficulty, bool hard, bool boss, bool siege, bool enableCreatureDrops,
             Dictionary<String, short> creatureDropOverrides, string startMessage, string endMessage,
-            bool drawMapOverlay)
+            bool drawMapOverlay, List<string> betweenWavePhrases, bool orderedPhrases)
         {
             wave_phases_definitions = waves;
             availablePhases = waves.hordePhases.Count;
@@ -108,6 +118,9 @@ namespace ValheimFortress.Challenge
             api_wave_start_msg = startMessage;
             api_wave_end_msg = endMessage;
             api_draw_map_overlay = drawMapOverlay;
+            api_between_wave_phrases.ForceSet(betweenWavePhrases ?? new List<string>() { });
+            api_ordered_phrases.ForceSet(orderedPhrases);
+            api_phase_message_index.ForceSet(0);
 
             start_challenge.ForceSet(true);
         }
@@ -258,6 +271,22 @@ namespace ValheimFortress.Challenge
                 return value != 0;
             }
             return api_creature_drops_enabled.Get();
+        }
+
+        // Between-wave phrase for this run. Returns null (use the built-in pool) when the caller supplied none.
+        // Ordered mode walks the list in order and wraps; random mode picks any entry. The cursor is ZDO-backed
+        // so ordering stays correct if ownership transfers mid-run.
+        public override string SelectPhasePauseMessage()
+        {
+            List<string> phrases = api_between_wave_phrases.Get();
+            if (phrases == null || phrases.Count == 0) { return null; }
+            if (api_ordered_phrases.Get())
+            {
+                int idx = api_phase_message_index.Get() % phrases.Count;
+                api_phase_message_index.Set(api_phase_message_index.Get() + 1);
+                return phrases[idx];
+            }
+            return phrases[UnityEngine.Random.Range(0, phrases.Count)];
         }
 
         // The runner has no world-interaction surface; it is spawned and driven entirely by the API.

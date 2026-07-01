@@ -56,7 +56,11 @@ var definition = new ValheimFortress.VFChallengeDefinition {
     // The spawned amount scales with difficulty, modes, and nearby players.
     ScaledRewards = new Dictionary<string, short> { { "Coins", 5 } },
     WaveStartMessage = "The horde approaches!",
-    WaveEndMessage = "$shrine_challenge_complete"
+    WaveEndMessage = "$shrine_challenge_complete",
+    // Shown during each between-wave pause. Supports $localization keys or literals.
+    // OrderedPhrases = true plays them in order (wrapping); false (default) picks at random.
+    BetweenWavePhrases = new List<string> { "Regroup!", "$shrine_phase_warning", "They return!" },
+    OrderedPhrases = true
 };
 
 Vector3 rewardsLocation = Player.m_localPlayer.transform.position;
@@ -123,7 +127,11 @@ global toggle per creature (creatures not listed use the global value; unknown n
 
 Rewards: `ScaledRewards` (item → per-unit cost) and/or `FixedRewards` (item → exact count).
 
-Messaging: `WaveStartMessage`, `WaveEndMessage` (support `$localization` keys).
+Messaging: `WaveStartMessage`, `WaveEndMessage` (support `$localization` keys). `BetweenWavePhrases` —
+optional list of phrases (each a `$localization` key or literal) shown during each between-wave pause;
+when non-empty it replaces the built-in phrase pool for the run (empty/null uses the built-in pool).
+`OrderedPhrases` — when true the phrases play in list order (wrapping when there are more pauses than
+phrases); when false (default) one is picked at random each pause.
 
 Presentation: `DrawMapOverlay` — when true, marks each spawn point on the minimap for the duration of
 the run using the vanilla event markers (shaded event-area circle plus the animated event icon, the same

@@ -1,4 +1,11 @@
 
+  **0.35.0**
+---
+```
+- API: VFChallengeDefinition gains BetweenWavePhrases (custom between-wave messages; $localization keys or literals) and OrderedPhrases (play them in order vs. at random)
+	replacing the built-in phrase pool for that run. Leaving this null will use the default phrases for that challenge.
+```
+
   **0.34.0**
 ---
 ```

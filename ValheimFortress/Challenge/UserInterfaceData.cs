@@ -48,22 +48,30 @@ namespace ValheimFortress.Challenge
             }
             List<Player> nearby_players = new List<Player> { };
             Player.GetPlayersInRange(shrine.transform.position, VFConfig.ShrineAnnouncementRange.Value, nearby_players);
-            foreach (Player localplayer in nearby_players)
+            foreach (Player localPlayer in nearby_players)
             {
-                localplayer.Message(MessageHud.MessageType.Center, challenge_warning);
+                localPlayer.Message(MessageHud.MessageType.Center, challenge_warning);
             }
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Sent warning message"); }
         }
 
         public static void PhasePausePhrase(GameObject shrine)
         {
-            if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Picking and sending phase waiting text from {shrine_phase_warnings.Count} phrases."); }
-            string selected_message = shrine_phase_warnings[UnityEngine.Random.Range(0, (shrine_phase_warnings.Count - 1))];
+            // Let the shrine supply its own phrase (the API runner does this); otherwise use the built-in pool.
+            string selected_message = shrine.GetComponent<GenericShrine>()?.SelectPhasePauseMessage();
+            if (string.IsNullOrEmpty(selected_message))
+            {
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Picking and sending phase waiting text from {shrine_phase_warnings.Count} phrases."); }
+                selected_message = shrine_phase_warnings[UnityEngine.Random.Range(0, shrine_phase_warnings.Count)];
+            }
+            // Localize on display so caller-supplied $keys and literals both resolve; the built-in pool is
+            // already localized, so re-localizing it is a safe no-op.
+            selected_message = Localization.instance.Localize(selected_message);
             List<Player> nearby_players = new List<Player> { };
             Player.GetPlayersInRange(shrine.transform.position, VFConfig.ShrineAnnouncementRange.Value, nearby_players);
-            foreach (Player localplayer in nearby_players)
+            foreach (Player localPlayer in nearby_players)
             {
-                localplayer.Message(MessageHud.MessageType.Center, selected_message);
+                localPlayer.Message(MessageHud.MessageType.Center, selected_message);
             }
         }
 

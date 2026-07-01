@@ -191,6 +191,17 @@ namespace ValheimFortress
         /// <summary>Optional message shown to nearby players when the challenge completes (supports $localization keys).</summary>
         public string WaveEndMessage { get; set; }
 
+        /// <summary>Optional phrases shown to nearby players during each between-wave pause. Each entry supports
+        /// a $localization key or literal text. When non-empty this replaces the built-in phrase pool for this
+        /// run; when null/empty the built-in pool is used. Selection order is controlled by
+        /// <see cref="OrderedPhrases"/>.</summary>
+        public List<string> BetweenWavePhrases { get; set; }
+
+        /// <summary>Controls how <see cref="BetweenWavePhrases"/> are selected. When true, phrases play in list
+        /// order (wrapping when there are more pauses than phrases); when false (default), a phrase is picked at
+        /// random each pause.</summary>
+        public bool OrderedPhrases { get; set; } = false;
+
         // ---- Presentation (optional) ----
 
         /// <summary>When true, each spawn point is marked on the minimap for the duration of the run (cleared

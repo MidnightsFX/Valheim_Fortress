@@ -162,6 +162,11 @@ namespace ValheimFortress.Challenge
             return !Monsters.SpawnableCreatures.TryGetValue(creature, out CreatureValues values) || values == null || values.dropsEnabled;
         }
 
+        // The between-wave pause message this shrine wants to show, or null to use the built-in random phrase
+        // pool. Physical shrines use the built-in pool; the API runner overrides this to return a caller-supplied
+        // phrase (ordered or random) when one was provided for the run.
+        public virtual string SelectPhasePauseMessage() { return null; }
+
         // Re-derives local shrine state after a reload (or after the local 'enemies' list is lost) from the
         // persisted, owner-authoritative ZDOID records, instead of name/radius matching nearby creatures.
         // First reconcile to prune anything that died while we were unloaded, then rebuild the local

@@ -77,7 +77,7 @@ namespace ValheimFortress
 
             shrine.BeginApiChallenge(waves, spawnPoints, rewardLocation, def.ScaledRewards, def.FixedRewards,
                 def.Difficulty, def.HardMode, def.BossMode, def.SiegeMode, def.EnableCreatureDrops, creature_drop_overrides,
-                def.WaveStartMessage, def.WaveEndMessage, def.DrawMapOverlay);
+                def.WaveStartMessage, def.WaveEndMessage, def.DrawMapOverlay, def.BetweenWavePhrases, def.OrderedPhrases);
 
             Jotunn.Logger.LogInfo($"VF-API: started challenge with {waves.hordePhases.Count} phases at {rewardLocation}.");
             return true;
