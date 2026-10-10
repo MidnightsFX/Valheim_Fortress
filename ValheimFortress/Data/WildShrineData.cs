@@ -943,6 +943,11 @@ namespace ValheimFortress.Challenge
             foreach (WildShrineConfiguration entry in wildShrineDefinitions.WildShrines)
             {
                 WildLevelDefinitions.Add(entry);
+                if (entry?.wildShrineLevelsConfig == null) { continue; }
+                for (int i = 0; i < entry.wildShrineLevelsConfig.Count; i++)
+                {
+                    WaveCreatureSettings.Validate(entry.wildShrineLevelsConfig[i]?.wildLevelDefinition?.creatureRules, $"WildShrines.yaml {entry.definitionForWildShrine} level {i + 1}");
+                }
             }
         }
 

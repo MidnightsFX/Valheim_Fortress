@@ -215,11 +215,16 @@ namespace ValheimFortress
 #################################################
 # levels:
 # - levelIndex: 1                                                  |- LevelIndex is the difficulty this wave is set at, valid values are 1+
-#   minimumStars: 0                                               |- Minimum stars for all phases, 0 or higher; overrides a lower global star cap
-#   maximumStars:                                                |- Optional maximum stars; omit for no event cap, 0 forces zero stars; takes priority over minimumStars
-#   slsModifiers: {}                                              |- Optional SLS name-to-type map, for example {Fire: Major, Fast: Minor}
-#   waveOverrides: {}                                            |- Optional 1-based phase overrides; same structure as the WildShrines.yaml example
-#   creatureOverrides: []                                       |- Creature rules for all phases; wave settings and wave creature rules take priority
+#   creatureRules:                                                 |- Optional stars and Star Level System (SLS) modifiers. Rules apply top to bottom; each matching rule overwrites what it sets
+#   - minStars: 1                                                  |- A rule with no waves, creatures or spawnTypes matches every creature in every wave
+#     maxStars: 3                                                  |- 0 forces no stars. Both override the global star cap; when they conflict the later rule wins
+#     modifiers: {minor: [Fast]}                                   |- Guaranteed SLS modifiers by type (major, minor, boss); a list replaces only its own type, [] clears it
+#   - creatures: [Troll]                                           |- Creature names from SpawnableCreatures.yaml, case-insensitive
+#     minStars: 4
+#     modifiers: {major: [Fire]}                                   |-   Trolls end up with Fast and Fire
+#   - waves: [-1]                                                  |- 1-based wave numbers in spawn order (siege mode doubles the count); negative counts from the end, -1 is the boss wave
+#     spawnTypes: [unique]                                         |- common, rare, elite or unique
+#     modifiers: {boss: [BossSummoner]}                            |- Needs SLS. Creatures given modifiers skip SLS's random ones, and SLS keeps one modifier per star by default
 #   numPhases: 4                                                   |- The number of phases in this level, enemies will be distributed among the phases
 #   levelForShrineTypes:                                           |- What shrines will host this level, multiple definitions can be applied
 #     challenge: true                                              |-   Shrine of challenge will host this level
@@ -310,28 +315,12 @@ namespace ValheimFortress
 #     wildshrineWaveEndLocalization: $wild_boars_defeated             |- Localization text to display when this wave is finished
 #     wildLevelDefinition:
 #       levelIndex: 2                                                 |- The difficulty level for this wave, valid values are 1+ (Refer to the readme for a breakdown of this equation)
-#       minimumStars: 3                                               |- Minimum stars for every creature, 0 or higher; overrides the global star cap when higher
-#       maximumStars: 5                                               |- Optional maximum stars; omit for no event cap, 0 forces zero stars; takes priority over minimumStars
-#       slsModifiers:                                                 |- Optional guaranteed SLS modifiers, added to its normal random modifiers
-#         Fire: Major                                                 |- Requires SLS with spawn-management API support (tested with 1.23.1)
-#         Fast: Minor
-#       creatureOverrides:                                            |- Creature rules for every wave; wave settings and wave creature rules take priority
-#       - creatures: [Troll]
-#         minimumStars: 5
-#         maximumStars: 5
-#         slsModifiers: {Fire: Major}
-#       waveOverrides:                                                |- Optional 1-based phase numbers, including boss/siege phases in spawn order
-#         1:
-#           minimumStars: 2                                           |- Omitted/null fields inherit event defaults
-#           slsModifiers: {Fast: Minor}                                |- Replaces inherited requirements; {} clears them, not SLS's random modifiers
-#           creatureOverrides:                                        |- Matching rules apply in list order; later specified fields win
-#           - creatures: [Greydwarf, Greydwarf_Elite]                   |- Exact, case-sensitive monster keys or prefab names; does not change creature selection
-#             minimumStars: 3
-#             maximumStars: 5
-#             slsModifiers: {Fire: Major}
-#           - creatures: [Troll]
-#             minimumStars: 5
-#             maximumStars: 5
+#       creatureRules:                                                |- Optional stars and SLS modifiers, same format as creatureRules in Levels.yaml
+#       - minStars: 1                                                 |- Rules apply top to bottom; each matching rule overwrites what it sets
+#         modifiers: {minor: [Fast]}                                  |- Needs SLS; creatures given modifiers skip SLS's random ones
+#       - creatures: [Greyling]                                       |- Optional selectors: waves (1-based, -1 = last), creatures, spawnTypes
+#         maxStars: 0
+#         modifiers: {minor: []}                                      |- [] clears the Fast modifier for Greylings
 #       biome: Meadows                                                |- The biome this wave is for, this impacts creature selection
 #       waveFormat: Tutorial                                          |- The wavestyle this uses (from wavestyles.yml), this governs which catagories and the percentage makeup of the wave
 #       levelWarningLocalization: $meadows_warning_wilderness         |- Localization for a between phase warning (often not used)

@@ -1,3 +1,10 @@
+  **0.38.0**
+---
+```
+- Shrine levels, wild shrines and API challenges can set star limits and guaranteed Star Level System modifiers for every wave, specific waves, specific creatures or creature types.
+- Config mistakes in these creature settings are reported in the log when the config loads.
+```
+
   **0.37.2**
 ---
 ```

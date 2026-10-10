@@ -101,10 +101,19 @@ namespace ValheimFortress.Challenge
         public String prefab { get; set; }
         public Int16 amount { get; set; }
         public Int16 stars { get; set; }
-        public int minimumStars { get; set; }
-        public int? maximumStars { get; set; }
-        public Dictionary<string, SlsModifierType> slsModifiers { get; set; }
+        // Resolved from the level's creatureRules when the wave is built; peers receive these, not the rules.
+        [YamlMember(DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
+        public int? minStars { get; set; }
+        [YamlMember(DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
+        public int? maxStars { get; set; }
+        [YamlMember(DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
+        public VFModifierSet modifiers { get; set; }
         public HoardConfig() {}
+
+        public bool HasCreatureSettings()
+        {
+            return minStars.HasValue || maxStars.HasValue || (modifiers != null && !modifiers.IsEmpty());
+        }
     }
 
     [DataContract]
@@ -168,33 +177,8 @@ namespace ValheimFortress.Challenge
     }
 
     [DataContract]
-    public class SpawnSettingsOverride
-    {
-        public int? minimumStars { get; set; }
-        public int? maximumStars { get; set; }
-        public Dictionary<string, SlsModifierType> slsModifiers { get; set; }
-    }
-
-    [DataContract]
-    public class CreatureSpawnSettingsOverride : SpawnSettingsOverride
-    {
-        public List<string> creatures { get; set; }
-    }
-
-    [DataContract]
-    public class WaveSpawnSettingsOverride : SpawnSettingsOverride
-    {
-        public List<CreatureSpawnSettingsOverride> creatureOverrides { get; set; }
-    }
-
-    [DataContract]
     public class ChallengeLevelDefinition
     {
-        public int minimumStars { get; set; }
-        public int? maximumStars { get; set; }
-        public Dictionary<string, SlsModifierType> slsModifiers { get; set; }
-        public Dictionary<int, WaveSpawnSettingsOverride> waveOverrides { get; set; }
-        public List<CreatureSpawnSettingsOverride> creatureOverrides { get; set; }
         [DefaultValue("")]
         public string levelName { get; set; }
         public short levelIndex { get; set; }
@@ -222,17 +206,14 @@ namespace ValheimFortress.Challenge
         public SpawnModifiers rareSpawnModifiers { get; set; }
         public SpawnModifiers eliteSpawnModifiers { get; set; }
         public SpawnModifiers uniqueSpawnModifiers { get; set; }
+        [YamlMember(DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
+        public List<VFCreatureRule> creatureRules { get; set; }
         public ChallengeLevelDefinition() { }
     }
 
     [DataContract]
     public class WildLevelDefinition
     {
-        public int minimumStars { get; set; }
-        public int? maximumStars { get; set; }
-        public Dictionary<string, SlsModifierType> slsModifiers { get; set; }
-        public Dictionary<int, WaveSpawnSettingsOverride> waveOverrides { get; set; }
-        public List<CreatureSpawnSettingsOverride> creatureOverrides { get; set; }
         public short levelIndex { get; set; }
         public Heightmap.Biome biome { get; set; }
         public WaveStyleName waveFormat { get; set; }
@@ -243,17 +224,15 @@ namespace ValheimFortress.Challenge
         public SpawnModifiers commonSpawnModifiers { get; set; }
         public SpawnModifiers rareSpawnModifiers { get; set; }
         public SpawnModifiers eliteSpawnModifiers { get; set; }
+        [YamlMember(DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
+        public List<VFCreatureRule> creatureRules { get; set; }
         public WildLevelDefinition() { }
 
         public ChallengeLevelDefinition ToChallengeLevelDefinition()
         {
             ChallengeLevelDefinition w_as_clevel = new ChallengeLevelDefinition();
             w_as_clevel.levelIndex = this.levelIndex;
-            w_as_clevel.minimumStars = this.minimumStars;
-            w_as_clevel.maximumStars = this.maximumStars;
-            w_as_clevel.slsModifiers = this.slsModifiers;
-            w_as_clevel.waveOverrides = this.waveOverrides;
-            w_as_clevel.creatureOverrides = this.creatureOverrides;
+            w_as_clevel.creatureRules = this.creatureRules;
             w_as_clevel.levelForShrineTypes = new Dictionary<ShrineType, bool> { { ShrineType.Wild, true } };
             w_as_clevel.levelMenuLocalization = ""; // unused
             w_as_clevel.requiredGlobalKey = "NONE";

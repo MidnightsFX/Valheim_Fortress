@@ -29,6 +29,7 @@ Got a bug to report or just want to chat about the mod? Drop by the discord or g
    * [Add/Editing Levels](#addediting-levels)
    * [Adding/Editing WaveStyles](#addingediting-wavestyles)
    * [Adding/Editing Wildshrine configuration](#addingediting-wildshrine-configuration)
+   * [Creature rules (stars and SLS modifiers)](#creature-rules)
 - [FAQ](#faq)
 - [Localizations - Translations](#localizations-translations)
 - [Future Features / Incomplete things](#future-features-incomplete-things)
@@ -219,6 +220,13 @@ Each of these segments will select a different creature and the different catago
 #################################################
 # levels:
 # - levelIndex: 1                                                  |- LevelIndex is the difficulty this wave is set at, valid values are 1+
+#   creatureRules:                                                 |- Optional stars and Star Level System (SLS) modifiers, see Creature rules below
+#   - minStars: 1                                                  |- A rule with no waves, creatures or spawnTypes matches every creature in every wave
+#     maxStars: 3
+#     modifiers: {minor: [Fast]}
+#   - creatures: [Troll]                                           |- Later rules overwrite what they set, so Trolls get 4 stars with Fast and Fire
+#     minStars: 4
+#     modifiers: {major: [Fire]}
 #   levelForShrineTypes:                                           |- What shrines will host this level, multiple definitions can be applied
 #     challenge: true                                              |-   Shrine of challenge will host this level
 #     arena: true                                                  |-   Shrine of the arena will host this level
@@ -310,6 +318,12 @@ and increase them until the final wave (with random noise, making the increases 
 #     wildshrineWaveEndLocalization: $wild_boars_defeated             |- Localization text to display when this wave is finished
 #     wildLevelDefinition:
 #       levelIndex: 2                                                 |- The difficulty level for this wave, valid values are 1+ (Refer to the readme for a breakdown of this equation)
+#       creatureRules:                                                |- Optional stars and SLS modifiers, same format as creatureRules in Levels.yaml
+#       - minStars: 1
+#         modifiers: {minor: [Fast]}
+#       - creatures: [Greyling]
+#         maxStars: 0
+#         modifiers: {minor: []}                                      |- [] clears the Fast modifier for Greylings
 #       biome: Meadows                                                |- The biome this wave is for, this impacts creature selection
 #       waveFormat: Tutorial                                          |- The wavestyle this uses (from wavestyles.yml), this governs which catagories and the percentage makeup of the wave
 #       levelWarningLocalization: $meadows_warning_wilderness         |- Localization for a between phase warning (often not used)
@@ -323,6 +337,35 @@ and increase them until the final wave (with random noise, making the increases 
 #       rareSpawnModifiers:                                           |- Spawn modifiers for rare creatures
 #       eliteSpawnModifiers:                                          |- Spawn modifiers for elite creatures
 ```
+
+<!-- TOC --><a name="creature-rules"></a>
+### Creature rules (stars and SLS modifiers)
+
+Levels in `Levels.yaml`, wild shrine levels (`wildLevelDefinition`) and API challenges can all take a `creatureRules` list,
+which sets star limits and guaranteed [Star Level System](https://thunderstore.io/c/valheim/p/MidnightsFX/StarLevelSystem/) (SLS) modifiers for the creatures in their waves.
+Rules do not change which creatures spawn or how many, only how strong they are.
+
+```
+creatureRules:
+- minStars: 1                    # a rule with no selectors matches every creature in every wave
+  maxStars: 3
+  modifiers: {minor: [Fast]}
+- creatures: [Troll]             # creature names from SpawnableCreatures.yaml, case-insensitive
+  minStars: 4
+  modifiers: {major: [Fire]}     # Trolls end up with Fast and Fire
+- waves: [-1]                    # the last wave, where bosses spawn
+  spawnTypes: [unique]           # common, rare, elite or unique
+  modifiers: {boss: [BossSummoner]}
+```
+
+- Rules apply from top to bottom, and each rule that matches a creature overwrites only the settings it sets. Put general rules first and specific ones after.
+- A rule can select by `waves`, `creatures` and `spawnTypes`. A creature must match every selector the rule sets; leaving one out matches everything.
+- `waves` are 1-based in spawn order. Siege mode doubles the number of waves, so negative numbers count from the end: `-1` is always the last (boss) wave.
+- `minStars` raises the generated stars and `maxStars` caps them; both override the global creature star cap. When they conflict the later rule wins, so a Troll rule's `minStars: 4` lifts an earlier `maxStars: 3`. Within one rule, `maxStars` wins.
+- `modifiers` lists SLS modifier names by type (`major`, `minor`, `boss`). A list replaces only its own type from earlier rules, and an empty list `[]` clears it.
+- Modifiers need SLS; without it only stars are applied. A creature given any modifiers this way does not also get SLS's random ones.
+  By default SLS keeps one modifier per star, so give creatures at least as many stars as modifiers or the extra ones can be lost when they reload.
+- Mistakes such as unknown creature names or wave `0` are logged as warnings when the config loads.
 
 <!-- TOC --><a name="faq"></a>
 ## FAQ

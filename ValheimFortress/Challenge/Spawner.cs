@@ -107,7 +107,7 @@ namespace ValheimFortress.Challenge
                 }
                 GameObject creature = UnityEngine.Object.Instantiate(gameObject, remote_spawn_locations[spawn_location_selected], rotation);
                 // Attempt to set the stars, it is possible that this will fail
-                if (hoard.minimumStars > 0 || hoard.maximumStars.HasValue || (hoard.slsModifiers != null && hoard.slsModifiers.Count > 0))
+                if (hoard.HasCreatureSettings())
                 {
                     WaveCreatureSettings.ApplyToCreature(creature.GetComponent<Character>(), hoard);
                 }

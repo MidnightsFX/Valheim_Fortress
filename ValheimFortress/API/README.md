@@ -20,7 +20,8 @@ All calls go through reflection, so you never need a hard reference to the Valhe
 > The contract is version-tolerant (missing/extra fields are handled) and stamped with a schema version:
 > if they drift too far, Valheim Fortress logs a clear warning telling you to re-copy `API.cs`. Re-copy
 > `API.cs` from the release you build against. **Note:** the 0.36.0 release changed the wire format
-> (simplified reward maps + schema version); re-copy `API.cs` when updating to 0.36.0 or later.
+> (simplified reward maps + schema version), and 0.38.0 added creature rules (schema version 2); re-copy
+> `API.cs` when updating to either.
 
 ### Required references
 
@@ -107,6 +108,52 @@ ValheimFortress.API.RunChallenge(definition, spawnPoints, rewardLocation);
 
 You can supply both `ScaledRewards` and `FixedRewards` on the same definition; both are granted.
 
+### Set stars and Star Level System modifiers
+
+`CreatureRules` sets star limits and guaranteed [Star Level System](https://thunderstore.io/c/valheim/p/MidnightsFX/StarLevelSystem/)
+(SLS) modifiers for the creatures in a challenge, in tuned or explicit mode. It is the same format as `creatureRules`
+in the Valheim Fortress `Levels.yaml` and `WildShrines.yaml` configs.
+
+```csharp
+var definition = new ValheimFortress.VFChallengeDefinition {
+    Biome = Heightmap.Biome.BlackForest,
+    Difficulty = 8,
+    CreatureRules = new List<ValheimFortress.VFCreatureRule> {
+        // No selectors: every creature in every wave gets 1-3 stars and the Fast modifier.
+        new ValheimFortress.VFCreatureRule {
+            MinStars = 1, MaxStars = 3,
+            Modifiers = new ValheimFortress.VFModifierSet { Minor = new List<string> { "Fast" } }
+        },
+        // Later rules overwrite what they set: Trolls get 4 stars (lifting the cap of 3) and Fire as well as Fast.
+        new ValheimFortress.VFCreatureRule {
+            Creatures = new List<string> { "Troll" },
+            MinStars = 4,
+            Modifiers = new ValheimFortress.VFModifierSet { Major = new List<string> { "Fire" } }
+        },
+        // Wave -1 is the last wave, where bosses spawn.
+        new ValheimFortress.VFCreatureRule {
+            Waves = new List<int> { -1 },
+            SpawnTypes = new List<string> { "unique" },
+            Modifiers = new ValheimFortress.VFModifierSet { Boss = new List<string> { "BossSummoner" } }
+        }
+    },
+    ScaledRewards = new Dictionary<string, short> { { "Coins", 5 } }
+};
+```
+
+In explicit mode an entry can also carry its own modifiers, which are applied after the rules:
+
+```csharp
+new ValheimFortress.VFHoardEntry {
+    Creature = "Troll", Amount = 1, Stars = 2,
+    Modifiers = new ValheimFortress.VFModifierSet { Major = new List<string> { "Frost" } }
+}
+```
+
+Modifiers need SLS; without it only stars are applied. A creature given any modifiers this way does not also get
+SLS's random ones, and by default SLS keeps one modifier per star, so give creatures at least as many stars as
+modifiers.
+
 ## Reference
 
 ### `ValheimFortress.API`
@@ -125,7 +172,20 @@ You can supply both `ScaledRewards` and `FixedRewards` on the same definition; b
 Tuned mode: `Biome`, `Difficulty`, `WaveStyle`, `NumPhases`, `MaxCreaturesPerPhase`,
 `OnlySelectMonsters`, `ExcludeSelectMonsters`, `HardMode`, `BossMode`, `SiegeMode`.
 
-Explicit mode: `ExplicitPhases` (overrides tuned fields when set).
+Explicit mode: `ExplicitPhases` (overrides tuned fields when set). Each `VFHoardEntry` has `Creature`,
+`Amount`, `Stars` and optional `Modifiers`.
+
+Creature rules: `CreatureRules` — optional list of `VFCreatureRule`, used in both modes. Rules apply in
+list order, and each rule that matches a creature overwrites only the settings it sets.
+
+| `VFCreatureRule` member | Description |
+| --- | --- |
+| `List<int> Waves` | 1-based wave numbers in spawn order; negative counts from the end (`-1` = last wave). Null matches every wave. |
+| `List<string> Creatures` | Creature names from `API.GetSpawnableCreatures()`, case-insensitive. Null matches every creature. |
+| `List<string> SpawnTypes` | `common`, `rare`, `elite` or `unique`. Null matches every type. |
+| `int? MinStars` | Lowest star count. |
+| `int? MaxStars` | Highest star count; 0 forces no stars. When stars conflict the later rule wins; within one rule `MaxStars` wins. |
+| `VFModifierSet Modifiers` | Guaranteed SLS modifiers: `Major`, `Minor` and `Boss` name lists. Each list set replaces that type's list from earlier rules; an empty list clears it. |
 
 Creature behavior: `EnableCreatureDrops` — global toggle; when true, challenge creatures drop their
 normal loot on death. Defaults to false (creatures drop nothing; players are rewarded only via the

@@ -48,6 +48,8 @@ namespace ValheimFortress
                 return false;
             }
 
+            WaveCreatureSettings.Validate(def.CreatureRules, "VF-API:");
+
             // Spawner.SpawnHorde randomly indexes into whatever spawn locations it's given, so any number
             // (>= 1, already validated above) is fine; creatures emerge from a randomly chosen point per spawn.
             PhasedWaveTemplate waves = BuildWaveTemplate(def);
@@ -106,7 +108,7 @@ namespace ValheimFortress
             // Explicit per-phase mode takes precedence when supplied.
             if (def.ExplicitPhases != null && def.ExplicitPhases.Count > 0)
             {
-                return BuildExplicitTemplate(def.ExplicitPhases);
+                return BuildExplicitTemplate(def.ExplicitPhases, def.CreatureRules);
             }
 
             // Tuned / generated mode.
@@ -146,15 +148,18 @@ namespace ValheimFortress
                 commonSpawnModifiers = new SpawnModifiers(),
                 rareSpawnModifiers = new SpawnModifiers(),
                 eliteSpawnModifiers = new SpawnModifiers(),
-                uniqueSpawnModifiers = new SpawnModifiers()
+                uniqueSpawnModifiers = new SpawnModifiers(),
+                creatureRules = def.CreatureRules
             };
 
             return Levels.generateRandomWaveWithOptions(cld, def.HardMode, def.BossMode, def.SiegeMode, max_creatures);
         }
 
-        private static PhasedWaveTemplate BuildExplicitTemplate(List<List<VFHoardEntry>> phases)
+        private static PhasedWaveTemplate BuildExplicitTemplate(List<List<VFHoardEntry>> phases, List<VFCreatureRule> rules)
         {
             List<List<HoardConfig>> horde_phases = new List<List<HoardConfig>>();
+            // Entry modifiers are the most specific setting, so they are applied after the rules.
+            List<KeyValuePair<HoardConfig, VFModifierSet>> entry_modifiers = new List<KeyValuePair<HoardConfig, VFModifierSet>>();
             foreach (List<VFHoardEntry> phase in phases)
             {
                 if (phase == null) { continue; }
@@ -168,18 +173,26 @@ namespace ValheimFortress
                         Jotunn.Logger.LogWarning($"VF-API: explicit creature '{entry.Creature}' is not a known VF creature, skipping. Use GetSpawnableCreatures() for valid names.");
                         continue;
                     }
-                    horde_phase.Add(new HoardConfig
+                    HoardConfig horde = new HoardConfig
                     {
                         creature = entry.Creature,
                         prefab = Monsters.SpawnableCreatures[entry.Creature].prefabName,
                         amount = entry.Amount,
                         stars = entry.Stars
-                    });
+                    };
+                    horde_phase.Add(horde);
+                    if (entry.Modifiers != null) { entry_modifiers.Add(new KeyValuePair<HoardConfig, VFModifierSet>(horde, entry.Modifiers)); }
                 }
                 if (horde_phase.Count > 0) { horde_phases.Add(horde_phase); }
             }
             if (horde_phases.Count == 0) { return null; }
-            return new PhasedWaveTemplate { hordePhases = horde_phases };
+            PhasedWaveTemplate template = new PhasedWaveTemplate { hordePhases = horde_phases };
+            WaveCreatureSettings.ApplyRules(template, rules);
+            foreach (KeyValuePair<HoardConfig, VFModifierSet> entry in entry_modifiers)
+            {
+                WaveCreatureSettings.ApplyModifiers(entry.Key, entry.Value);
+            }
+            return template;
         }
 
         // Converts the public per-creature drop override map (creature name -> bool) into the short-encoded

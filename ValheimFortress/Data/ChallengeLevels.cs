@@ -721,6 +721,10 @@ namespace ValheimFortress.Data
         {
             ChallengeLevelDefinitions.Clear();
             ChallengeLevelDefinitions = levelDefinitions.Levels;
+            foreach (ChallengeLevelDefinition level in ChallengeLevelDefinitions ?? new List<ChallengeLevelDefinition>())
+            {
+                WaveCreatureSettings.Validate(level?.creatureRules, $"Levels.yaml level {level?.levelIndex} {level?.levelName}".TrimEnd());
+            }
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Updated Level definitions."); }
         }
 

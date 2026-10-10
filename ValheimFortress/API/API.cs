@@ -134,7 +134,7 @@ namespace ValheimFortress
         /// <summary>The wire schema version this copy of the API produces. Bumped when the serialized shape
         /// changes so a Valheim Fortress install can detect a caller whose copied <c>API.cs</c> is out of
         /// date. Callers do not set this.</summary>
-        public const int CurrentSchemaVersion = 1;
+        public const int CurrentSchemaVersion = 2;
 
         /// <summary>Schema marker stamped automatically on serialization (see <see cref="CurrentSchemaVersion"/>).
         /// Always emitted; the receiver warns when it does not match the installed version. Do not set this yourself.</summary>
@@ -201,6 +201,12 @@ namespace ValheimFortress
         [DataMember(EmitDefaultValue = false, IsRequired = false)]
         public Dictionary<string, bool> CreatureDropOverrides { get; set; }
 
+        /// <summary>Optional rules for creature stars and guaranteed Star Level System (SLS) modifiers, used in
+        /// both tuned and explicit mode. Rules apply in list order; each matching rule overwrites the settings it
+        /// sets, so put general rules first and specific ones after. See <see cref="VFCreatureRule"/>.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public List<VFCreatureRule> CreatureRules { get; set; }
+
         // ---- Explicit mode (overrides the tuned fields when set) ----
 
         /// <summary>Explicit per-phase creature lists. Each inner list is one phase. When non-empty this
@@ -266,8 +272,90 @@ namespace ValheimFortress
         [DataMember(EmitDefaultValue = false, IsRequired = false)]
         public short Amount { get; set; }
 
-        /// <summary>Star level (0 = no stars).</summary>
+        /// <summary>Star level (0 = no stars). <see cref="VFChallengeDefinition.CreatureRules"/> can still raise or cap it.</summary>
         [DataMember(EmitDefaultValue = false, IsRequired = false)]
         public short Stars { get; set; }
+
+        /// <summary>Optional guaranteed SLS modifiers for this entry. Applied after
+        /// <see cref="VFChallengeDefinition.CreatureRules"/>: each list set here replaces that type's list.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public VFModifierSet Modifiers { get; set; }
+    }
+
+    /// <summary>
+    /// A rule that sets stars and guaranteed SLS modifiers for the creatures it matches. The selectors
+    /// (<see cref="Waves"/>, <see cref="Creatures"/>, <see cref="SpawnTypes"/>) are optional: one left null
+    /// matches everything, and a rule must match every selector it sets. Settings left null keep the value from
+    /// earlier rules. Valheim Fortress also reads this type from its YAML configs, with camelCase keys.
+    /// </summary>
+    [DataContract]
+    public class VFCreatureRule
+    {
+        /// <summary>1-based wave numbers, in spawn order. Negative numbers count from the end, so -1 is the last
+        /// wave (where bosses spawn), whatever the wave count.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public List<int> Waves { get; set; }
+
+        /// <summary>Creature names (see <see cref="API.GetSpawnableCreatures"/>), case-insensitive.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public List<string> Creatures { get; set; }
+
+        /// <summary>Creature categories: common, rare, elite or unique (bosses), case-insensitive.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public List<string> SpawnTypes { get; set; }
+
+        /// <summary>Lowest star count for matching creatures.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public int? MinStars { get; set; }
+
+        /// <summary>Highest star count for matching creatures; 0 forces no stars. When stars conflict the later rule wins;
+        /// within one rule this wins over <see cref="MinStars"/>.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public int? MaxStars { get; set; }
+
+        /// <summary>Guaranteed SLS modifiers. Each list set here replaces that type's list from earlier rules.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public VFModifierSet Modifiers { get; set; }
+    }
+
+    /// <summary>
+    /// Guaranteed Star Level System modifiers, by SLS modifier type. Names are SLS modifier names (for example
+    /// Fire, Fast, BossSummoner), case-insensitive. A null list leaves that type unchanged; an empty list clears
+    /// it. A creature given any guaranteed modifiers does not also get SLS's own random modifiers. Ignored when
+    /// SLS is not installed.
+    /// </summary>
+    [DataContract]
+    public class VFModifierSet
+    {
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public List<string> Major { get; set; }
+
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public List<string> Minor { get; set; }
+
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public List<string> Boss { get; set; }
+
+        /// <summary>Returns a copy of this set with each list that <paramref name="other"/> sets replacing this one's.</summary>
+        public VFModifierSet Overlay(VFModifierSet other)
+        {
+            return new VFModifierSet
+            {
+                Major = Copy(other?.Major ?? Major),
+                Minor = Copy(other?.Minor ?? Minor),
+                Boss = Copy(other?.Boss ?? Boss)
+            };
+        }
+
+        /// <summary>True when no list has any names.</summary>
+        public bool IsEmpty()
+        {
+            return (Major == null || Major.Count == 0) && (Minor == null || Minor.Count == 0) && (Boss == null || Boss.Count == 0);
+        }
+
+        private static List<string> Copy(List<string> names)
+        {
+            return names == null ? null : new List<string>(names);
+        }
     }
 }
