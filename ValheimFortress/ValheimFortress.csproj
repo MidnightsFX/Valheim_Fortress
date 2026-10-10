@@ -56,6 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="API\API.cs" />
+    <Compile Include="API\StarLevelSystem.cs" />
     <Compile Include="Common\APIReceiver.cs" />
     <Compile Include="Challenge\ArenaShrine.cs" />
     <Compile Include="Challenge\ArenaShrineUI.cs" />
@@ -72,10 +73,12 @@
     <Compile Include="Challenge\Rewards.cs" />
     <Compile Include="Challenge\RewardsData.cs" />
     <Compile Include="Challenge\Spawner.cs" />
+    <Compile Include="Challenge\WaveCreatureSettings.cs" />
     <Compile Include="Challenge\UserInterfaceData.cs" />
     <Compile Include="Challenge\WildShrine.cs" />
     <Compile Include="Common\JotunnPieceLoader.cs" />
     <Compile Include="Common\Logger.cs" />
+    <Compile Include="Common\SlsIntegration.cs" />
     <Compile Include="Common\PieceDefinition.cs" />
     <Compile Include="Data\ChallengeLevels.cs" />
     <Compile Include="Data\Monsters.cs" />

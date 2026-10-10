@@ -304,6 +304,7 @@ namespace ValheimFortress.Challenge
 
             PhasedWaveTemplate finalizedWaveGeneration = new PhasedWaveTemplate();
             finalizedWaveGeneration.hordePhases = finalizedHoards;
+            WaveCreatureSettings.ApplyToWave(finalizedWaveGeneration, defined_level);
 
             if (VFConfig.EnableDebugMode.Value)
             {

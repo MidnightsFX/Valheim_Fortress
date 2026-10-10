@@ -101,6 +101,9 @@ namespace ValheimFortress.Challenge
         public String prefab { get; set; }
         public Int16 amount { get; set; }
         public Int16 stars { get; set; }
+        public int minimumStars { get; set; }
+        public int? maximumStars { get; set; }
+        public Dictionary<string, SlsModifierType> slsModifiers { get; set; }
         public HoardConfig() {}
     }
 
@@ -165,8 +168,33 @@ namespace ValheimFortress.Challenge
     }
 
     [DataContract]
+    public class SpawnSettingsOverride
+    {
+        public int? minimumStars { get; set; }
+        public int? maximumStars { get; set; }
+        public Dictionary<string, SlsModifierType> slsModifiers { get; set; }
+    }
+
+    [DataContract]
+    public class CreatureSpawnSettingsOverride : SpawnSettingsOverride
+    {
+        public List<string> creatures { get; set; }
+    }
+
+    [DataContract]
+    public class WaveSpawnSettingsOverride : SpawnSettingsOverride
+    {
+        public List<CreatureSpawnSettingsOverride> creatureOverrides { get; set; }
+    }
+
+    [DataContract]
     public class ChallengeLevelDefinition
     {
+        public int minimumStars { get; set; }
+        public int? maximumStars { get; set; }
+        public Dictionary<string, SlsModifierType> slsModifiers { get; set; }
+        public Dictionary<int, WaveSpawnSettingsOverride> waveOverrides { get; set; }
+        public List<CreatureSpawnSettingsOverride> creatureOverrides { get; set; }
         [DefaultValue("")]
         public string levelName { get; set; }
         public short levelIndex { get; set; }
@@ -200,6 +228,11 @@ namespace ValheimFortress.Challenge
     [DataContract]
     public class WildLevelDefinition
     {
+        public int minimumStars { get; set; }
+        public int? maximumStars { get; set; }
+        public Dictionary<string, SlsModifierType> slsModifiers { get; set; }
+        public Dictionary<int, WaveSpawnSettingsOverride> waveOverrides { get; set; }
+        public List<CreatureSpawnSettingsOverride> creatureOverrides { get; set; }
         public short levelIndex { get; set; }
         public Heightmap.Biome biome { get; set; }
         public WaveStyleName waveFormat { get; set; }
@@ -216,6 +249,11 @@ namespace ValheimFortress.Challenge
         {
             ChallengeLevelDefinition w_as_clevel = new ChallengeLevelDefinition();
             w_as_clevel.levelIndex = this.levelIndex;
+            w_as_clevel.minimumStars = this.minimumStars;
+            w_as_clevel.maximumStars = this.maximumStars;
+            w_as_clevel.slsModifiers = this.slsModifiers;
+            w_as_clevel.waveOverrides = this.waveOverrides;
+            w_as_clevel.creatureOverrides = this.creatureOverrides;
             w_as_clevel.levelForShrineTypes = new Dictionary<ShrineType, bool> { { ShrineType.Wild, true } };
             w_as_clevel.levelMenuLocalization = ""; // unused
             w_as_clevel.requiredGlobalKey = "NONE";

@@ -18,12 +18,13 @@ namespace ValheimFortress
 {
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
     [BepInDependency(Jotunn.Main.ModGuid)]
+    [BepInDependency("MidnightsFX.StarLevelSystem", BepInDependency.DependencyFlags.SoftDependency)]
     [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Minor)]
     internal class ValheimFortress : BaseUnityPlugin
     {
         public const string PluginGUID = "MidnightsFX.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.37.2";
+        public const string PluginVersion = "0.38.0";
 
         // Networked prefab the public API instantiates to host API-driven challenges (see APIReceiver / ExternalShrine).
         public const string ApiChallengeRunnerPrefab = "VF_api_challenge_runner";
