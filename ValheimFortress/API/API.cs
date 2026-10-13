@@ -24,6 +24,8 @@ namespace ValheimFortress
         private static readonly MethodInfo GetSpawnableCreaturesMethod;
         private static readonly MethodInfo GetRewardItemsMethod;
         private static readonly MethodInfo GetWaveStylesMethod;
+        private static readonly MethodInfo GetShrineChallengeDefinitionMethod;
+        private static readonly MethodInfo GetShrineTributesMethod;
 
         /// <summary>True when Valheim Fortress is loaded and the API is callable.</summary>
         public static bool IsAvailable => APIReceiver != null;
@@ -36,6 +38,8 @@ namespace ValheimFortress
             GetSpawnableCreaturesMethod = APIReceiver.GetMethod("GetSpawnableCreatures", BindingFlags.Public | BindingFlags.Static);
             GetRewardItemsMethod = APIReceiver.GetMethod("GetRewardItems", BindingFlags.Public | BindingFlags.Static);
             GetWaveStylesMethod = APIReceiver.GetMethod("GetWaveStyles", BindingFlags.Public | BindingFlags.Static);
+            GetShrineChallengeDefinitionMethod = APIReceiver.GetMethod("GetShrineChallengeDefinition", BindingFlags.Public | BindingFlags.Static);
+            GetShrineTributesMethod = APIReceiver.GetMethod("GetShrineTributes", BindingFlags.Public | BindingFlags.Static);
         }
 
         /// <summary>
@@ -91,8 +95,37 @@ namespace ValheimFortress
             return (List<string>)GetWaveStylesMethod.Invoke(null, null);
         }
 
-        // Serializer settings MUST stay in lockstep with APIReceiver.Deserialize on the Valheim Fortress
-        // side, since the JSON produced here is the only thing that crosses the soft-dependency boundary.
+        /// <summary>
+        /// Returns the challenge a wild shrine runs when it is offered <paramref name="tributePrefab"/>, built from
+        /// the wild shrine configuration currently loaded (the server's <c>WildShrines.yaml</c> once synced). The
+        /// definition carries the shrine level's waves, creature rules, rewards and messages; adjust it if you
+        /// like, then pass it to <see cref="RunChallenge(VFChallengeDefinition, Vector3[], Vector3)"/> with your
+        /// own spawn points and reward location. The tribute amount is not part of the definition, since the
+        /// caller decides what (if anything) the player pays.
+        /// </summary>
+        /// <param name="shrineName">The wild shrine prefab name, for example <c>VF_wild_shrine_green1</c>
+        /// (case-insensitive; a trailing <c>(Clone)</c> is ignored). See <see cref="GetShrineTributes"/>.</param>
+        /// <param name="tributePrefab">The item prefab sacrificed at the shrine, for example <c>TrophyBoar</c>
+        /// (case-insensitive).</param>
+        /// <returns>The definition, or null when Valheim Fortress is missing or the shrine does not accept that tribute.</returns>
+        public static VFChallengeDefinition GetShrineChallengeDefinition(string shrineName, string tributePrefab)
+        {
+            if (GetShrineChallengeDefinitionMethod == null || string.IsNullOrEmpty(shrineName) || string.IsNullOrEmpty(tributePrefab)) { return null; }
+            string json = GetShrineChallengeDefinitionMethod.Invoke(null, new object[] { shrineName, tributePrefab }) as string;
+            return Deserialize(json);
+        }
+
+        /// <summary>Returns every wild shrine prefab name mapped to the tribute item prefabs it accepts (valid inputs
+        /// for <see cref="GetShrineChallengeDefinition"/>).</summary>
+        public static Dictionary<string, List<string>> GetShrineTributes()
+        {
+            if (GetShrineTributesMethod == null) { return new Dictionary<string, List<string>>(); }
+            return (Dictionary<string, List<string>>)GetShrineTributesMethod.Invoke(null, null);
+        }
+
+        // Serializer settings MUST stay in lockstep with APIReceiver on the Valheim Fortress side, since JSON
+        // is the only thing that crosses the soft-dependency boundary, in both directions: definitions passed
+        // to RunChallenge are serialized here, and shrine definitions are serialized there and read here.
         // UseSimpleDictionaryFormat writes the reward/override maps as plain JSON objects ({"Coins":5})
         // rather than key/value-pair arrays.
         private static readonly DataContractJsonSerializerSettings SerializerSettings =
@@ -107,6 +140,23 @@ namespace ValheimFortress
                     DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(VFChallengeDefinition), SerializerSettings);
                     serializer.WriteObject(ms, definition);
                     return Encoding.UTF8.GetString(ms.ToArray());
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static VFChallengeDefinition Deserialize(string json)
+        {
+            if (string.IsNullOrEmpty(json)) { return null; }
+            try
+            {
+                using (MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(json)))
+                {
+                    DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(VFChallengeDefinition), SerializerSettings);
+                    return serializer.ReadObject(ms) as VFChallengeDefinition;
                 }
             }
             catch
@@ -134,7 +184,7 @@ namespace ValheimFortress
         /// <summary>The wire schema version this copy of the API produces. Bumped when the serialized shape
         /// changes so a Valheim Fortress install can detect a caller whose copied <c>API.cs</c> is out of
         /// date. Callers do not set this.</summary>
-        public const int CurrentSchemaVersion = 2;
+        public const int CurrentSchemaVersion = 3;
 
         /// <summary>Schema marker stamped automatically on serialization (see <see cref="CurrentSchemaVersion"/>).
         /// Always emitted; the receiver warns when it does not match the installed version. Do not set this yourself.</summary>
@@ -172,6 +222,18 @@ namespace ValheimFortress
         /// <summary>Optional blacklist of creature names to exclude from generation.</summary>
         [DataMember(EmitDefaultValue = false, IsRequired = false)]
         public List<string> ExcludeSelectMonsters { get; set; }
+
+        /// <summary>Optional shaping of how many common creatures each generated wave gets (see <see cref="VFSpawnModifiers"/>).</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public VFSpawnModifiers CommonSpawnModifiers { get; set; }
+
+        /// <summary>Optional shaping of how many rare creatures each generated wave gets (see <see cref="VFSpawnModifiers"/>).</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public VFSpawnModifiers RareSpawnModifiers { get; set; }
+
+        /// <summary>Optional shaping of how many elite creatures each generated wave gets (see <see cref="VFSpawnModifiers"/>).</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public VFSpawnModifiers EliteSpawnModifiers { get; set; }
 
         /// <summary>Increases wave points and rewards.</summary>
         [DataMember(EmitDefaultValue = false, IsRequired = false)]
@@ -357,5 +419,32 @@ namespace ValheimFortress
         {
             return names == null ? null : new List<string>(names);
         }
+    }
+
+    /// <summary>
+    /// Shapes how many creatures of one category (common, rare or elite) each generated wave gets, the same as the
+    /// <c>commonSpawnModifiers</c>/<c>rareSpawnModifiers</c>/<c>eliteSpawnModifiers</c> settings in the Valheim
+    /// Fortress <c>Levels.yaml</c> and <c>WildShrines.yaml</c> configs. Used in tuned mode only. Set one per
+    /// category; when several are set, the last one in the order below wins. Leaving all unset spawns the full
+    /// amount in every wave.
+    /// </summary>
+    [DataContract]
+    public class VFSpawnModifiers
+    {
+        /// <summary>Front-loads the category: many in the first wave, tapering off in later waves (with some randomness).</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public bool LinearDecreaseRandomWaveAdjustment { get; set; }
+
+        /// <summary>Back-loads the category: few in the first wave, ramping up in later waves (with some randomness).</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public bool LinearIncreaseRandomWaveAdjustment { get; set; }
+
+        /// <summary>Randomly reduces the amount in each wave, by up to about half.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public bool PartialRandomWaveAdjustment { get; set; }
+
+        /// <summary>Holds the category back until the second half of the waves.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public bool OnlyGenerateInSecondHalf { get; set; }
     }
 }

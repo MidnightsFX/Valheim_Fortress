@@ -103,6 +103,90 @@ namespace ValheimFortress
             return Enum.GetNames(typeof(WaveStyleName)).ToList();
         }
 
+        // The challenge a wild shrine runs for the given tribute, as a JSON-serialized VFChallengeDefinition (the
+        // caller deserializes it with the same settings), or null when there is no such shrine or tribute.
+        // Reads the wild shrine config currently loaded, which is the server's once it has synced.
+        public static string GetShrineChallengeDefinition(string shrineName, string tributePrefab)
+        {
+            if (string.IsNullOrEmpty(shrineName) || string.IsNullOrEmpty(tributePrefab)) { return null; }
+            // Accept a placed shrine's gameObject.name too.
+            if (shrineName.EndsWith("(Clone)")) { shrineName = shrineName.Substring(0, shrineName.Length - 7); }
+
+            WildShrineConfiguration shrine = WildShrineData.GetWildShrineConfigurationForSpecificShrine(shrineName);
+            if (shrine == null)
+            {
+                Jotunn.Logger.LogWarning($"VF-API: no wild shrine named '{shrineName}'. Known shrines: {string.Join(", ", GetShrineTributes().Keys)}.");
+                return null;
+            }
+
+            // First match wins, the same as offering the item at the shrine.
+            WildShrineLevelConfiguration level = shrine.wildShrineLevelsConfig?.FirstOrDefault(entry =>
+                entry != null && string.Equals(entry.tributeName, tributePrefab, StringComparison.OrdinalIgnoreCase));
+            if (level == null || level.wildLevelDefinition == null)
+            {
+                Jotunn.Logger.LogWarning($"VF-API: wild shrine '{shrine.definitionForWildShrine}' does not accept tribute '{tributePrefab}'. " +
+                    $"Accepted: {string.Join(", ", TributeNames(shrine))}.");
+                return null;
+            }
+
+            return Serialize(BuildShrineDefinition(level));
+        }
+
+        // Every wild shrine prefab name mapped to the tribute item prefabs it accepts.
+        public static Dictionary<string, List<string>> GetShrineTributes()
+        {
+            Dictionary<string, List<string>> result = new Dictionary<string, List<string>>();
+            foreach (WildShrineConfiguration shrine in WildShrineData.GetWildShrineDefinitions())
+            {
+                // The lookup by name takes the first match, so a duplicate name is never reachable.
+                if (string.IsNullOrEmpty(shrine?.definitionForWildShrine) || result.ContainsKey(shrine.definitionForWildShrine)) { continue; }
+                result[shrine.definitionForWildShrine] = TributeNames(shrine);
+            }
+            return result;
+        }
+
+        private static List<string> TributeNames(WildShrineConfiguration shrine)
+        {
+            if (shrine.wildShrineLevelsConfig == null) { return new List<string>(); }
+            return shrine.wildShrineLevelsConfig.Where(entry => !string.IsNullOrEmpty(entry?.tributeName)).Select(entry => entry.tributeName).ToList();
+        }
+
+        // Mirrors what WildShrine does with the level: the wave is generated from ToChallengeLevelDefinition with
+        // the level's hard/siege flags and creature cap, the rewards are scaled by levelIndex, and loot drops
+        // follow each creature's dropsEnabled setting (GenericShrine.ShouldDropLoot).
+        private static VFChallengeDefinition BuildShrineDefinition(WildShrineLevelConfiguration level)
+        {
+            WildLevelDefinition wild = level.wildLevelDefinition;
+            Dictionary<string, bool> drop_overrides = Monsters.SpawnableCreatures
+                .Where(entry => entry.Value != null && entry.Value.dropsEnabled)
+                .ToDictionary(entry => entry.Key, entry => true);
+
+            return new VFChallengeDefinition
+            {
+                Biome = wild.biome,
+                Difficulty = wild.levelIndex,
+                WaveStyle = wild.waveFormat.ToString(),
+                // Wild levels have no phase count; wave generation falls back to 4.
+                NumPhases = 4,
+                MaxCreaturesPerPhase = wild.maxCreaturesPerPhaseOverride,
+                OnlySelectMonsters = wild.onlySelectMonsters,
+                ExcludeSelectMonsters = wild.excludeSelectMonsters,
+                CommonSpawnModifiers = wild.commonSpawnModifiers?.ToApi(),
+                RareSpawnModifiers = wild.rareSpawnModifiers?.ToApi(),
+                EliteSpawnModifiers = wild.eliteSpawnModifiers?.ToApi(),
+                CreatureRules = wild.creatureRules,
+                HardMode = level.hardMode,
+                SiegeMode = level.siegeMode,
+                BossMode = false,
+                ScaledRewards = level.rewards,
+                WaveStartMessage = level.wildshrine_wave_start_localization,
+                WaveEndMessage = level.wildshrine_wave_end_localization,
+                EnableCreatureDrops = false,
+                CreatureDropOverrides = drop_overrides.Count > 0 ? drop_overrides : null,
+                DrawMapOverlay = VFConfig.EnableShrineMapOverlay.Value
+            };
+        }
+
         private static PhasedWaveTemplate BuildWaveTemplate(VFChallengeDefinition def)
         {
             // Explicit per-phase mode takes precedence when supplied.
@@ -145,9 +229,9 @@ namespace ValheimFortress
                 bossLevelWarningLocalization = "",
                 onlySelectMonsters = def.OnlySelectMonsters,
                 excludeSelectMonsters = def.ExcludeSelectMonsters,
-                commonSpawnModifiers = new SpawnModifiers(),
-                rareSpawnModifiers = new SpawnModifiers(),
-                eliteSpawnModifiers = new SpawnModifiers(),
+                commonSpawnModifiers = SpawnModifiers.FromApi(def.CommonSpawnModifiers),
+                rareSpawnModifiers = SpawnModifiers.FromApi(def.RareSpawnModifiers),
+                eliteSpawnModifiers = SpawnModifiers.FromApi(def.EliteSpawnModifiers),
                 uniqueSpawnModifiers = new SpawnModifiers(),
                 creatureRules = def.CreatureRules
             };
@@ -215,11 +299,30 @@ namespace ValheimFortress
             return result;
         }
 
-        // Must stay in lockstep with API.Serialize on the caller side (the copied API.cs); the JSON string
-        // is the only thing that crosses the soft-dependency boundary, so both sides must agree on the format.
-        // UseSimpleDictionaryFormat reads the reward/override maps as plain JSON objects ({"Coins":5}).
+        // Must stay in lockstep with API.Serialize/Deserialize on the caller side (the copied API.cs); JSON
+        // strings are the only thing that crosses the soft-dependency boundary, in both directions, so both
+        // sides must agree on the format. UseSimpleDictionaryFormat keeps the reward/override maps as plain
+        // JSON objects ({"Coins":5}).
         private static readonly DataContractJsonSerializerSettings SerializerSettings =
             new DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true };
+
+        private static string Serialize(VFChallengeDefinition def)
+        {
+            try
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(VFChallengeDefinition), SerializerSettings);
+                    serializer.WriteObject(ms, def);
+                    return Encoding.UTF8.GetString(ms.ToArray());
+                }
+            }
+            catch (Exception ex)
+            {
+                Jotunn.Logger.LogError($"VF-API: failed to serialize challenge definition: {ex}");
+                return null;
+            }
+        }
 
         private static VFChallengeDefinition Deserialize(string json)
         {

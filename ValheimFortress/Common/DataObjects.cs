@@ -299,6 +299,31 @@ namespace ValheimFortress.Challenge
         {
             return linearIncreaseRandomWaveAdjustment || linearIncreaseWaveAdjustment || linearDecreaseRandomWaveAdjustment || partialRandomWaveAdjustment || onlyGenerateInSecondHalf;
         }
+
+        // Converts from/to the public API's copy of these settings. linearIncreaseWaveAdjustment has no effect
+        // in wave generation, so the API does not carry it.
+        public static SpawnModifiers FromApi(VFSpawnModifiers mods)
+        {
+            if (mods == null) { return new SpawnModifiers(); }
+            return new SpawnModifiers
+            {
+                linearIncreaseRandomWaveAdjustment = mods.LinearIncreaseRandomWaveAdjustment,
+                linearDecreaseRandomWaveAdjustment = mods.LinearDecreaseRandomWaveAdjustment,
+                partialRandomWaveAdjustment = mods.PartialRandomWaveAdjustment,
+                onlyGenerateInSecondHalf = mods.OnlyGenerateInSecondHalf
+            };
+        }
+
+        public VFSpawnModifiers ToApi()
+        {
+            return new VFSpawnModifiers
+            {
+                LinearIncreaseRandomWaveAdjustment = linearIncreaseRandomWaveAdjustment,
+                LinearDecreaseRandomWaveAdjustment = linearDecreaseRandomWaveAdjustment,
+                PartialRandomWaveAdjustment = partialRandomWaveAdjustment,
+                OnlyGenerateInSecondHalf = onlyGenerateInSecondHalf
+            };
+        }
     }
 
     public class LevelModifiers

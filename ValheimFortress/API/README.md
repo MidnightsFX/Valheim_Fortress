@@ -20,8 +20,8 @@ All calls go through reflection, so you never need a hard reference to the Valhe
 > The contract is version-tolerant (missing/extra fields are handled) and stamped with a schema version:
 > if they drift too far, Valheim Fortress logs a clear warning telling you to re-copy `API.cs`. Re-copy
 > `API.cs` from the release you build against. **Note:** the 0.36.0 release changed the wire format
-> (simplified reward maps + schema version), and 0.38.0 added creature rules (schema version 2); re-copy
-> `API.cs` when updating to either.
+> (simplified reward maps + schema version), 0.38.0 added creature rules (schema version 2), and 0.39.0
+> added spawn modifiers (schema version 3); re-copy `API.cs` when updating to any of them.
 
 ### Required references
 
@@ -154,6 +154,47 @@ Modifiers need SLS; without it only stars are applied. A creature given any modi
 SLS's random ones, and by default SLS keeps one modifier per star, so give creatures at least as many stars as
 modifiers.
 
+### Shape how each creature category spreads over the waves
+
+In tuned mode, `CommonSpawnModifiers`, `RareSpawnModifiers` and `EliteSpawnModifiers` control how many creatures
+of that category each wave gets. They match the `commonSpawnModifiers`/`rareSpawnModifiers`/`eliteSpawnModifiers`
+settings in `Levels.yaml` and `WildShrines.yaml`.
+
+```csharp
+var definition = new ValheimFortress.VFChallengeDefinition {
+    Biome = Heightmap.Biome.Swamp,
+    Difficulty = 10,
+    // Commons start small and ramp up; elites only show up in the second half.
+    CommonSpawnModifiers = new ValheimFortress.VFSpawnModifiers { LinearIncreaseRandomWaveAdjustment = true },
+    EliteSpawnModifiers = new ValheimFortress.VFSpawnModifiers { OnlyGenerateInSecondHalf = true },
+    ScaledRewards = new Dictionary<string, short> { { "Coins", 5 } }
+};
+```
+
+### Run a wild shrine's challenge
+
+Wild shrines start a challenge when offered a tribute item. You can ask Valheim Fortress for the challenge a
+shrine runs for a given tribute and run it wherever you like. The definition comes from the wild shrine config
+currently loaded (the server's `WildShrines.yaml` once it has synced), so it follows the server admin's changes.
+
+```csharp
+// Shrine prefab name -> tribute item prefabs it accepts, e.g. "VF_wild_shrine_green1" -> ["TrophyBoar", ...]
+Dictionary<string, List<string>> tributes = ValheimFortress.API.GetShrineTributes();
+
+var definition = ValheimFortress.API.GetShrineChallengeDefinition("VF_wild_shrine_green1", "TrophyBoar");
+if (definition != null) {
+    // The result is a normal definition: tweak anything before running it.
+    definition.DrawMapOverlay = true;
+    ValheimFortress.API.RunChallenge(definition, spawnPoints, rewardLocation);
+}
+```
+
+The shrine name and tribute are case-insensitive, and a trailing `(Clone)` on the shrine name is ignored, so a
+placed shrine's `gameObject.name` works. When the shrine accepts the same tribute on more than one level, the
+first one is used, just like offering it at the shrine. The returned definition does not include the tribute
+amount: whether and what the player pays is up to your mod. `null` means the shrine or tribute was not found;
+Valheim Fortress logs a warning listing the valid names.
+
 ## Reference
 
 ### `ValheimFortress.API`
@@ -166,11 +207,24 @@ modifiers.
 | `List<string> GetSpawnableCreatures()` | Valid `VFHoardEntry.Creature` / monster-filter names. |
 | `List<string> GetRewardItems()` | Item prefab names suitable as reward keys. |
 | `List<string> GetWaveStyles()` | Valid `WaveStyle` values. |
+| `VFChallengeDefinition GetShrineChallengeDefinition(string shrineName, string tributePrefab)` | The challenge a wild shrine runs for that tribute, or `null` if not found. |
+| `Dictionary<string, List<string>> GetShrineTributes()` | Every wild shrine prefab name and the tribute item prefabs it accepts. |
 
 ### `VFChallengeDefinition`
 
 Tuned mode: `Biome`, `Difficulty`, `WaveStyle`, `NumPhases`, `MaxCreaturesPerPhase`,
-`OnlySelectMonsters`, `ExcludeSelectMonsters`, `HardMode`, `BossMode`, `SiegeMode`.
+`OnlySelectMonsters`, `ExcludeSelectMonsters`, `HardMode`, `BossMode`, `SiegeMode`,
+`CommonSpawnModifiers`, `RareSpawnModifiers`, `EliteSpawnModifiers`.
+
+| `VFSpawnModifiers` member | Description |
+| --- | --- |
+| `bool LinearDecreaseRandomWaveAdjustment` | Many in the first wave, tapering off in later waves (with some randomness). |
+| `bool LinearIncreaseRandomWaveAdjustment` | Few in the first wave, ramping up in later waves (with some randomness). |
+| `bool PartialRandomWaveAdjustment` | Randomly reduces each wave's amount, by up to about half. |
+| `bool OnlyGenerateInSecondHalf` | None until the second half of the waves. |
+
+Set one per category; when several are set, the last one in the table wins. With none set, every wave gets the
+full amount.
 
 Explicit mode: `ExplicitPhases` (overrides tuned fields when set). Each `VFHoardEntry` has `Creature`,
 `Amount`, `Stars` and optional `Modifiers`.

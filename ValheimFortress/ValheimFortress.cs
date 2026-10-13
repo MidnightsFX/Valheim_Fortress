@@ -24,7 +24,7 @@ namespace ValheimFortress
     {
         public const string PluginGUID = "MidnightsFX.ValheimFortress";
         public const string PluginName = "ValheimFortress";
-        public const string PluginVersion = "0.38.0";
+        public const string PluginVersion = "0.39.0";
 
         // Networked prefab the public API instantiates to host API-driven challenges (see APIReceiver / ExternalShrine).
         public const string ApiChallengeRunnerPrefab = "VF_api_challenge_runner";

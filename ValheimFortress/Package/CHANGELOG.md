@@ -1,3 +1,11 @@
+  **0.39.0**
+---
+```
+- Wave spawn settings on shrine levels take effect again, so creatures ramp up, taper off or wait for later waves as configured.
+- Other mods can look up the challenge a wild shrine runs for a given offering, list the offerings each shrine accepts, and run that challenge anywhere.
+- API challenges can use the same wave spawn settings as shrine levels.
+```
+
   **0.38.0**
 ---
 ```

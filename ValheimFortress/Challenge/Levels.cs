@@ -405,7 +405,7 @@ namespace ValheimFortress.Challenge
         {
             float wavePercent = 1f;
             // Guard clause for no modifiers
-            if (waveMods == null || waveMods.AnyEnabled()) {
+            if (waveMods == null || !waveMods.AnyEnabled()) {
                 return wavePercent;
             }
 
