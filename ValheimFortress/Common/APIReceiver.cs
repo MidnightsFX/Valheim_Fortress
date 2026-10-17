@@ -166,8 +166,8 @@ namespace ValheimFortress
                 Biome = wild.biome,
                 Difficulty = wild.levelIndex,
                 WaveStyle = wild.waveFormat.ToString(),
-                // Wild levels have no phase count; wave generation falls back to 4.
-                NumPhases = 4,
+                NumPhases = wild.numPhases > 0 ? wild.numPhases : (short)4,
+                ExplicitPhases = wild.explicitPhases,
                 MaxCreaturesPerPhase = wild.maxCreaturesPerPhaseOverride,
                 OnlySelectMonsters = wild.onlySelectMonsters,
                 ExcludeSelectMonsters = wild.excludeSelectMonsters,
@@ -239,7 +239,7 @@ namespace ValheimFortress
             return Levels.generateRandomWaveWithOptions(cld, def.HardMode, def.BossMode, def.SiegeMode, max_creatures);
         }
 
-        private static PhasedWaveTemplate BuildExplicitTemplate(List<List<VFHoardEntry>> phases, List<VFCreatureRule> rules)
+        internal static PhasedWaveTemplate BuildExplicitTemplate(List<List<VFHoardEntry>> phases, List<VFCreatureRule> rules)
         {
             List<List<HoardConfig>> horde_phases = new List<List<HoardConfig>>();
             // Entry modifiers are the most specific setting, so they are applied after the rules.

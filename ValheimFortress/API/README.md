@@ -2,6 +2,38 @@
 
 ## Overview
 
+### Exact waves in WildShrines.yaml
+
+`wildLevelDefinition.numPhases` sets the generated wave count (zero or omitted
+keeps four). `wildLevelDefinition.explicitPhases` instead supplies exact waves,
+using the same creature catalogue keys and entry fields as `ExplicitPhases` in
+the API. `GetShrineChallengeDefinition` preserves both fields, so physical wild
+shrines and API callers use the same event definition.
+
+```yaml
+wildLevelDefinition:
+  levelIndex: 1
+  biome: BlackForest
+  explicitPhases:
+  - - creature: GreyDwarf
+      amount: 6
+      stars: 2
+  - - creature: Troll
+      amount: 1
+      stars: 3
+```
+
+Explicit lists take precedence over generated wave count, budgets, wave styles,
+caps, and hard/siege composition changes. Existing reward settings still apply.
+Creature rules still apply, including wave-number selectors and exact star caps.
+Use actual keys from your SpawnableCreatures.yaml; the example names are not
+prefab lookups. As with the existing explicit API, invalid entries are skipped.
+
+Elder root abilities cast by Fortress-spawned creatures start their downward
+floor search two metres above the target instead of 1,000 metres. This avoids
+starting above the ceiling of an interior room. Other summons and world bosses
+are unchanged. Root lifetime and stats retain their native behavior.
+
 This API lets other mods drive Valheim Fortress horde challenges: define a wave set, creature
 selection, and rewards in one place (the way the built-in Wild Shrines do), then run that challenge
 on demand at any location with caller-chosen spawn points and a reward drop location.

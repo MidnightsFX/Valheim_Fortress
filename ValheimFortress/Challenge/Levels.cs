@@ -100,6 +100,12 @@ namespace ValheimFortress.Challenge
 
         public static PhasedWaveTemplate generateRandomWaveWithOptions(ChallengeLevelDefinition levelDefinition, bool hard_mode, bool boss_mode, bool siege_mode, short override_max_creatures = 0)
         {
+            // Explicit lists have the same precedence and settings as API-authored challenges.
+            // Counts are intentional: generated-wave budgets and caps do not change them.
+            if (levelDefinition.explicitPhases != null && levelDefinition.explicitPhases.Count > 0)
+            {
+                return APIReceiver.BuildExplicitTemplate(levelDefinition.explicitPhases, levelDefinition.creatureRules);
+            }
             // The defined levels definition index is what we use for the actual point calculation- meaning you will fight and get rewards based on that level- not the position of the level definition.
             Int16 wave_total_points = ComputeChallengePoints(levelDefinition.levelIndex);
             if (hard_mode) {

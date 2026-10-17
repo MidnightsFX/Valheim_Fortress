@@ -132,6 +132,7 @@ namespace ValheimFortress.Challenge
                 {
                     creature_metadata.m_faction = Character.Faction.Boss;
                     creature_metadata.m_nview.GetZDO().Set("VFDrops", drops_enabled);
+                    creature_metadata.m_nview.GetZDO().Set("VFChallengeCreature", true);
                 }
                 else
                 {

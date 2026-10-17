@@ -179,6 +179,8 @@ namespace ValheimFortress.Challenge
     [DataContract]
     public class ChallengeLevelDefinition
     {
+        [YamlMember(DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
+        public List<List<VFHoardEntry>> explicitPhases { get; set; }
         [DefaultValue("")]
         public string levelName { get; set; }
         public short levelIndex { get; set; }
@@ -214,6 +216,10 @@ namespace ValheimFortress.Challenge
     [DataContract]
     public class WildLevelDefinition
     {
+        [YamlMember(DefaultValuesHandling = DefaultValuesHandling.OmitDefaults)]
+        public short numPhases { get; set; }
+        [YamlMember(DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
+        public List<List<VFHoardEntry>> explicitPhases { get; set; }
         public short levelIndex { get; set; }
         public Heightmap.Biome biome { get; set; }
         public WaveStyleName waveFormat { get; set; }
@@ -232,6 +238,8 @@ namespace ValheimFortress.Challenge
         {
             ChallengeLevelDefinition w_as_clevel = new ChallengeLevelDefinition();
             w_as_clevel.levelIndex = this.levelIndex;
+            w_as_clevel.numPhases = this.numPhases;
+            w_as_clevel.explicitPhases = this.explicitPhases;
             w_as_clevel.creatureRules = this.creatureRules;
             w_as_clevel.levelForShrineTypes = new Dictionary<ShrineType, bool> { { ShrineType.Wild, true } };
             w_as_clevel.levelMenuLocalization = ""; // unused
