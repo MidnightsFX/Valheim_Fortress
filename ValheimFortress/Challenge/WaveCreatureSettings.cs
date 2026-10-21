@@ -42,6 +42,7 @@ namespace ValheimFortress.Challenge
                     horde.minStars = null;
                     horde.maxStars = null;
                     horde.modifiers = null;
+                    horde.healthMultiplier = null;
                     if (rules == null) { continue; }
                     foreach (VFCreatureRule rule in rules)
                     {
@@ -86,6 +87,7 @@ namespace ValheimFortress.Challenge
                 horde.maxStars = Math.Max(0, rule.MaxStars.Value);
                 if (horde.minStars > horde.maxStars) { horde.minStars = horde.maxStars; }
             }
+            if (rule.HealthMultiplier.HasValue) { horde.healthMultiplier = rule.HealthMultiplier.Value; }
             ApplyModifiers(horde, rule.Modifiers);
         }
 
@@ -124,9 +126,13 @@ namespace ValheimFortress.Challenge
                 {
                     Jotunn.Logger.LogWarning($"{where} minStars {rule.MinStars} is above maxStars {rule.MaxStars} in the same rule; maxStars wins.");
                 }
-                if (!rule.MinStars.HasValue && !rule.MaxStars.HasValue && rule.Modifiers == null)
+                if (!rule.MinStars.HasValue && !rule.MaxStars.HasValue && rule.Modifiers == null && !rule.HealthMultiplier.HasValue)
                 {
-                    Jotunn.Logger.LogWarning($"{where} sets no minStars, maxStars or modifiers, so it does nothing.");
+                    Jotunn.Logger.LogWarning($"{where} sets no minStars, maxStars, modifiers or healthMultiplier, so it does nothing.");
+                }
+                if (rule.HealthMultiplier <= 0f)
+                {
+                    Jotunn.Logger.LogWarning($"{where} healthMultiplier {rule.HealthMultiplier} is not above 0, so it is ignored.");
                 }
                 if (rule.Modifiers != null)
                 {
@@ -155,10 +161,11 @@ namespace ValheimFortress.Challenge
             int level = (int)Math.Min(int.MaxValue, stars + 1);
             // SetLevel updates the networked level and vanilla health, unlike assigning m_level.
             // SLS receives the same level and persists its own cache through its public API.
-            SlsIntegration.Apply(creature, level, horde.modifiers);
+            float health = horde.healthMultiplier.HasValue && horde.healthMultiplier.Value > 0f ? horde.healthMultiplier.Value : 1f;
+            SlsIntegration.Apply(creature, level, horde.modifiers, health);
             if (VFConfig.EnableDebugMode.Value)
             {
-                Jotunn.Logger.LogInfo($"Shrine creature {horde.creature}: minStars={horde.minStars}, maxStars={horde.maxStars}, level={creature.GetLevel()}.");
+                Jotunn.Logger.LogInfo($"Shrine creature {horde.creature}: minStars={horde.minStars}, maxStars={horde.maxStars}, healthMultiplier={health}, level={creature.GetLevel()}.");
             }
         }
     }

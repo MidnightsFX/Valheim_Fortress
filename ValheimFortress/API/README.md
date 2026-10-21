@@ -20,8 +20,10 @@ All calls go through reflection, so you never need a hard reference to the Valhe
 > The contract is version-tolerant (missing/extra fields are handled) and stamped with a schema version:
 > if they drift too far, Valheim Fortress logs a clear warning telling you to re-copy `API.cs`. Re-copy
 > `API.cs` from the release you build against. **Note:** the 0.36.0 release changed the wire format
-> (simplified reward maps + schema version), 0.38.0 added creature rules (schema version 2), and 0.39.0
-> added spawn modifiers (schema version 3); re-copy `API.cs` when updating to any of them.
+> (simplified reward maps + schema version), 0.38.0 added creature rules (schema version 2), 0.39.0
+> added spawn modifiers (schema version 3), and 0.40.0 added challenge handles, spawn portals and health
+> multipliers (schema version 4); re-copy `API.cs` when updating to any of them. Definitions from an older
+> copy still run on a newer Valheim Fortress; only a copy newer than the installed version logs a warning.
 
 ### Required references
 
@@ -150,6 +152,15 @@ new ValheimFortress.VFHoardEntry {
 }
 ```
 
+Rules and entries can also set `HealthMultiplier`, for example to give a final boss ten times its health:
+
+```csharp
+new ValheimFortress.VFHoardEntry { Creature = "Eikthyr", Amount = 1, Stars = 2, HealthMultiplier = 10f }
+```
+
+With SLS the multiplier is stored with the creature and survives reloads; without it, it lasts while the creature
+stays loaded.
+
 Modifiers need SLS; without it only stars are applied. A creature given any modifiers this way does not also get
 SLS's random ones, and by default SLS keeps one modifier per star, so give creatures at least as many stars as
 modifiers.
@@ -195,6 +206,41 @@ first one is used, just like offering it at the shrine. The returned definition 
 amount: whether and what the player pays is up to your mod. `null` means the shrine or tribute was not found;
 Valheim Fortress logs a warning listing the valid names.
 
+### Follow and stop a run (schema 4)
+
+`StartChallenge` runs a challenge like `RunChallenge` and returns a handle. Unlike `RunChallenge` it can be
+called by any peer, a client included: the caller owns the run at first, and ownership then moves with the
+players near it, like a physical shrine's. Check `API.SupportsHandles` first; older Valheim Fortress versions
+don't have these methods.
+
+```csharp
+definition.SpawnPortalVisuals = true;  // open the shrines' spawn portals at each spawn point
+string handle = ValheimFortress.API.StartChallenge(definition, spawnPoints, rewardLocation);
+
+// Later, for example once a second:
+ValheimFortress.VFChallengeState state = ValheimFortress.API.GetChallengeState(handle);
+if (state != null && state.Exists) {
+    // state.Starting, state.Active, state.Phase of state.Phases, state.Alive, state.Completed, state.Stopped
+}
+
+// Give up early: creatures and portals are removed and no rewards are given.
+ValheimFortress.API.StopChallenge(handle);
+```
+
+In tuned mode, `FinalPhase` adds one explicit phase after the generated waves, which suits a boss fight at the
+end of generated waves. Creature rules treat it as the last wave (`-1`):
+
+```csharp
+definition.NumPhases = 11;
+definition.FinalPhase = new List<ValheimFortress.VFHoardEntry> {
+    new ValheimFortress.VFHoardEntry { Creature = "Eikthyr", Amount = 1, Stars = 2, HealthMultiplier = 10f }
+};
+```
+
+`GetChallengeState` reads the run's networked state, so it works on any peer that has the run's area loaded,
+not only its owner. A finished or stopped run stays readable for about 30 seconds before its runner is removed;
+after that `Exists` is false. `StopChallenge` sends the request to whichever peer owns the run.
+
 ## Reference
 
 ### `ValheimFortress.API`
@@ -209,6 +255,22 @@ Valheim Fortress logs a warning listing the valid names.
 | `List<string> GetWaveStyles()` | Valid `WaveStyle` values. |
 | `VFChallengeDefinition GetShrineChallengeDefinition(string shrineName, string tributePrefab)` | The challenge a wild shrine runs for that tribute, or `null` if not found. |
 | `Dictionary<string, List<string>> GetShrineTributes()` | Every wild shrine prefab name and the tribute item prefabs it accepts. |
+| `bool SupportsHandles` | True when the methods below exist (schema 4). |
+| `string StartChallenge(VFChallengeDefinition definition, Vector3[] spawnPoints, Vector3 rewardLocation)` | Starts a challenge and returns its handle, or `null`. |
+| `VFChallengeState GetChallengeState(string handle)` | The run's state as this peer sees it, or `null` for an invalid handle. |
+| `bool StopChallenge(string handle)` | Ends the run without rewards. True when the request was sent. |
+
+### `VFChallengeState`
+
+| Member | Description |
+| --- | --- |
+| `bool Exists` | False when this peer does not know the run (removed after finishing, or its area is not loaded here). |
+| `bool Starting` | Between the start call and the first wave. |
+| `bool Active` | Waves are running. |
+| `int Phase`, `int Phases` | Phases started so far, and the total. |
+| `int Alive` | Challenge creatures still alive. |
+| `bool Completed` | Every phase was cleared; rewards, if any, were given. |
+| `bool Stopped` | The run was ended with `StopChallenge`. |
 
 ### `VFChallengeDefinition`
 
@@ -226,8 +288,10 @@ Tuned mode: `Biome`, `Difficulty`, `WaveStyle`, `NumPhases`, `MaxCreaturesPerPha
 Set one per category; when several are set, the last one in the table wins. With none set, every wave gets the
 full amount.
 
+`FinalPhase` (tuned mode, schema 4): `VFHoardEntry` list for one extra phase after the generated waves.
+
 Explicit mode: `ExplicitPhases` (overrides tuned fields when set). Each `VFHoardEntry` has `Creature`,
-`Amount`, `Stars` and optional `Modifiers`.
+`Amount`, `Stars` and optional `Modifiers` and `HealthMultiplier`.
 
 Creature rules: `CreatureRules` — optional list of `VFCreatureRule`, used in both modes. Rules apply in
 list order, and each rule that matches a creature overwrites only the settings it sets.
@@ -240,6 +304,7 @@ list order, and each rule that matches a creature overwrites only the settings i
 | `int? MinStars` | Lowest star count. |
 | `int? MaxStars` | Highest star count; 0 forces no stars. When stars conflict the later rule wins; within one rule `MaxStars` wins. |
 | `VFModifierSet Modifiers` | Guaranteed SLS modifiers: `Major`, `Minor` and `Boss` name lists. Each list set replaces that type's list from earlier rules; an empty list clears it. |
+| `float? HealthMultiplier` | Multiplies the creature's health. A later rule replaces an earlier one; an entry's own value replaces the rules'. |
 
 Creature behavior: `EnableCreatureDrops` — global toggle; when true, challenge creatures drop their
 normal loot on death. Defaults to false (creatures drop nothing; players are rewarded only via the
@@ -258,6 +323,7 @@ Presentation: `DrawMapOverlay` — when true, marks each spawn point on the mini
 the run using the vanilla event markers (shaded event-area circle plus the animated event icon, the same
 markers the physical shrines and SLS raids use), cleared automatically on completion. Local/cosmetic
 only: renders for the instance driving the run (single-player or the P2P host) and is skipped on a
-headless dedicated server. Defaults to false.
+headless dedicated server. Defaults to false. `SpawnPortalVisuals` — when true, a spawn portal opens at
+each spawn point while the run is active (schema 4).
 
 Supported biomes for generation: Meadows, BlackForest, Swamp, Mountain, Plains, Mistlands, AshLands.

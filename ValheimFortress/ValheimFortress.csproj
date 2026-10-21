@@ -134,6 +134,7 @@
     <EmbeddedResource Include="Localizations\Thai.json" />
     <EmbeddedResource Include="Localizations\Turkish.json" />
     <EmbeddedResource Include="Localizations\Ukrainian.json" />
+    <EmbeddedResource Include="Localizations\Vietnamese.json" />
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>

@@ -25,12 +25,13 @@ namespace ValheimFortress.Common
             }
         }
 
-        internal static void Apply(Character creature, int level, VFModifierSet modifiers)
+        internal static void Apply(Character creature, int level, VFModifierSet modifiers, float healthMultiplier = 1f)
         {
             bool hasModifiers = modifiers != null && !modifiers.IsEmpty();
             if (!SlsApi.IsAvailable)
             {
                 creature.SetLevel(level);
+                ApplyVanillaHealth(creature, healthMultiplier);
                 if (hasModifiers) { WarnOnce("Shrine creatureRules modifiers require StarLevelSystem. Applying stars only."); }
                 return;
             }
@@ -38,6 +39,7 @@ namespace ValheimFortress.Common
             if (!SlsApi.SupportsSpawnManaged)
             {
                 creature.SetLevel(level);
+                ApplyVanillaHealth(creature, healthMultiplier);
                 WarnOnce("Shrine creature settings require an SLS version with SetCreatureSpawnManaged and modifier APIs. Upgrade SLS; its spawn rules may override the stars.");
                 return;
             }
@@ -54,11 +56,13 @@ namespace ValheimFortress.Common
             catch (Exception exception)
             {
                 creature.SetLevel(level);
+                ApplyVanillaHealth(creature, healthMultiplier);
                 WarnOnce($"Could not apply shrine SLS settings: {Cause(exception).Message}");
                 return;
             }
 
             if (hasModifiers) { AddModifiers(creature, level, modifiers); }
+            if (HasHealthMultiplier(healthMultiplier)) { MultiplyBaseHealth(creature, healthMultiplier); }
 
             try
             {
@@ -68,6 +72,38 @@ namespace ValheimFortress.Common
             {
                 WarnOnce($"Could not apply shrine SLS settings: {Cause(exception).Message}");
             }
+        }
+
+        private static bool HasHealthMultiplier(float multiplier)
+        {
+            return multiplier > 0f && multiplier != 1f;
+        }
+
+        // SLS keeps base health as a multiplier in its creature cache, which it saves with the creature, so the
+        // boost survives reloads and ownership changes. Falls back to vanilla max health if SLS refuses.
+        private static void MultiplyBaseHealth(Character creature, float multiplier)
+        {
+            try
+            {
+                float current = SlsApi.GetCreatureBaseAttribute(creature, 0);
+                if (current <= 0f) { current = 1f; }
+                RequireSuccess(SlsApi.SetCreatureBaseAttribute(creature, 0, current * multiplier), nameof(SlsApi.SetCreatureBaseAttribute));
+            }
+            catch (Exception exception)
+            {
+                WarnOnce($"Could not apply a shrine health multiplier through SLS: {Cause(exception).Message}");
+                ApplyVanillaHealth(creature, multiplier);
+            }
+        }
+
+        // Without SLS: raises the networked max health. Vanilla recomputes it from the prefab when an undamaged
+        // creature reloads, so this lasts while the creature stays loaded.
+        private static void ApplyVanillaHealth(Character creature, float multiplier)
+        {
+            if (!HasHealthMultiplier(multiplier)) { return; }
+            float health = creature.GetMaxHealth() * multiplier;
+            creature.SetMaxHealth(health);
+            creature.SetHealth(health);
         }
 
         // Adding any modifier stores the creature's modifier list before SLS's setup runs, so SLS does not

@@ -39,7 +39,7 @@ namespace ValheimFortress.Challenge
                 tempportal.AddComponent<PortalTracker>();
                 tempportal.GetComponent<PortalTracker>().SetShrine(shrine);
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Created portal at {spawn_location}."); }
-                if (VFConfig.EnableMapPings.Value) { Chat.instance.SendPing(spawn_location); }
+                if (VFConfig.EnableMapPings.Value && Chat.instance != null) { Chat.instance.SendPing(spawn_location); }
             }
             if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Done placing portals"); }
 

@@ -26,9 +26,17 @@ namespace ValheimFortress
         private static readonly MethodInfo GetWaveStylesMethod;
         private static readonly MethodInfo GetShrineChallengeDefinitionMethod;
         private static readonly MethodInfo GetShrineTributesMethod;
+        private static readonly MethodInfo StartChallengeMethod;
+        private static readonly MethodInfo GetChallengeStateMethod;
+        private static readonly MethodInfo StopChallengeMethod;
 
         /// <summary>True when Valheim Fortress is loaded and the API is callable.</summary>
         public static bool IsAvailable => APIReceiver != null;
+
+        /// <summary>True when the installed Valheim Fortress supports challenge handles
+        /// (<see cref="StartChallenge(VFChallengeDefinition, Vector3[], Vector3)"/>, <see cref="GetChallengeState"/>,
+        /// <see cref="StopChallenge"/>), added in API schema 4.</summary>
+        public static bool SupportsHandles => StartChallengeMethod != null && GetChallengeStateMethod != null && StopChallengeMethod != null;
 
         static API()
         {
@@ -40,6 +48,9 @@ namespace ValheimFortress
             GetWaveStylesMethod = APIReceiver.GetMethod("GetWaveStyles", BindingFlags.Public | BindingFlags.Static);
             GetShrineChallengeDefinitionMethod = APIReceiver.GetMethod("GetShrineChallengeDefinition", BindingFlags.Public | BindingFlags.Static);
             GetShrineTributesMethod = APIReceiver.GetMethod("GetShrineTributes", BindingFlags.Public | BindingFlags.Static);
+            StartChallengeMethod = APIReceiver.GetMethod("StartChallenge", BindingFlags.Public | BindingFlags.Static);
+            GetChallengeStateMethod = APIReceiver.GetMethod("GetChallengeState", BindingFlags.Public | BindingFlags.Static);
+            StopChallengeMethod = APIReceiver.GetMethod("StopChallenge", BindingFlags.Public | BindingFlags.Static);
         }
 
         /// <summary>
@@ -69,6 +80,48 @@ namespace ValheimFortress
         public static bool RunChallenge(VFChallengeDefinition definition, List<Vector3> spawnPoints, Vector3 rewardLocation)
         {
             return RunChallenge(definition, spawnPoints?.ToArray(), rewardLocation);
+        }
+
+        /// <summary>
+        /// Runs a challenge like <see cref="RunChallenge(VFChallengeDefinition, Vector3[], Vector3)"/> and returns a
+        /// handle for following and stopping it with <see cref="GetChallengeState"/> and <see cref="StopChallenge"/>.
+        ///
+        /// Any peer may call this, a client included: the caller owns the run at first, and ownership then moves
+        /// with the players near it like a physical shrine's. Requires <see cref="SupportsHandles"/>.
+        /// </summary>
+        /// <returns>The run's handle, or null when it could not start (or this Valheim Fortress is too old).</returns>
+        public static string StartChallenge(VFChallengeDefinition definition, Vector3[] spawnPoints, Vector3 rewardLocation)
+        {
+            if (StartChallengeMethod == null || definition == null) { return null; }
+            string json = Serialize(definition);
+            if (json == null) { return null; }
+            return StartChallengeMethod.Invoke(null, new object[] { json, spawnPoints, rewardLocation }) as string;
+        }
+
+        /// <summary>
+        /// The state of a run started with <see cref="StartChallenge(VFChallengeDefinition, Vector3[], Vector3)"/>, as
+        /// this peer currently sees it. A peer only knows runs in areas it has loaded, so read it near the run (for
+        /// example on whoever owns the object that started it).
+        /// </summary>
+        /// <returns>The state, or null when the handle is invalid or this Valheim Fortress is too old. A finished run
+        /// stays readable (<see cref="VFChallengeState.Completed"/> or <see cref="VFChallengeState.Stopped"/>) for a
+        /// short while before its runner is removed; after that <see cref="VFChallengeState.Exists"/> is false.</returns>
+        public static VFChallengeState GetChallengeState(string handle)
+        {
+            if (GetChallengeStateMethod == null || string.IsNullOrEmpty(handle)) { return null; }
+            if (!(GetChallengeStateMethod.Invoke(null, new object[] { handle }) is Dictionary<string, int> values)) { return null; }
+            return VFChallengeState.From(values);
+        }
+
+        /// <summary>
+        /// Stops a run started with <see cref="StartChallenge(VFChallengeDefinition, Vector3[], Vector3)"/>: its
+        /// creatures and portals are removed and no rewards are given. The request goes to whichever peer owns the run.
+        /// </summary>
+        /// <returns>True when the stop request was sent.</returns>
+        public static bool StopChallenge(string handle)
+        {
+            if (StopChallengeMethod == null || string.IsNullOrEmpty(handle)) { return false; }
+            return StopChallengeMethod.Invoke(null, new object[] { handle }) is bool ok && ok;
         }
 
         /// <summary>
@@ -184,7 +237,7 @@ namespace ValheimFortress
         /// <summary>The wire schema version this copy of the API produces. Bumped when the serialized shape
         /// changes so a Valheim Fortress install can detect a caller whose copied <c>API.cs</c> is out of
         /// date. Callers do not set this.</summary>
-        public const int CurrentSchemaVersion = 3;
+        public const int CurrentSchemaVersion = 4;
 
         /// <summary>Schema marker stamped automatically on serialization (see <see cref="CurrentSchemaVersion"/>).
         /// Always emitted; the receiver warns when it does not match the installed version. Do not set this yourself.</summary>
@@ -276,6 +329,12 @@ namespace ValheimFortress
         [DataMember(EmitDefaultValue = false, IsRequired = false)]
         public List<List<VFHoardEntry>> ExplicitPhases { get; set; }
 
+        /// <summary>Tuned mode only: creatures for one extra phase after the generated waves, for example a boss fight.
+        /// <see cref="CreatureRules"/> treat it as the last wave (-1), and each entry's own settings apply after the
+        /// rules. Ignored when <see cref="ExplicitPhases"/> is set (add the phase there instead). Added in schema 4.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public List<VFHoardEntry> FinalPhase { get; set; }
+
         // ---- Rewards (either, both, or neither) ----
 
         /// <summary>Auto-scaled rewards. Keys are item prefab names, values are the per-unit point cost;
@@ -320,6 +379,56 @@ namespace ValheimFortress
         /// to false.</summary>
         [DataMember(EmitDefaultValue = false, IsRequired = false)]
         public bool DrawMapOverlay { get; set; } = false;
+
+        /// <summary>When true, a Fortress spawn portal appears at each spawn point while the run is active, the same
+        /// portals the physical shrines open. Defaults to false. Added in schema 4; older Valheim Fortress versions
+        /// ignore it.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public bool SpawnPortalVisuals { get; set; } = false;
+    }
+
+    /// <summary>The state of a challenge run, from <see cref="API.GetChallengeState"/>.</summary>
+    public class VFChallengeState
+    {
+        /// <summary>False when this peer does not know the run: it finished and was removed, or its area is not loaded here.</summary>
+        public bool Exists { get; set; }
+
+        /// <summary>True between the start call and the first wave.</summary>
+        public bool Starting { get; set; }
+
+        /// <summary>True while waves are running.</summary>
+        public bool Active { get; set; }
+
+        /// <summary>How many phases have started so far (1 once the first wave spawns).</summary>
+        public int Phase { get; set; }
+
+        /// <summary>The run's total number of phases.</summary>
+        public int Phases { get; set; }
+
+        /// <summary>Challenge creatures still alive.</summary>
+        public int Alive { get; set; }
+
+        /// <summary>True once every phase was cleared (rewards, if any, were given).</summary>
+        public bool Completed { get; set; }
+
+        /// <summary>True when the run was stopped with <see cref="API.StopChallenge"/>.</summary>
+        public bool Stopped { get; set; }
+
+        internal static VFChallengeState From(Dictionary<string, int> values)
+        {
+            int Value(string key) { return values.TryGetValue(key, out int value) ? value : 0; }
+            return new VFChallengeState
+            {
+                Exists = Value("exists") != 0,
+                Starting = Value("starting") != 0,
+                Active = Value("active") != 0,
+                Phase = Value("phase"),
+                Phases = Value("phases"),
+                Alive = Value("alive"),
+                Completed = Value("completed") != 0,
+                Stopped = Value("stopped") != 0
+            };
+        }
     }
 
     /// <summary>A single creature entry in an explicit wave phase.</summary>
@@ -342,6 +451,13 @@ namespace ValheimFortress
         /// <see cref="VFChallengeDefinition.CreatureRules"/>: each list set here replaces that type's list.</summary>
         [DataMember(EmitDefaultValue = false, IsRequired = false)]
         public VFModifierSet Modifiers { get; set; }
+
+        /// <summary>Optional health multiplier for this entry (for example 10 for a boss with ten times its health).
+        /// Applied after <see cref="VFChallengeDefinition.CreatureRules"/>, replacing a rule's multiplier. Uses Star
+        /// Level System when installed so it survives reloads; without it the multiplier lasts until the creature
+        /// unloads. Added in schema 4.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public float? HealthMultiplier { get; set; }
     }
 
     /// <summary>
@@ -378,6 +494,11 @@ namespace ValheimFortress
         /// <summary>Guaranteed SLS modifiers. Each list set here replaces that type's list from earlier rules.</summary>
         [DataMember(EmitDefaultValue = false, IsRequired = false)]
         public VFModifierSet Modifiers { get; set; }
+
+        /// <summary>Health multiplier for matching creatures; a later rule replaces an earlier one. See
+        /// <see cref="VFHoardEntry.HealthMultiplier"/>. Added in schema 4.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public float? HealthMultiplier { get; set; }
     }
 
     /// <summary>

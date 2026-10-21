@@ -444,3 +444,9 @@ If you like this mod maybe you'll like my other work
 - Mobs can form a 'spawn tower' (especially common when using the Arena spawner with high spawn limits)
 - Automated turret likes to fire off into space instead of hitting its target occassionally (its aim isn't perfect, so sometimes this is intended)
 	- If you can reliably reproduce this issue please report it on the Github or Discord
+
+---
+
+If you enjoy my mods donations are appreciated. My mods will never be paid and donations are not required.
+
+<a href="https://ko-fi.com/midnightsfx"><img height="36" src="https://storage.ko-fi.com/cdn/kofi2.png?v=3" alt="Support me on Ko-fi"></a>

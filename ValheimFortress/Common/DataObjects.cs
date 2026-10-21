@@ -108,11 +108,14 @@ namespace ValheimFortress.Challenge
         public int? maxStars { get; set; }
         [YamlMember(DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
         public VFModifierSet modifiers { get; set; }
+        [YamlMember(DefaultValuesHandling = DefaultValuesHandling.OmitNull)]
+        public float? healthMultiplier { get; set; }
         public HoardConfig() {}
 
         public bool HasCreatureSettings()
         {
-            return minStars.HasValue || maxStars.HasValue || (modifiers != null && !modifiers.IsEmpty());
+            return minStars.HasValue || maxStars.HasValue || (modifiers != null && !modifiers.IsEmpty())
+                || (healthMultiplier.HasValue && healthMultiplier.Value > 0f && healthMultiplier.Value != 1f);
         }
     }
 

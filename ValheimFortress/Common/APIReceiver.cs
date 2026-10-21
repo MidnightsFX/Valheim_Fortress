@@ -30,22 +30,89 @@ namespace ValheimFortress
         // should own/drive the run (the server in dedicated setups, or the host).
         public static bool RunChallenge(string definitionJson, Vector3[] spawnPoints, Vector3 rewardLocation)
         {
+            return Launch(definitionJson, spawnPoints, rewardLocation) != null;
+        }
+
+        // Schema 4: the same as RunChallenge, returning a handle (the runner's ZDOID) for GetChallengeState and
+        // StopChallenge, or null when the run could not start.
+        public static string StartChallenge(string definitionJson, Vector3[] spawnPoints, Vector3 rewardLocation)
+        {
+            ExternalShrine shrine = Launch(definitionJson, spawnPoints, rewardLocation);
+            ZNetView view = shrine != null ? shrine.GetComponent<ZNetView>() : null;
+            if (view == null || view.GetZDO() == null) { return null; }
+            ZDOID id = view.GetZDO().m_uid;
+            return $"{id.UserID}:{id.ID}";
+        }
+
+        // Reads the runner's ZDO, so it works on any peer that has the run's area loaded, owner or not. Only framework
+        // types cross the API boundary, so the state is a flat name -> int map (booleans as 0/1).
+        public static Dictionary<string, int> GetChallengeState(string handle)
+        {
+            if (!TryParseHandle(handle, out ZDOID id)) { return null; }
+            Dictionary<string, int> state = new Dictionary<string, int>();
+            ZDO zdo = ZDOMan.instance?.GetZDO(id);
+            if (zdo == null)
+            {
+                state["exists"] = 0;
+                return state;
+            }
+            state["exists"] = 1;
+            state["starting"] = zdo.GetBool(ExternalShrine.StartKey) ? 1 : 0;
+            state["active"] = zdo.GetBool(ExternalShrine.ActiveKey) ? 1 : 0;
+            state["phase"] = zdo.GetInt(ExternalShrine.PhaseKey);
+            state["phases"] = zdo.GetInt(ExternalShrine.TotalPhasesKey);
+            state["alive"] = zdo.GetInt(ExternalShrine.AliveKey);
+            state["completed"] = zdo.GetBool(ExternalShrine.CompletedKey) ? 1 : 0;
+            state["stopped"] = zdo.GetBool(ExternalShrine.StoppedKey) ? 1 : 0;
+            return state;
+        }
+
+        // Asks the run's owner to stop it. When nobody owns it (its area is unloaded everywhere) this peer takes it
+        // over and leaves a stop request that the next owner to load it carries out.
+        public static bool StopChallenge(string handle)
+        {
+            if (!TryParseHandle(handle, out ZDOID id)) { return false; }
+            ZDO zdo = ZDOMan.instance?.GetZDO(id);
+            if (zdo == null || ZRoutedRpc.instance == null) { return false; }
+            long owner = zdo.GetOwner();
+            if (owner == 0L)
+            {
+                zdo.SetOwner(ZDOMan.GetSessionID());
+                zdo.Set(ExternalShrine.StopRequestedKey, true);
+                return true;
+            }
+            ZRoutedRpc.instance.InvokeRoutedRPC(owner, id, ExternalShrine.StopRpc);
+            return true;
+        }
+
+        private static bool TryParseHandle(string handle, out ZDOID id)
+        {
+            id = ZDOID.None;
+            if (string.IsNullOrEmpty(handle)) { return false; }
+            string[] parts = handle.Split(':');
+            if (parts.Length != 2 || !long.TryParse(parts[0], out long user) || !uint.TryParse(parts[1], out uint number)) { return false; }
+            id = new ZDOID(user, number);
+            return id != ZDOID.None;
+        }
+
+        private static ExternalShrine Launch(string definitionJson, Vector3[] spawnPoints, Vector3 rewardLocation)
+        {
             if (ZNetScene.instance == null)
             {
                 Jotunn.Logger.LogWarning("VF-API: RunChallenge called with no world loaded (ZNetScene is null).");
-                return false;
+                return null;
             }
             if (spawnPoints == null || spawnPoints.Length == 0)
             {
                 Jotunn.Logger.LogWarning("VF-API: RunChallenge requires at least one spawn point.");
-                return false;
+                return null;
             }
 
             VFChallengeDefinition def = Deserialize(definitionJson);
             if (def == null)
             {
                 Jotunn.Logger.LogWarning("VF-API: RunChallenge could not parse the supplied challenge definition.");
-                return false;
+                return null;
             }
 
             WaveCreatureSettings.Validate(def.CreatureRules, "VF-API:");
@@ -56,14 +123,14 @@ namespace ValheimFortress
             if (waves == null || waves.hordePhases == null || waves.hordePhases.Count == 0)
             {
                 Jotunn.Logger.LogWarning("VF-API: RunChallenge produced an empty wave template; nothing to run.");
-                return false;
+                return null;
             }
 
             GameObject prefab = PrefabManager.Instance.GetPrefab(ValheimFortress.ApiChallengeRunnerPrefab);
             if (prefab == null)
             {
                 Jotunn.Logger.LogError($"VF-API: runner prefab '{ValheimFortress.ApiChallengeRunnerPrefab}' was not found.");
-                return false;
+                return null;
             }
 
             GameObject runner = UnityEngine.Object.Instantiate(prefab, rewardLocation, Quaternion.identity);
@@ -72,17 +139,18 @@ namespace ValheimFortress
             {
                 Jotunn.Logger.LogError("VF-API: runner prefab is missing its ExternalShrine component.");
                 UnityEngine.Object.Destroy(runner);
-                return false;
+                return null;
             }
 
             Dictionary<string, short> creature_drop_overrides = BuildDropOverrides(def.CreatureDropOverrides);
 
             shrine.BeginApiChallenge(waves, spawnPoints, rewardLocation, def.ScaledRewards, def.FixedRewards,
                 def.Difficulty, def.HardMode, def.BossMode, def.SiegeMode, def.EnableCreatureDrops, creature_drop_overrides,
-                def.WaveStartMessage, def.WaveEndMessage, def.DrawMapOverlay, def.BetweenWavePhrases, def.OrderedPhrases);
+                def.WaveStartMessage, def.WaveEndMessage, def.DrawMapOverlay, def.BetweenWavePhrases, def.OrderedPhrases,
+                def.SpawnPortalVisuals);
 
             Jotunn.Logger.LogInfo($"VF-API: started challenge with {waves.hordePhases.Count} phases at {rewardLocation}.");
-            return true;
+            return shrine;
         }
 
         // Names of every creature that can be spawned (the keys used in VFHoardEntry.Creature).
@@ -236,47 +304,76 @@ namespace ValheimFortress
                 creatureRules = def.CreatureRules
             };
 
-            return Levels.generateRandomWaveWithOptions(cld, def.HardMode, def.BossMode, def.SiegeMode, max_creatures);
+            PhasedWaveTemplate generated = Levels.generateRandomWaveWithOptions(cld, def.HardMode, def.BossMode, def.SiegeMode, max_creatures);
+            if (generated?.hordePhases != null && def.FinalPhase != null && def.FinalPhase.Count > 0)
+            {
+                AppendFinalPhase(generated, def.FinalPhase, def.CreatureRules);
+            }
+            return generated;
         }
 
         private static PhasedWaveTemplate BuildExplicitTemplate(List<List<VFHoardEntry>> phases, List<VFCreatureRule> rules)
         {
             List<List<HoardConfig>> horde_phases = new List<List<HoardConfig>>();
-            // Entry modifiers are the most specific setting, so they are applied after the rules.
-            List<KeyValuePair<HoardConfig, VFModifierSet>> entry_modifiers = new List<KeyValuePair<HoardConfig, VFModifierSet>>();
+            // Entry settings are the most specific, so they are applied after the rules.
+            List<KeyValuePair<HoardConfig, VFHoardEntry>> entry_settings = new List<KeyValuePair<HoardConfig, VFHoardEntry>>();
             foreach (List<VFHoardEntry> phase in phases)
             {
-                if (phase == null) { continue; }
-                List<HoardConfig> horde_phase = new List<HoardConfig>();
-                foreach (VFHoardEntry entry in phase)
-                {
-                    if (entry == null || string.IsNullOrEmpty(entry.Creature)) { continue; }
-                    if (entry.Amount <= 0) { continue; }
-                    if (!Monsters.SpawnableCreatures.ContainsKey(entry.Creature))
-                    {
-                        Jotunn.Logger.LogWarning($"VF-API: explicit creature '{entry.Creature}' is not a known VF creature, skipping. Use GetSpawnableCreatures() for valid names.");
-                        continue;
-                    }
-                    HoardConfig horde = new HoardConfig
-                    {
-                        creature = entry.Creature,
-                        prefab = Monsters.SpawnableCreatures[entry.Creature].prefabName,
-                        amount = entry.Amount,
-                        stars = entry.Stars
-                    };
-                    horde_phase.Add(horde);
-                    if (entry.Modifiers != null) { entry_modifiers.Add(new KeyValuePair<HoardConfig, VFModifierSet>(horde, entry.Modifiers)); }
-                }
+                List<HoardConfig> horde_phase = BuildPhase(phase, entry_settings);
                 if (horde_phase.Count > 0) { horde_phases.Add(horde_phase); }
             }
             if (horde_phases.Count == 0) { return null; }
             PhasedWaveTemplate template = new PhasedWaveTemplate { hordePhases = horde_phases };
             WaveCreatureSettings.ApplyRules(template, rules);
-            foreach (KeyValuePair<HoardConfig, VFModifierSet> entry in entry_modifiers)
-            {
-                WaveCreatureSettings.ApplyModifiers(entry.Key, entry.Value);
-            }
+            ApplyEntrySettings(entry_settings);
             return template;
+        }
+
+        // Schema 4: FinalPhase adds one explicit phase after the generated waves (a boss fight, for example).
+        // Rules are resolved again over the whole run so wave -1 means that final phase.
+        private static void AppendFinalPhase(PhasedWaveTemplate template, List<VFHoardEntry> final_phase, List<VFCreatureRule> rules)
+        {
+            List<KeyValuePair<HoardConfig, VFHoardEntry>> entry_settings = new List<KeyValuePair<HoardConfig, VFHoardEntry>>();
+            List<HoardConfig> horde_phase = BuildPhase(final_phase, entry_settings);
+            if (horde_phase.Count == 0) { return; }
+            template.hordePhases.Add(horde_phase);
+            WaveCreatureSettings.ApplyRules(template, rules);
+            ApplyEntrySettings(entry_settings);
+        }
+
+        private static List<HoardConfig> BuildPhase(List<VFHoardEntry> phase, List<KeyValuePair<HoardConfig, VFHoardEntry>> entry_settings)
+        {
+            List<HoardConfig> horde_phase = new List<HoardConfig>();
+            if (phase == null) { return horde_phase; }
+            foreach (VFHoardEntry entry in phase)
+            {
+                if (entry == null || string.IsNullOrEmpty(entry.Creature)) { continue; }
+                if (entry.Amount <= 0) { continue; }
+                if (!Monsters.SpawnableCreatures.ContainsKey(entry.Creature))
+                {
+                    Jotunn.Logger.LogWarning($"VF-API: explicit creature '{entry.Creature}' is not a known VF creature, skipping. Use GetSpawnableCreatures() for valid names.");
+                    continue;
+                }
+                HoardConfig horde = new HoardConfig
+                {
+                    creature = entry.Creature,
+                    prefab = Monsters.SpawnableCreatures[entry.Creature].prefabName,
+                    amount = entry.Amount,
+                    stars = entry.Stars
+                };
+                horde_phase.Add(horde);
+                if (entry.Modifiers != null || entry.HealthMultiplier.HasValue) { entry_settings.Add(new KeyValuePair<HoardConfig, VFHoardEntry>(horde, entry)); }
+            }
+            return horde_phase;
+        }
+
+        private static void ApplyEntrySettings(List<KeyValuePair<HoardConfig, VFHoardEntry>> entry_settings)
+        {
+            foreach (KeyValuePair<HoardConfig, VFHoardEntry> entry in entry_settings)
+            {
+                WaveCreatureSettings.ApplyModifiers(entry.Key, entry.Value.Modifiers);
+                if (entry.Value.HealthMultiplier.HasValue) { entry.Key.healthMultiplier = entry.Value.HealthMultiplier.Value; }
+            }
         }
 
         // Converts the public per-creature drop override map (creature name -> bool) into the short-encoded
@@ -340,10 +437,12 @@ namespace ValheimFortress
                         Jotunn.Logger.LogError("VF-API: challenge definition deserialized to null / an unexpected type.");
                         return null;
                     }
-                    if (def.SchemaVersion != VFChallengeDefinition.CurrentSchemaVersion)
+                    // Every field added since schema 1 is optional, so an older caller's definition reads fine; only a
+                    // caller built against a newer API may be using settings this version does not know.
+                    if (def.SchemaVersion > VFChallengeDefinition.CurrentSchemaVersion)
                     {
                         Jotunn.Logger.LogWarning($"VF-API: challenge definition schema version mismatch (received {def.SchemaVersion}, expected {VFChallengeDefinition.CurrentSchemaVersion}). " +
-                            "The calling mod's copy of API.cs is out of sync with this Valheim Fortress version; re-copy API.cs from the current release. Attempting to continue.");
+                            "The calling mod was built for a newer Valheim Fortress; settings this version does not know are ignored. Attempting to continue.");
                     }
                     return def;
                 }

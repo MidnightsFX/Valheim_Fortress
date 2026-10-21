@@ -1,3 +1,11 @@
+  **0.40.0**
+---
+```
+- Other mods can follow a challenge they started, stop it early, end it with a chosen boss wave and control the wave portals
+- Challenge creatures can be given extra health (Requires Star Level System), in shrine levels, wild shrines and API challenges.
+- Adds a Vietnamese translation.
+```
+
   **0.39.0**
 ---
 ```

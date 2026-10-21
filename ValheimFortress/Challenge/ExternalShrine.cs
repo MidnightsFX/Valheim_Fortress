@@ -14,6 +14,20 @@ namespace ValheimFortress.Challenge
     // portal/spawnpoint children and self-destroys once the run completes.
     internal class ExternalShrine : GenericShrine
     {
+        // ZDO keys and the stop RPC read by APIReceiver's handle methods (GetChallengeState, StopChallenge).
+        internal const string StartKey = "shrine_start_challenge";
+        internal const string ActiveKey = "shrine_challenge_active";
+        internal const string PhaseKey = "shrine_current_phase";
+        internal const string AliveKey = "spawned_creatures";
+        internal const string TotalPhasesKey = "api_total_phases";
+        internal const string CompletedKey = "api_completed";
+        internal const string StoppedKey = "api_stopped";
+        internal const string StopRequestedKey = "api_stop_requested";
+        internal const string StopRpc = "VF_ApiStopChallenge";
+
+        // How long a finished runner stays, so its rewards finish spawning and handle holders can read the outcome.
+        private const int EndedRunnerSeconds = 30;
+
         // Reward data is held on the ZDO so a new owner can finish the run if the owning region changes
         // mid-challenge (full shrine parity). Keys are item prefab names.
         private Vector3ZNetProperty api_reward_location;
@@ -41,6 +55,15 @@ namespace ValheimFortress.Challenge
         // Whether to mark the spawn points on the minimap for the duration of the run. Transient: the overlay
         // is client-local and only drawn/cleared by the owner that drives the run (see DrawSpawnLocationOverlay).
         private bool api_draw_map_overlay;
+
+        // Schema 4 run state, all ZDO-backed so any owner (and any handle holder) sees it: whether to open spawn
+        // portals, the run's phase count, how it ended, a pending stop request, and when it ended (ZNet seconds).
+        private BoolZNetProperty api_spawn_portals;
+        private IntZNetProperty api_total_phases;
+        private BoolZNetProperty api_completed;
+        private BoolZNetProperty api_stopped;
+        private BoolZNetProperty api_stop_requested;
+        private IntZNetProperty api_ended_at;
 
         public override void Awake()
         {
@@ -80,6 +103,13 @@ namespace ValheimFortress.Challenge
             api_between_wave_phrases = new ListStringZNetProperty("api_between_wave_phrases", zNetView, new List<string>() { });
             api_ordered_phrases = new BoolZNetProperty("api_ordered_phrases", zNetView, false);
             api_phase_message_index = new IntZNetProperty("api_phase_message_index", zNetView, 0);
+            api_spawn_portals = new BoolZNetProperty("api_spawn_portals", zNetView, false);
+            api_total_phases = new IntZNetProperty(TotalPhasesKey, zNetView, 0);
+            api_completed = new BoolZNetProperty(CompletedKey, zNetView, false);
+            api_stopped = new BoolZNetProperty(StoppedKey, zNetView, false);
+            api_stop_requested = new BoolZNetProperty(StopRequestedKey, zNetView, false);
+            api_ended_at = new IntZNetProperty("api_ended_at", zNetView, 0);
+            zNetView.Register(StopRpc, RPC_StopChallenge);
 
             // Reuse the same wave-config RPC the other shrines use; Jotunn returns the existing RPC for a
             // repeated name so registering it again here is safe.
@@ -98,10 +128,12 @@ namespace ValheimFortress.Challenge
             Dictionary<String, short> scaledRewards, Dictionary<String, short> fixedRewards,
             short difficulty, bool hard, bool boss, bool siege, bool enableCreatureDrops,
             Dictionary<String, short> creatureDropOverrides, string startMessage, string endMessage,
-            bool drawMapOverlay, List<string> betweenWavePhrases, bool orderedPhrases)
+            bool drawMapOverlay, List<string> betweenWavePhrases, bool orderedPhrases, bool spawnPortals)
         {
             wave_phases_definitions = waves;
             availablePhases = waves.hordePhases.Count;
+            api_total_phases.ForceSet(availablePhases);
+            api_spawn_portals.ForceSet(spawnPortals);
 
             SetWaveSpawnPoints(spawnPoints);
             wave_definition_ready.ForceSet(true);
@@ -133,9 +165,17 @@ namespace ValheimFortress.Challenge
             currentPhase.Set(0);
             challenge_active.Set(true);
             BeginPhaseSpawn();
-            // The runner has no in-world portals; when the caller opts in, just mark the spawn points on the
-            // minimap (cleared in FinishChallenge). Local/cosmetic and a no-op without a minimap.
-            if (api_draw_map_overlay) { RemoteLocationPortals.DrawSpawnLocationOverlay(remote_spawn_locations.Get(), this.gameObject.transform.position); }
+            // The runner has no portals of its own. When the caller opts in, open the shrines' spawn portals at the
+            // spawn points (they close themselves when the run ends) and/or mark the points on the minimap (cleared
+            // in FinishChallenge). The map marks are local/cosmetic and a no-op without a minimap.
+            if (api_spawn_portals.Get())
+            {
+                RemoteLocationPortals.DrawMapOverlayAndPortals(remote_spawn_locations.Get(), this, api_draw_map_overlay);
+            }
+            else if (api_draw_map_overlay)
+            {
+                RemoteLocationPortals.DrawSpawnLocationOverlay(remote_spawn_locations.Get(), this.gameObject.transform.position);
+            }
             spawn_controller.TrySpawningPhase(5f, false, wave_phases_definitions.hordePhases[currentPhase.Get()], gameObject, remote_spawn_locations.Get());
             SetCurrentCreatureList(wave_phases_definitions.hordePhases[currentPhase.Get()]);
             start_challenge.Set(false);
@@ -154,6 +194,21 @@ namespace ValheimFortress.Challenge
             // Everything below is owner-authoritative, identical to the physical shrines.
             NoteOwnershipState(zNetView.IsOwner());
             if (!zNetView.IsOwner()) { return; }
+
+            // A finished or stopped run waits a moment, then whoever owns it then removes it.
+            if (api_ended_at.Get() > 0)
+            {
+                if (ZNet.instance != null && (int)ZNet.instance.GetTimeSeconds() - api_ended_at.Get() >= EndedRunnerSeconds)
+                {
+                    ZNetScene.instance.Destroy(gameObject);
+                }
+                return;
+            }
+            if (api_stop_requested.Get())
+            {
+                StopChallenge();
+                return;
+            }
 
             // Kick off the challenge once BeginApiChallenge has staged the data.
             if (start_challenge.Get() == true)
@@ -214,6 +269,7 @@ namespace ValheimFortress.Challenge
         {
             Jotunn.Logger.LogInfo("API challenge complete! Spawning rewards.");
             AnnounceToNearbyPlayers(string.IsNullOrEmpty(api_wave_end_msg) ? "$shrine_challenge_complete" : api_wave_end_msg);
+            api_completed.Set(true);
 
             Vector3 reward_pos = api_reward_location.Get();
             Dictionary<String, short> scaled = api_scaled_rewards.Get();
@@ -227,7 +283,31 @@ namespace ValheimFortress.Challenge
                 SpawnFixedRewardsDirectly(fixed_rewards, reward_pos);
             }
 
+            EndRun();
+        }
+
+        // A stop from the API (StopChallenge): the run ends without rewards. Owner only.
+        private void StopChallenge()
+        {
+            if (api_ended_at.Get() > 0) { return; }
+            Jotunn.Logger.LogInfo("API challenge stopped by its caller.");
+            api_stop_requested.Set(false);
+            api_stopped.Set(true);
+            EndRun();
+        }
+
+        private void RPC_StopChallenge(long sender)
+        {
+            if (zNetView == null || !zNetView.IsValid()) { return; }
+            if (zNetView.IsOwner()) { StopChallenge(); }
+            else { api_stop_requested.ForceSet(true); }
+        }
+
+        // Tears down all challenge state; the runner object is removed a little later (see Update).
+        private void EndRun()
+        {
             challenge_active.Set(false);
+            start_challenge.Set(false);
             RemoteLocationPortals.ClearMapOverlay();
             DestroyAllSpawnedCreatures();
             boss_mode.Set(false);
@@ -243,18 +323,9 @@ namespace ValheimFortress.Challenge
             phase_spawn_in_flight.Set(false);
             challenge_progress_time.Set(0);
 
-            // Give the reward/cleanup coroutines a moment to finish before removing the runner object.
-            StartCoroutine(DestroyRunnerAfterDelay(10f));
-        }
-
-        private IEnumerator DestroyRunnerAfterDelay(float delay)
-        {
-            yield return new WaitForSeconds(delay);
-            if (zNetView != null && zNetView.IsValid() && zNetView.IsOwner())
-            {
-                ZNetScene.instance.Destroy(gameObject);
-            }
-            yield break;
+            // Give the reward/cleanup coroutines a moment to finish before removing the runner object. Kept on the
+            // ZDO so a new owner still removes it if ownership moves in the meantime.
+            api_ended_at.Set(ZNet.instance != null ? Math.Max(1, (int)ZNet.instance.GetTimeSeconds()) : 1);
         }
 
         private void AnnounceToNearbyPlayers(string message)
