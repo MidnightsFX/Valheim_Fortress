@@ -60,9 +60,12 @@ namespace ValheimFortress.Challenge
         protected Spawner spawn_controller;
         protected int availablePhases;
         protected Rewards reward_controller = new Rewards();
-        // Throttle counter for owner-side creature reconciliation (see ReconcileIfDue).
-        protected int reconcile_tick = 0;
-        protected const int reconcile_tick_interval = 20;
+        // Throttle for owner-side creature reconciliation (see ReconcileIfDue). Time based so the cost does not
+        // scale with frame rate.
+        protected float next_reconcile_time = 0f;
+        protected const float reconcile_interval_seconds = 0.33f;
+        // Creatures spawned since the last flush (see RegisterSpawnedCreature / FlushSpawnedCreatures).
+        private readonly List<SpawnedCreatureRecord> pending_creature_records = new List<SpawnedCreatureRecord>();
 
         protected CustomRPC WaveDefinitionRPC;
 
@@ -184,6 +187,10 @@ namespace ValheimFortress.Challenge
         // pool. Physical shrines use the built-in pool; the API runner overrides this to return a caller-supplied
         // phrase (ordered or random) when one was provided for the run.
         public virtual string SelectPhasePauseMessage() { return null; }
+
+        // True when this run shows no announcements at all. Physical shrines always announce; the API runner
+        // returns the caller's SuppressAnnouncements setting.
+        public virtual bool SuppressAnnouncements() { return false; }
 
         // Re-derives local shrine state after a reload (or after the local 'enemies' list is lost) from the
         // persisted, owner-authoritative ZDOID records, instead of name/radius matching nearby creatures.
@@ -345,27 +352,50 @@ namespace ValheimFortress.Challenge
         }
 
         // Registers a freshly spawned challenge creature with the shrine owner. Called from the spawn
-        // coroutine (which runs on the shrine owner), so plain Set on the shrine ZDO is correct here.
-        // spawned_creatures is always kept equal to the live record count so it can never drift.
+        // coroutine (which runs on the shrine owner). Records are buffered and written in one go by
+        // FlushSpawnedCreatures: the record list is stored as a single byte array, so writing it per creature
+        // re-encoded and re-sent the whole list for every spawn (quadratic in the phase size).
         public void RegisterSpawnedCreature(ZDOID creature_id, string prefab_name)
         {
             if (creature_id == ZDOID.None) { return; }
+            pending_creature_records.Add(new SpawnedCreatureRecord(creature_id, prefab_name));
+        }
+
+        // Writes buffered creature records to the shrine ZDO. The spawner calls this after each spawn segment
+        // and at the end of each horde; reconciliation and cleanup flush first so they always see every creature.
+        // spawned_creatures is always kept equal to the record count so it can never drift.
+        public void FlushSpawnedCreatures()
+        {
+            if (pending_creature_records.Count == 0) { return; }
+            if (zNetView == null || !zNetView.IsValid())
+            {
+                pending_creature_records.Clear();
+                return;
+            }
             var records = spawned_creature_records.Get();
-            records.Add(new SpawnedCreatureRecord(creature_id, prefab_name));
+            records.AddRange(pending_creature_records);
             spawned_creature_records.Set(records);
             spawned_creatures.Set(records.Count);
             // Records the fact that this phase actually placed creatures, independent of the local 'enemies'
             // list, so the phase gate survives an owner change.
-            phase_spawned_total.Set(phase_spawned_total.Get() + 1);
+            phase_spawned_total.Set(phase_spawned_total.Get() + pending_creature_records.Count);
+            OnCreaturesRegistered(pending_creature_records);
+            pending_creature_records.Clear();
             TouchProgressWatchdog();
         }
+
+        // Called after newly spawned creatures are written to the ZDO (count = how many). The API runner keeps a
+        // whole-run total for its progress state; the physical shrines need nothing.
+        protected virtual void OnCreaturesRegistered(List<SpawnedCreatureRecord> added) { }
+
+        // Called after each reconcile with the creatures still alive (the API runner tracks its bosses from it).
+        protected virtual void OnReconciled(List<SpawnedCreatureRecord> survivors) { }
 
         // Throttled entry point for owner-side reconciliation; call once per Update from the owner region.
         public void ReconcileIfDue()
         {
-            reconcile_tick++;
-            if (reconcile_tick < reconcile_tick_interval) { return; }
-            reconcile_tick = 0;
+            if (Time.time < next_reconcile_time) { return; }
+            next_reconcile_time = Time.time + reconcile_interval_seconds;
             ReconcileSpawnedCreatures();
         }
 
@@ -468,6 +498,7 @@ namespace ValheimFortress.Challenge
         public void ReconcileSpawnedCreatures()
         {
             if (zNetView == null || !zNetView.IsValid() || !zNetView.IsOwner()) { return; }
+            FlushSpawnedCreatures();
             var records = spawned_creature_records.Get();
             if (records.Count == 0)
             {
@@ -494,6 +525,7 @@ namespace ValheimFortress.Challenge
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Reconciled challenge creatures: {records.Count} -> {survivors.Count} alive."); }
             }
             if (spawned_creatures.Get() != survivors.Count) { spawned_creatures.Set(survivors.Count); }
+            OnReconciled(survivors);
         }
 
         // Authoritative cleanup used when a run ends or is cancelled. Destroys every still-tracked creature
@@ -503,6 +535,7 @@ namespace ValheimFortress.Challenge
         public void DestroyAllSpawnedCreatures()
         {
             if (zNetView == null || !zNetView.IsValid() || !zNetView.IsOwner()) { return; }
+            FlushSpawnedCreatures();
             foreach (var record in spawned_creature_records.Get())
             {
                 GameObject instance = ZNetScene.instance.FindInstance(record.Id);

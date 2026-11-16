@@ -360,12 +360,14 @@ namespace ValheimFortress.Challenge
     public abstract class ZNetProperty<T>
     {
         public string Key { get; private set; }
+        public int KeyHash { get; private set; }
         public T DefaultValue { get; private set; }
         protected readonly ZNetView zNetView;
 
         protected ZNetProperty(string key, ZNetView zNetView, T defaultValue)
         {
             Key = key;
+            KeyHash = key.GetStableHashCode();
             DefaultValue = defaultValue;
             this.zNetView = zNetView;
         }
@@ -402,12 +404,12 @@ namespace ValheimFortress.Challenge
 
         public override bool Get()
         {
-            return zNetView.GetZDO().GetBool(Key, DefaultValue);
+            return zNetView.GetZDO().GetBool(KeyHash, DefaultValue);
         }
 
         protected override void SetValue(bool value)
         {
-            zNetView.GetZDO().Set(Key, value);
+            zNetView.GetZDO().Set(KeyHash, value);
         }
     }
 
@@ -419,12 +421,12 @@ namespace ValheimFortress.Challenge
 
         public override int Get()
         {
-            return zNetView.GetZDO().GetInt(Key, DefaultValue);
+            return zNetView.GetZDO().GetInt(KeyHash, DefaultValue);
         }
 
         protected override void SetValue(int value)
         {
-            zNetView.GetZDO().Set(Key, value);
+            zNetView.GetZDO().Set(KeyHash, value);
         }
     }
 
@@ -436,12 +438,12 @@ namespace ValheimFortress.Challenge
 
         public override string Get()
         {
-            return zNetView.GetZDO().GetString(Key, DefaultValue);
+            return zNetView.GetZDO().GetString(KeyHash, DefaultValue);
         }
 
         protected override void SetValue(string value)
         {
-            zNetView.GetZDO().Set(Key, value);
+            zNetView.GetZDO().Set(KeyHash, value);
         }
     }
 
@@ -453,12 +455,12 @@ namespace ValheimFortress.Challenge
 
         public override Vector3 Get()
         {
-            return zNetView.GetZDO().GetVec3(Key, DefaultValue);
+            return zNetView.GetZDO().GetVec3(KeyHash, DefaultValue);
         }
 
         protected override void SetValue(Vector3 value)
         {
-            zNetView.GetZDO().Set(Key, value);
+            zNetView.GetZDO().Set(KeyHash, value);
         }
     }
 
@@ -474,7 +476,7 @@ namespace ValheimFortress.Challenge
         // those keys hold transient per-run state so a one-time reset on upgrade is acceptable.
         public override List<string> Get()
         {
-            var stored = zNetView.GetZDO().GetByteArray(Key);
+            var stored = zNetView.GetZDO().GetByteArray(KeyHash);
             var result = new List<string>();
             // we can't deserialize a null/empty buffer
             if (stored == null || stored.Length == 0) { return result; }
@@ -494,7 +496,7 @@ namespace ValheimFortress.Challenge
             {
                 writer.Write(value.Count);
                 foreach (var entry in value) { writer.Write(entry ?? ""); }
-                zNetView.GetZDO().Set(Key, mStream.ToArray());
+                zNetView.GetZDO().Set(KeyHash, mStream.ToArray());
             }
         }
     }
@@ -505,7 +507,7 @@ namespace ValheimFortress.Challenge
 		}
 
 		public override Vector3[] Get() {
-			byte[] bytes = zNetView.GetZDO().GetByteArray(Key);
+			byte[] bytes = zNetView.GetZDO().GetByteArray(KeyHash);
 			// Honour the configured default rather than handing callers a null they then iterate over.
 			if (bytes is null)
 				return DefaultValue;
@@ -529,7 +531,7 @@ namespace ValheimFortress.Challenge
 				BitConverter.GetBytes(value[i].z).CopyTo(bytes, i * 12 + 8);
 			}
 
-			zNetView.GetZDO().Set(Key, bytes);
+			zNetView.GetZDO().Set(KeyHash, bytes);
 		}
 	}
 
@@ -546,7 +548,7 @@ namespace ValheimFortress.Challenge
         // hold transient per-run state so a one-time reset on upgrade is acceptable.
         public override Dictionary<String, short> Get()
         {
-            var stored = zNetView.GetZDO().GetByteArray(Key);
+            var stored = zNetView.GetZDO().GetByteArray(KeyHash);
             var result = new Dictionary<string, short>();
             // we can't deserialize a null/empty buffer
             if (stored == null || stored.Length == 0) { return result; }
@@ -575,7 +577,7 @@ namespace ValheimFortress.Challenge
                     writer.Write(entry.Key);
                     writer.Write(entry.Value);
                 }
-                zNetView.GetZDO().Set(Key, mStream.ToArray());
+                zNetView.GetZDO().Set(KeyHash, mStream.ToArray());
             }
         }
     }
@@ -604,7 +606,7 @@ namespace ValheimFortress.Challenge
         // Per entry: ZDOID.UserID (long, 8 bytes) + ZDOID.ID (uint, 4 bytes) + length-prefixed UTF-8 name.
         public override List<SpawnedCreatureRecord> Get()
         {
-            var stored = zNetView.GetZDO().GetByteArray(Key);
+            var stored = zNetView.GetZDO().GetByteArray(KeyHash);
             var result = new List<SpawnedCreatureRecord>();
             if (stored == null || stored.Length == 0) { return result; }
             using (var mStream = new MemoryStream(stored))
@@ -634,7 +636,7 @@ namespace ValheimFortress.Challenge
                     writer.Write(record.Id.ID);
                     writer.Write(record.Name ?? "");
                 }
-                zNetView.GetZDO().Set(Key, mStream.ToArray());
+                zNetView.GetZDO().Set(KeyHash, mStream.ToArray());
             }
         }
     }
@@ -652,6 +654,7 @@ namespace ValheimFortress.Challenge
 
         protected override void SetValue(ZDOID value)
         {
+            // ZDOIDs are stored under a derived key pair, so this one keeps the string overload.
             zNetView.GetZDO().Set(Key, value);
         }
     }
@@ -665,7 +668,7 @@ namespace ValheimFortress.Challenge
 
         public override List<uint> Get()
         {
-            var stored = zNetView.GetZDO().GetByteArray(Key);
+            var stored = zNetView.GetZDO().GetByteArray(KeyHash);
             // we can't deserialize a null buffer
             if (stored == null) { return new List<uint>(); }
             var mStream = new MemoryStream(stored);
@@ -678,7 +681,7 @@ namespace ValheimFortress.Challenge
             var mStream = new MemoryStream();
             binFormatter.Serialize(mStream, value);
 
-            zNetView.GetZDO().Set(Key, mStream.ToArray());
+            zNetView.GetZDO().Set(KeyHash, mStream.ToArray());
         }
     }
 
@@ -691,7 +694,7 @@ namespace ValheimFortress.Challenge
 
         public override Dictionary<uint, ZDOID> Get()
         {
-            var stored = zNetView.GetZDO().GetByteArray(Key);
+            var stored = zNetView.GetZDO().GetByteArray(KeyHash);
             // we can't deserialize a null buffer
             if (stored == null) { return new Dictionary<uint, ZDOID>(); }
             var mStream = new MemoryStream(stored);
@@ -704,7 +707,7 @@ namespace ValheimFortress.Challenge
             var mStream = new MemoryStream();
             binFormatter.Serialize(mStream, value);
 
-            zNetView.GetZDO().Set(Key, mStream.ToArray());
+            zNetView.GetZDO().Set(KeyHash, mStream.ToArray());
         }
     }
 }

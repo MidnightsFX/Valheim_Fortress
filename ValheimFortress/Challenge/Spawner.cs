@@ -94,7 +94,15 @@ namespace ValheimFortress.Challenge
                 if (amount_spawned >= spawn_segment_size)
                 {
                     amount_spawned = 0;
+                    shrine.FlushSpawnedCreatures();
                     yield return new WaitForSeconds(pause_between_segments);
+                    // The run can be stopped during the pause; the check above ran before it, so ask again or one
+                    // more creature spawns after the cleanup and is never removed.
+                    if (shrine == null || shrine.ChallengeNoLongerSpawnable())
+                    {
+                        if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo("Shrine run cancelled during a spawn pause, coroutine spawner stopped."); }
+                        break;
+                    }
                 }
                 // Randomize the rotation of this individual spawn, this helps prevent spawn towers
                 Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
@@ -169,6 +177,7 @@ namespace ValheimFortress.Challenge
 
                 amount_spawned++;
             }
+            shrine.FlushSpawnedCreatures();
             CompleteHorde();
             yield break;
         }

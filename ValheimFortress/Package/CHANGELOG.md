@@ -1,7 +1,9 @@
   **0.41.0**
 ---
 ```
-- Other mods can bring a boss in first, send waves after it on a timer, and end the challenge when the boss falls.
+- API Changes
+  - Supports other mods sending time based waves
+  
 ```
 
   **0.40.0**

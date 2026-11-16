@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -30,6 +30,11 @@ namespace ValheimFortress
         private static readonly MethodInfo GetChallengeStateMethod;
         private static readonly MethodInfo StopChallengeMethod;
         private static readonly MethodInfo GetApiSchemaVersionMethod;
+        private static readonly MethodInfo ClaimChallengeMethod;
+
+        /// <summary>True when the installed Valheim Fortress supports claimable runs (<see cref="ClaimChallenge"/>,
+        /// <see cref="VFChallengeDefinition.HoldRewardsUntilClaimed"/>, boss counts), added in API schema 5.</summary>
+        public static bool SupportsClaim => ClaimChallengeMethod != null;
 
         /// <summary>True when Valheim Fortress is loaded and the API is callable.</summary>
         public static bool IsAvailable => APIReceiver != null;
@@ -65,6 +70,7 @@ namespace ValheimFortress
             GetChallengeStateMethod = APIReceiver.GetMethod("GetChallengeState", BindingFlags.Public | BindingFlags.Static);
             StopChallengeMethod = APIReceiver.GetMethod("StopChallenge", BindingFlags.Public | BindingFlags.Static);
             GetApiSchemaVersionMethod = APIReceiver.GetMethod("GetApiSchemaVersion", BindingFlags.Public | BindingFlags.Static);
+            ClaimChallengeMethod = APIReceiver.GetMethod("ClaimChallenge", BindingFlags.Public | BindingFlags.Static);
         }
 
         /// <summary>
@@ -136,6 +142,18 @@ namespace ValheimFortress
         {
             if (StopChallengeMethod == null || string.IsNullOrEmpty(handle)) { return false; }
             return StopChallengeMethod.Invoke(null, new object[] { handle }) is bool ok && ok;
+        }
+
+        /// <summary>
+        /// Ends a run with its rewards. On a run holding its rewards (<see cref="VFChallengeDefinition.HoldRewardsUntilClaimed"/>)
+        /// that is <see cref="VFChallengeState.Claimable"/> this pays out; on a run still going it pays out now and removes
+        /// the creatures still alive (they do not count as killed). Sent to whichever peer owns the run.
+        /// </summary>
+        /// <returns>True when the claim request was sent.</returns>
+        public static bool ClaimChallenge(string handle)
+        {
+            if (ClaimChallengeMethod == null || string.IsNullOrEmpty(handle)) { return false; }
+            return ClaimChallengeMethod.Invoke(null, new object[] { handle }) is bool ok && ok;
         }
 
         /// <summary>
@@ -261,7 +279,7 @@ namespace ValheimFortress
         // ---- Tuned / generated mode (used when ExplicitPhases is null/empty) ----
 
         /// <summary>Biome whose creatures the wave is generated from. Supported: Meadows, BlackForest,
-        /// Swamp, Mountain, Plains, Mistlands, AshLands.</summary>
+        /// Swamp, Mountain, Plains, Mistlands, AshLands, and DeepNorth.</summary>
         [DataMember(EmitDefaultValue = false, IsRequired = false)]
         public Heightmap.Biome Biome { get; set; } = Heightmap.Biome.Meadows;
 
@@ -414,6 +432,11 @@ namespace ValheimFortress
         [DataMember(EmitDefaultValue = false, IsRequired = false)]
         public bool OrderedPhrases { get; set; } = false;
 
+        /// <summary>When true, no announcements are shown to nearby players for this run: the start, end and
+        /// between-wave messages are all skipped, whatever the message fields hold. Defaults to false.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public bool SuppressAnnouncements { get; set; } = false;
+
         // ---- Presentation (optional) ----
 
         /// <summary>When true, each spawn point is marked on the minimap for the duration of the run (cleared
@@ -430,6 +453,11 @@ namespace ValheimFortress
         /// ignore it.</summary>
         [DataMember(EmitDefaultValue = false, IsRequired = false)]
         public bool SpawnPortalVisuals { get; set; } = false;
+
+        /// <summary>When true, clearing the last phase does not pay out: the run becomes <see cref="VFChallengeState.Claimable"/>
+        /// and waits for <see cref="API.ClaimChallenge"/> (or <see cref="API.StopChallenge"/>). Defaults to false.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public bool HoldRewardsUntilClaimed { get; set; } = false;
     }
 
     /// <summary>The state of a challenge run, from <see cref="API.GetChallengeState"/>.</summary>
@@ -459,6 +487,26 @@ namespace ValheimFortress
         /// <summary>True when the run was stopped with <see cref="API.StopChallenge"/>.</summary>
         public bool Stopped { get; set; }
 
+        /// <summary>Creatures the run's wave template plans in total (0 on an older Valheim Fortress).</summary>
+        public int Expected { get; set; }
+
+        /// <summary>Creatures spawned so far over the whole run (0 on an older Valheim Fortress).</summary>
+        public int Spawned { get; set; }
+
+        /// <summary>Creatures killed so far: <see cref="Spawned"/> minus <see cref="Alive"/>.</summary>
+        public int Killed => System.Math.Max(0, Spawned - Alive);
+
+        /// <summary>True when every phase is cleared and the run holds its rewards until <see cref="API.ClaimChallenge"/>.</summary>
+        public bool Claimable { get; set; }
+
+        /// <summary>Boss (unique) creatures the run plans, has spawned, and still has alive.</summary>
+        public int Bosses { get; set; }
+        public int BossesSpawned { get; set; }
+        public int BossesAlive { get; set; }
+
+        /// <summary>True when the run planned bosses and every one of them has spawned and died.</summary>
+        public bool BossesDead => Bosses > 0 && BossesSpawned >= Bosses && BossesAlive == 0;
+
         internal static VFChallengeState From(Dictionary<string, int> values)
         {
             int Value(string key) { return values.TryGetValue(key, out int value) ? value : 0; }
@@ -471,7 +519,13 @@ namespace ValheimFortress
                 Phases = Value("phases"),
                 Alive = Value("alive"),
                 Completed = Value("completed") != 0,
-                Stopped = Value("stopped") != 0
+                Stopped = Value("stopped") != 0,
+                Expected = Value("expected"),
+                Spawned = Value("spawned"),
+                Claimable = Value("claimable") != 0,
+                Bosses = Value("bosses"),
+                BossesSpawned = Value("bosses_spawned"),
+                BossesAlive = Value("bosses_alive")
             };
         }
     }

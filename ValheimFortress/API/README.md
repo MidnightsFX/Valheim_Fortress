@@ -70,7 +70,9 @@ var definition = new ValheimFortress.VFChallengeDefinition {
     // Shown during each between-wave pause. Supports $localization keys or literals.
     // OrderedPhrases = true plays them in order (wrapping); false (default) picks at random.
     BetweenWavePhrases = new List<string> { "Regroup!", "$shrine_phase_warning", "They return!" },
-    OrderedPhrases = true
+    OrderedPhrases = true,
+    // SuppressAnnouncements = true skips every message above for this run.
+    SuppressAnnouncements = false
 };
 
 Vector3 rewardsLocation = Player.m_localPlayer.transform.position;
@@ -289,6 +291,9 @@ definition.CompleteWhenDead = new List<string> { "Eikthyr" };  // creature prefa
 | `int Alive` | Challenge creatures still alive. |
 | `bool Completed` | Every phase was cleared; rewards, if any, were given. |
 | `bool Stopped` | The run was ended with `StopChallenge`. |
+| `int Expected` | Creatures the run's wave template plans in total. |
+| `int Spawned` | Creatures spawned so far over the whole run. |
+| `int Killed` | `Spawned - Alive`; with `Expected` this gives the run's progress. |
 
 ### `VFChallengeDefinition`
 

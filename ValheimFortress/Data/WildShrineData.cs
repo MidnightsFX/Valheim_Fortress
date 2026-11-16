@@ -840,7 +840,7 @@ namespace ValheimFortress.Challenge
                         {
                             { "Chain", 55 },
                             { "Bilebag", 45 },
-                            { "BlackCore", 65 },
+                            { "BlackCore", 15 },
                         },
                         hardMode = false,
                         siegeMode = false,
@@ -894,7 +894,7 @@ namespace ValheimFortress.Challenge
                         {
                             { "MushroomJotunpuffs", 35 },
                             { "JuteBlue", 45 },
-                            { "DvergrNeedle", 80 },
+                            { "DvergrNeedle", 10 }, // still drops like 90
                         },
                         hardMode = false,
                         siegeMode = false,
@@ -914,8 +914,198 @@ namespace ValheimFortress.Challenge
                         }
                     },
                 }
+            },
+            new WildShrineConfiguration
+            {
+                definitionForWildShrine = "VF_wild_shrine_red1",
+                wildShrineNameLocalization = "$wild_shrine_red",
+                wildShrineRequestLocalization = "$wild_shrine_red_request",
+                shrine_larger_tribute_required_localization = "$wild_shrine_hungry",
+                shrine_unaccepted_tribute_localization = "$wild_shrine_not_interested",
+                wildShrineLevelsConfig = new List<WildShrineLevelConfiguration>
+                {
+                    new WildShrineLevelConfiguration
+                    {
+                        tributeName = "TrophyCharredMelee",
+                        tributeAmount = 3,
+                        rewards = new Dictionary<string, short>
+                        {
+                            {"CharcoalResin", 20},
+                            {"FlametalOreNew", 20},
+                            {"MushroomSmokePuff", 50 }
+                        },
+                        hardMode = false,
+                        siegeMode = false,
+                        wildshrine_wave_start_localization = "$wild_charred_attack",
+                        wildshrine_wave_end_localization = "$wild_charred_defeated",
+                        wildLevelDefinition = new WildLevelDefinition
+                        {
+                            levelIndex  = 22,
+                            maxCreaturesPerPhaseOverride = 26,
+                            biome = Heightmap.Biome.AshLands,
+                            waveFormat = WaveStyleName.VeryHard,
+                            levelWarningLocalization = "$ashlands_warning_wilderness",
+                            onlySelectMonsters = new List<String> { "Charred_Melee", "Charred_Archer", "Charred_Mage", "Asksvin" },
+                            commonSpawnModifiers = new SpawnModifiers {linearIncreaseRandomWaveAdjustment = true},
+                            rareSpawnModifiers = new SpawnModifiers {linearIncreaseRandomWaveAdjustment = true},
+                            eliteSpawnModifiers = new SpawnModifiers {linearIncreaseRandomWaveAdjustment = true}
+                        }
+                    },
+                    new WildShrineLevelConfiguration
+                    {
+                        tributeName = "TrophyAsksvin",
+                        tributeAmount = 3,
+                        rewards = new Dictionary<string, short>
+                        {
+                            { "AsksvinMeat", 50},
+                            { "AskHide", 50 },
+                            { "AskBladder", 50 },
+                            { "VoltureEgg", 50},
+                            { "VoltureMeat", 50 }
+                        },
+                        hardMode = false,
+                        siegeMode = false,
+                        wildshrine_wave_start_localization = "$wild_charred_attack",
+                        wildshrine_wave_end_localization = "$wild_charred_defeated",
+                        wildLevelDefinition = new WildLevelDefinition
+                        {
+                            levelIndex = 22,
+                            maxCreaturesPerPhaseOverride = 26,
+                            biome = Heightmap.Biome.AshLands,
+                            waveFormat = WaveStyleName.VeryHard,
+                            levelWarningLocalization = "$ashlands_warning_wilderness",
+                            onlySelectMonsters = new List<string> { "Asksvin", "Volture", "BlobLava"},
+                            commonSpawnModifiers = new SpawnModifiers { linearIncreaseRandomWaveAdjustment = true},
+                            rareSpawnModifiers = new SpawnModifiers { linearIncreaseRandomWaveAdjustment = true},
+                            eliteSpawnModifiers = new SpawnModifiers { linearIncreaseRandomWaveAdjustment = true}
+                        }
+                    },
+                    new WildShrineLevelConfiguration
+                    {
+                        tributeName = "TrophyMorgen",
+                        tributeAmount = 3,
+                        rewards = new Dictionary<string, short>
+                        {
+                            { "MorgenHeart", 20},
+                            { "MorgenSinew", 20},
+                            { "FlametalOreNew", 50 },
+                            { "CelestialFeather", 20 },
+                            { "MoltenCore", 20}
+                        },
+                        hardMode = false,
+                        siegeMode = false,
+                        wildshrine_wave_start_localization = "$wild_charred_attack",
+                        wildshrine_wave_end_localization = "$wild_charred_defeated",
+                        wildLevelDefinition = new WildLevelDefinition
+                        {
+                            levelIndex = 22,
+                            maxCreaturesPerPhaseOverride = 26,
+                            biome = Heightmap.Biome.AshLands,
+                            waveFormat = WaveStyleName.VeryHard,
+                            levelWarningLocalization = "$ashlands_warning_wilderness",
+                            onlySelectMonsters = new List<string> { "Morgen", "FallenValkyrie", "Charred_Mage" },
+                            commonSpawnModifiers = new SpawnModifiers {linearIncreaseRandomWaveAdjustment = true},
+                            rareSpawnModifiers = new SpawnModifiers { linearIncreaseRandomWaveAdjustment = true},
+                            eliteSpawnModifiers = new SpawnModifiers { linearIncreaseRandomWaveAdjustment = true}
+                        }
+                    }
+                }
+            },
+            new WildShrineConfiguration
+            {
+                definitionForWildShrine = "VF_wild_shrine_blue3",
+                wildShrineNameLocalization = "$wild_shrine_blue3",
+                wildShrineRequestLocalization = "$wild_shrine_deepnorth_request",
+                shrine_larger_tribute_required_localization = "$wild_shrine_hungry",
+                shrine_unaccepted_tribute_localization = "$wild_shrine_not_interested",
+                wildShrineLevelsConfig = new List<WildShrineLevelConfiguration>
+                {
+                    new WildShrineLevelConfiguration
+                    {
+                        tributeName = "TrophyBarka",
+                        tributeAmount = 3,
+                        rewards = new Dictionary<string, short>
+                        {
+                            {"BarkaBranch", 50 },
+                            {"SealHide", 50 },
+                            {"SealBlubber", 50 }
+                        },
+                        hardMode = false,
+                        siegeMode = false,
+                        wildshrine_wave_start_localization = "$wild_barka_attack",
+                        wildshrine_wave_end_localization = "$wild_deepnorth_defeated",
+                        wildLevelDefinition = new WildLevelDefinition
+                        {
+                            levelIndex = 22,
+                            maxCreaturesPerPhaseOverride = 26,
+                            biome = Heightmap.Biome.DeepNorth,
+                            waveFormat = WaveStyleName.Normal,
+                            levelWarningLocalization = "$deepnorth_warning_wilderness",
+                            onlySelectMonsters = new List<string> {"Barka", "Seal", "Moose"},
+                            commonSpawnModifiers = new SpawnModifiers {linearIncreaseRandomWaveAdjustment = true},
+                            rareSpawnModifiers = new SpawnModifiers {linearIncreaseRandomWaveAdjustment = true},
+                            eliteSpawnModifiers = new SpawnModifiers {linearIncreaseRandomWaveAdjustment = true}
+                        }
+                    },
+                    new WildShrineLevelConfiguration
+                    {
+                        tributeName = "TrophyJotunWarrior",
+                        tributeAmount = 3,
+                        rewards = new Dictionary<string, short>
+                        {
+                            {"MemorialCoal", 100 },
+                            {"Leatherstraps", 50 },
+                            {"NornThread", 50 },
+                            {"BloodGoldKey", 1 }
+                        },
+                        hardMode = false,
+                        siegeMode = false,
+                        wildshrine_wave_start_localization = "$wild_deepnorth_attack",
+                        wildshrine_wave_end_localization = "$wild_deepnorth_defeated",
+                        wildLevelDefinition = new WildLevelDefinition
+                        {
+                            levelIndex = 25,
+                            maxCreaturesPerPhaseOverride = 26,
+                            biome = Heightmap.Biome.DeepNorth,
+                            waveFormat = WaveStyleName.VeryHard,
+                            levelWarningLocalization = "$deepnorth_warning_wilderness",
+                            onlySelectMonsters = new List<string> { "JotunWarrior", "JotunWitch", "FallenWarrior", "TrollFrost" },
+                            commonSpawnModifiers = new SpawnModifiers {linearIncreaseRandomWaveAdjustment = true},
+                            rareSpawnModifiers = new SpawnModifiers {linearIncreaseRandomWaveAdjustment = true},
+                            eliteSpawnModifiers = new SpawnModifiers {linearIncreaseRandomWaveAdjustment = true}
+                        }
+                    },
+                    new WildShrineLevelConfiguration
+                    {
+                        tributeName = "TrophyElaking",
+                        tributeAmount = 3,
+                        rewards = new Dictionary<string, short>
+                        {
+                            {"ElakingHairBundle", 50},
+                            {"MoleClaws", 50},
+                            {"MoldKeys", 5},
+                            {"OOzeMork", 50},
+                            {"NornThread", 50}
+                        },
+                        hardMode = false,
+                        siegeMode = false,
+                        wildshrine_wave_start_localization = "$wild_deepnorth_attack",
+                        wildshrine_wave_end_localization = "$wild_deepnorth_defeated",
+                        wildLevelDefinition = new WildLevelDefinition
+                        {
+                            levelIndex = 25,
+                            maxCreaturesPerPhaseOverride = 26,
+                            biome = Heightmap.Biome.DeepNorth,
+                            waveFormat = WaveStyleName.VeryHard,
+                            levelWarningLocalization = "$deepnorth_warning_wilderness",
+                            onlySelectMonsters = new List<string> { "Elaking", "BlobMork", "ElakingMole", "JotunWitch" },
+                            commonSpawnModifiers = new SpawnModifiers {linearIncreaseRandomWaveAdjustment = true},
+                            rareSpawnModifiers = new SpawnModifiers {linearIncreaseRandomWaveAdjustment = true},
+                            eliteSpawnModifiers = new SpawnModifiers {linearIncreaseRandomWaveAdjustment = true}
+                        }
+                    }
+                }
             }
-
         };
 
         public static WildShrineConfiguration GetWildShrineConfigurationForSpecificShrine(string shrine_name)
