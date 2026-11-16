@@ -65,6 +65,16 @@ namespace ValheimFortress.Challenge
         private BoolZNetProperty api_stop_requested;
         private IntZNetProperty api_ended_at;
 
+        // Schema 5 timing, ZDO-backed like the rest: a timed phase interval, the alive cap that holds a timed phase back,
+        // the phase a loop restarts from (-1: no loop), when the current phase began (ZNet seconds), the creatures whose
+        // death ends the run, and whether one of them has been seen alive.
+        private IntZNetProperty api_phase_interval;
+        private IntZNetProperty api_max_alive;
+        private IntZNetProperty api_loop_from;
+        private IntZNetProperty api_phase_started_at;
+        private ListStringZNetProperty api_complete_when_dead;
+        private BoolZNetProperty api_required_seen;
+
         public override void Awake()
         {
             // The runner prefab carries its own ZNetView (added by PrefabManager.CreateEmptyPrefab),
@@ -109,6 +119,12 @@ namespace ValheimFortress.Challenge
             api_stopped = new BoolZNetProperty(StoppedKey, zNetView, false);
             api_stop_requested = new BoolZNetProperty(StopRequestedKey, zNetView, false);
             api_ended_at = new IntZNetProperty("api_ended_at", zNetView, 0);
+            api_phase_interval = new IntZNetProperty("api_phase_interval", zNetView, 0);
+            api_max_alive = new IntZNetProperty("api_max_alive", zNetView, 0);
+            api_loop_from = new IntZNetProperty("api_loop_from", zNetView, -1);
+            api_phase_started_at = new IntZNetProperty("api_phase_started_at", zNetView, 0);
+            api_complete_when_dead = new ListStringZNetProperty("api_complete_when_dead", zNetView, new List<string>() { });
+            api_required_seen = new BoolZNetProperty("api_required_seen", zNetView, false);
             zNetView.Register(StopRpc, RPC_StopChallenge);
 
             // Reuse the same wave-config RPC the other shrines use; Jotunn returns the existing RPC for a
@@ -160,10 +176,58 @@ namespace ValheimFortress.Challenge
             start_challenge.ForceSet(true);
         }
 
+        // Schema 5, staged by APIReceiver right after BeginApiChallenge. loopFrom: the phase a loop restarts from, -1 for
+        // no loop.
+        public void SetTiming(int phaseIntervalSeconds, int maxAlive, int loopFrom, List<string> completeWhenDead)
+        {
+            api_phase_interval.ForceSet(Math.Max(0, phaseIntervalSeconds));
+            api_max_alive.ForceSet(Math.Max(0, maxAlive));
+            api_loop_from.ForceSet(loopFrom);
+            api_complete_when_dead.ForceSet(completeWhenDead ?? new List<string>() { });
+            api_required_seen.ForceSet(false);
+        }
+
+        private int Now => ZNet.instance != null ? (int)ZNet.instance.GetTimeSeconds() : 0;
+
+        // A timed phase is due once the interval has passed since the last one began, its spawning is done, and fewer
+        // creatures than the cap are alive.
+        private bool TimedPhaseDue()
+        {
+            int interval = api_phase_interval.Get();
+            if (interval <= 0 || phase_spawn_in_flight.Get()) { return false; }
+            if (Now - api_phase_started_at.Get() < interval) { return false; }
+            int cap = api_max_alive.Get();
+            return cap <= 0 || spawned_creatures.Get() < cap;
+        }
+
+        // The run's required creatures (CompleteWhenDead): one has been alive, and none is now. Read from the spawn records
+        // and the creatures' ZDOs, as alive_creature_list follows each phase's plan rather than who is alive.
+        private bool RequiredCreaturesDown()
+        {
+            List<string> required = api_complete_when_dead.Get();
+            if (required == null || required.Count == 0 || ZDOMan.instance == null) { return false; }
+            bool any_alive = false;
+            foreach (SpawnedCreatureRecord record in spawned_creature_records.Get())
+            {
+                if (required.Contains(record.Name) && ZDOMan.instance.GetZDO(record.Id) != null)
+                {
+                    any_alive = true;
+                    break;
+                }
+            }
+            if (any_alive)
+            {
+                if (api_required_seen.Get() == false) { api_required_seen.Set(true); }
+                return false;
+            }
+            return api_required_seen.Get();
+        }
+
         public override void StartChallengeMode()
         {
             currentPhase.Set(0);
             challenge_active.Set(true);
+            api_phase_started_at.Set(Now);
             BeginPhaseSpawn();
             // The runner has no portals of its own. When the caller opts in, open the shrines' spawn portals at the
             // spawn points (they close themselves when the run ends) and/or mark the points on the minimap (cleared
@@ -237,13 +301,26 @@ namespace ValheimFortress.Challenge
                     return;
                 }
 
+                if (RequiredCreaturesDown())
+                {
+                    FinishChallenge();
+                    return;
+                }
+
                 if (wave_phases_definitions.hordePhases != null && wave_phases_definitions.hordePhases.Count > 0)
                 {
-                    // We need to have spawned creatures, and none of them remaining, before advancing.
-                    if (ShouldAdvancePhase())
+                    // We need to have spawned creatures, and none of them remaining, before advancing; or, with a phase
+                    // interval, the interval to have passed.
+                    if (ShouldAdvancePhase() || TimedPhaseDue())
                     {
+                        int loop_from = api_loop_from.Get();
+                        if (loop_from >= 0 && loop_from < wave_phases_definitions.hordePhases.Count && currentPhase.Get() >= wave_phases_definitions.hordePhases.Count)
+                        {
+                            currentPhase.Set(loop_from);
+                        }
                         if (RemainingPhases())
                         {
+                            api_phase_started_at.Set(Now);
                             should_add_creature_beacons.Set(false);
                             force_next_phase.Set(false);
                             int current_phase = currentPhase.Get();
@@ -254,8 +331,9 @@ namespace ValheimFortress.Challenge
                             int expected_next_phase = currentPhase.Get() + 1;
                             currentPhase.Set(max_wave_phase <= expected_next_phase ? max_wave_phase : expected_next_phase);
                         }
-                        else
+                        else if (ShouldAdvancePhase())
                         {
+                            // A timed run without phases left completes only once its last creatures are dead.
                             FinishChallenge();
                         }
                     }

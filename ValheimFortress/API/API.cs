@@ -29,6 +29,7 @@ namespace ValheimFortress
         private static readonly MethodInfo StartChallengeMethod;
         private static readonly MethodInfo GetChallengeStateMethod;
         private static readonly MethodInfo StopChallengeMethod;
+        private static readonly MethodInfo GetApiSchemaVersionMethod;
 
         /// <summary>True when Valheim Fortress is loaded and the API is callable.</summary>
         public static bool IsAvailable => APIReceiver != null;
@@ -37,6 +38,18 @@ namespace ValheimFortress
         /// (<see cref="StartChallenge(VFChallengeDefinition, Vector3[], Vector3)"/>, <see cref="GetChallengeState"/>,
         /// <see cref="StopChallenge"/>), added in API schema 4.</summary>
         public static bool SupportsHandles => StartChallengeMethod != null && GetChallengeStateMethod != null && StopChallengeMethod != null;
+
+        /// <summary>The API schema the installed Valheim Fortress understands: 0 when it is not loaded, 4 for any version with
+        /// handles but no version query, otherwise what it reports. Fields of a newer schema than this are ignored by it.</summary>
+        public static int InstalledSchemaVersion
+        {
+            get
+            {
+                if (APIReceiver == null) { return 0; }
+                if (GetApiSchemaVersionMethod != null) { return (int)GetApiSchemaVersionMethod.Invoke(null, null); }
+                return SupportsHandles ? 4 : 3;
+            }
+        }
 
         static API()
         {
@@ -51,6 +64,7 @@ namespace ValheimFortress
             StartChallengeMethod = APIReceiver.GetMethod("StartChallenge", BindingFlags.Public | BindingFlags.Static);
             GetChallengeStateMethod = APIReceiver.GetMethod("GetChallengeState", BindingFlags.Public | BindingFlags.Static);
             StopChallengeMethod = APIReceiver.GetMethod("StopChallenge", BindingFlags.Public | BindingFlags.Static);
+            GetApiSchemaVersionMethod = APIReceiver.GetMethod("GetApiSchemaVersion", BindingFlags.Public | BindingFlags.Static);
         }
 
         /// <summary>
@@ -237,7 +251,7 @@ namespace ValheimFortress
         /// <summary>The wire schema version this copy of the API produces. Bumped when the serialized shape
         /// changes so a Valheim Fortress install can detect a caller whose copied <c>API.cs</c> is out of
         /// date. Callers do not set this.</summary>
-        public const int CurrentSchemaVersion = 4;
+        public const int CurrentSchemaVersion = 5;
 
         /// <summary>Schema marker stamped automatically on serialization (see <see cref="CurrentSchemaVersion"/>).
         /// Always emitted; the receiver warns when it does not match the installed version. Do not set this yourself.</summary>
@@ -334,6 +348,37 @@ namespace ValheimFortress
         /// rules. Ignored when <see cref="ExplicitPhases"/> is set (add the phase there instead). Added in schema 4.</summary>
         [DataMember(EmitDefaultValue = false, IsRequired = false)]
         public List<VFHoardEntry> FinalPhase { get; set; }
+
+        /// <summary>Tuned mode only: creatures for one phase before the generated waves, for example a boss the waves
+        /// come to help. Each entry's own settings apply after the <see cref="CreatureRules"/>. Ignored when
+        /// <see cref="ExplicitPhases"/> is set (add the phase there instead). Added in schema 5.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public List<VFHoardEntry> FirstPhase { get; set; }
+
+        // ---- Timing and ending (schema 5) ----
+
+        /// <summary>When above 0, the next phase also starts once this many seconds have passed since the last one
+        /// began, whether or not the creatures of earlier phases are dead (never before the current phase has finished
+        /// spawning). 0: a phase starts only once every creature is dead. Added in schema 5.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public int PhaseIntervalSeconds { get; set; }
+
+        /// <summary>Holds a timed phase back while this many challenge creatures or more are alive. 0: no limit.
+        /// Added in schema 5.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public int MaxAliveCreatures { get; set; }
+
+        /// <summary>After the last phase, start again from the first generated one (after <see cref="FirstPhase"/>), so
+        /// waves keep coming until the run ends some other way (<see cref="CompleteWhenDead"/>, or
+        /// <see cref="API.StopChallenge"/>). Added in schema 5.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public bool LoopPhases { get; set; }
+
+        /// <summary>Creature prefab names whose death ends the run: once one of them has spawned and none is left
+        /// alive, the run completes (rewards are given and its other creatures removed), whatever phases remain.
+        /// Added in schema 5.</summary>
+        [DataMember(EmitDefaultValue = false, IsRequired = false)]
+        public List<string> CompleteWhenDead { get; set; }
 
         // ---- Rewards (either, both, or neither) ----
 

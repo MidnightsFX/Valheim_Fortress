@@ -148,9 +148,19 @@ namespace ValheimFortress
                 def.Difficulty, def.HardMode, def.BossMode, def.SiegeMode, def.EnableCreatureDrops, creature_drop_overrides,
                 def.WaveStartMessage, def.WaveEndMessage, def.DrawMapOverlay, def.BetweenWavePhrases, def.OrderedPhrases,
                 def.SpawnPortalVisuals);
+            // A loop starts again after the first phase when that phase is the caller's own (FirstPhase).
+            bool has_first_phase = (def.ExplicitPhases == null || def.ExplicitPhases.Count == 0) && def.FirstPhase != null && def.FirstPhase.Count > 0;
+            int loop_from = def.LoopPhases ? (has_first_phase && waves.hordePhases.Count > 1 ? 1 : 0) : -1;
+            shrine.SetTiming(def.PhaseIntervalSeconds, def.MaxAliveCreatures, loop_from, def.CompleteWhenDead);
 
             Jotunn.Logger.LogInfo($"VF-API: started challenge with {waves.hordePhases.Count} phases at {rewardLocation}.");
             return shrine;
+        }
+
+        // The API schema this install understands, for callers whose copied API.cs is newer (API.InstalledSchemaVersion).
+        public static int GetApiSchemaVersion()
+        {
+            return VFChallengeDefinition.CurrentSchemaVersion;
         }
 
         // Names of every creature that can be spawned (the keys used in VFHoardEntry.Creature).
@@ -309,7 +319,22 @@ namespace ValheimFortress
             {
                 AppendFinalPhase(generated, def.FinalPhase, def.CreatureRules);
             }
+            if (generated?.hordePhases != null && def.FirstPhase != null && def.FirstPhase.Count > 0)
+            {
+                PrependFirstPhase(generated, def.FirstPhase, def.CreatureRules);
+            }
             return generated;
+        }
+
+        // Schema 5: FirstPhase adds one explicit phase before the generated waves (a boss the waves come to help).
+        private static void PrependFirstPhase(PhasedWaveTemplate template, List<VFHoardEntry> first_phase, List<VFCreatureRule> rules)
+        {
+            List<KeyValuePair<HoardConfig, VFHoardEntry>> entry_settings = new List<KeyValuePair<HoardConfig, VFHoardEntry>>();
+            List<HoardConfig> horde_phase = BuildPhase(first_phase, entry_settings);
+            if (horde_phase.Count == 0) { return; }
+            template.hordePhases.Insert(0, horde_phase);
+            WaveCreatureSettings.ApplyRules(template, rules);
+            ApplyEntrySettings(entry_settings);
         }
 
         private static PhasedWaveTemplate BuildExplicitTemplate(List<List<VFHoardEntry>> phases, List<VFCreatureRule> rules)

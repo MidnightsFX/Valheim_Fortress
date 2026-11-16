@@ -241,6 +241,23 @@ definition.FinalPhase = new List<ValheimFortress.VFHoardEntry> {
 not only its owner. A finished or stopped run stays readable for about 30 seconds before its runner is removed;
 after that `Exists` is false. `StopChallenge` sends the request to whichever peer owns the run.
 
+### Boss first, waves on a timer (schema 5)
+
+A raid-like fight: the boss comes first, a new generated wave follows every so often while it stands, and its
+death ends the run (the rewards are given and the remaining creatures removed). Check
+`API.InstalledSchemaVersion >= 5` first; an older Valheim Fortress ignores these fields.
+
+```csharp
+definition.NumPhases = 6;
+definition.FirstPhase = new List<ValheimFortress.VFHoardEntry> {
+    new ValheimFortress.VFHoardEntry { Creature = "Eikthyr", Amount = 1, Stars = 2, HealthMultiplier = 10f }
+};
+definition.PhaseIntervalSeconds = 180;  // a new wave every 3 minutes, dead or not
+definition.MaxAliveCreatures = 40;      // but none while 40 or more challenge creatures are up
+definition.LoopPhases = true;           // after the last wave, start again from the first generated one
+definition.CompleteWhenDead = new List<string> { "Eikthyr" };  // creature prefab names
+```
+
 ## Reference
 
 ### `ValheimFortress.API`
@@ -256,6 +273,7 @@ after that `Exists` is false. `StopChallenge` sends the request to whichever pee
 | `VFChallengeDefinition GetShrineChallengeDefinition(string shrineName, string tributePrefab)` | The challenge a wild shrine runs for that tribute, or `null` if not found. |
 | `Dictionary<string, List<string>> GetShrineTributes()` | Every wild shrine prefab name and the tribute item prefabs it accepts. |
 | `bool SupportsHandles` | True when the methods below exist (schema 4). |
+| `int InstalledSchemaVersion` | The schema the installed Valheim Fortress understands: 0 when it is not loaded, otherwise 4 and up (schema 5). |
 | `string StartChallenge(VFChallengeDefinition definition, Vector3[] spawnPoints, Vector3 rewardLocation)` | Starts a challenge and returns its handle, or `null`. |
 | `VFChallengeState GetChallengeState(string handle)` | The run's state as this peer sees it, or `null` for an invalid handle. |
 | `bool StopChallenge(string handle)` | Ends the run without rewards. True when the request was sent. |
@@ -289,6 +307,12 @@ Set one per category; when several are set, the last one in the table wins. With
 full amount.
 
 `FinalPhase` (tuned mode, schema 4): `VFHoardEntry` list for one extra phase after the generated waves.
+`FirstPhase` (tuned mode, schema 5): the same, before them.
+
+Timing (schema 5): `PhaseIntervalSeconds` starts the next phase after that many seconds even with creatures alive
+(0: only once all are dead), `MaxAliveCreatures` holds a timed phase back while that many are alive (0: no limit),
+`LoopPhases` starts again from the first generated phase after the last, and `CompleteWhenDead` (creature prefab
+names) ends the run once one of them has spawned and none is alive.
 
 Explicit mode: `ExplicitPhases` (overrides tuned fields when set). Each `VFHoardEntry` has `Creature`,
 `Amount`, `Stars` and optional `Modifiers` and `HealthMultiplier`.
