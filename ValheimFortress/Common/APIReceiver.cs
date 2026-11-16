@@ -1,4 +1,4 @@
-using Jotunn.Managers;
+﻿using Jotunn.Managers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,7 +21,7 @@ namespace ValheimFortress
         private static readonly Heightmap.Biome[] supported_biomes =
         {
             Heightmap.Biome.Meadows, Heightmap.Biome.BlackForest, Heightmap.Biome.Swamp,
-            Heightmap.Biome.Mountain, Heightmap.Biome.Plains, Heightmap.Biome.Mistlands, Heightmap.Biome.AshLands
+            Heightmap.Biome.Mountain, Heightmap.Biome.Plains, Heightmap.Biome.Mistlands, Heightmap.Biome.AshLands, Heightmap.Biome.DeepNorth
         };
 
         // Runs a wave-based challenge. The definition is a JSON-serialized VFChallengeDefinition (see the
@@ -64,6 +64,12 @@ namespace ValheimFortress
             state["alive"] = zdo.GetInt(ExternalShrine.AliveKey);
             state["completed"] = zdo.GetBool(ExternalShrine.CompletedKey) ? 1 : 0;
             state["stopped"] = zdo.GetBool(ExternalShrine.StoppedKey) ? 1 : 0;
+            state["expected"] = zdo.GetInt(ExternalShrine.ExpectedKey);
+            state["spawned"] = zdo.GetInt(ExternalShrine.SpawnedKey);
+            state["claimable"] = zdo.GetBool(ExternalShrine.ClaimableKey) ? 1 : 0;
+            state["bosses"] = zdo.GetInt(ExternalShrine.BossesKey);
+            state["bosses_spawned"] = zdo.GetInt(ExternalShrine.BossesSpawnedKey);
+            state["bosses_alive"] = zdo.GetInt(ExternalShrine.BossesAliveKey);
             return state;
         }
 
@@ -82,6 +88,24 @@ namespace ValheimFortress
                 return true;
             }
             ZRoutedRpc.instance.InvokeRoutedRPC(owner, id, ExternalShrine.StopRpc);
+            return true;
+        }
+
+        // Schema 5: ends a run with its rewards, now (removing creatures still alive) or once it is claimable. Sent to
+        // the run's owner like StopChallenge.
+        public static bool ClaimChallenge(string handle)
+        {
+            if (!TryParseHandle(handle, out ZDOID id)) { return false; }
+            ZDO zdo = ZDOMan.instance?.GetZDO(id);
+            if (zdo == null || ZRoutedRpc.instance == null) { return false; }
+            long owner = zdo.GetOwner();
+            if (owner == 0L)
+            {
+                zdo.SetOwner(ZDOMan.GetSessionID());
+                zdo.Set("api_claim_requested", true);
+                return true;
+            }
+            ZRoutedRpc.instance.InvokeRoutedRPC(owner, id, ExternalShrine.ClaimRpc);
             return true;
         }
 
@@ -147,7 +171,7 @@ namespace ValheimFortress
             shrine.BeginApiChallenge(waves, spawnPoints, rewardLocation, def.ScaledRewards, def.FixedRewards,
                 def.Difficulty, def.HardMode, def.BossMode, def.SiegeMode, def.EnableCreatureDrops, creature_drop_overrides,
                 def.WaveStartMessage, def.WaveEndMessage, def.DrawMapOverlay, def.BetweenWavePhrases, def.OrderedPhrases,
-                def.SpawnPortalVisuals);
+                def.SpawnPortalVisuals, def.HoldRewardsUntilClaimed, def.SuppressAnnouncements);
 
             Jotunn.Logger.LogInfo($"VF-API: started challenge with {waves.hordePhases.Count} phases at {rewardLocation}.");
             return shrine;
