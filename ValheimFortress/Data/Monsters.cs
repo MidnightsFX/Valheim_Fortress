@@ -80,6 +80,18 @@ namespace ValheimFortress.Data
             {"BlobLava", new CreatureValues {spawnCost = 75, prefabName = "BlobLava", spawnType = RARE, biome = Heightmap.Biome.AshLands, enabled = true, dropsEnabled = false} },
             {"Morgen", new CreatureValues {spawnCost = 85, prefabName = "Morgen", spawnType = ELITE, biome = Heightmap.Biome.AshLands, enabled = true, dropsEnabled = false} },
             {"Volture", new CreatureValues {spawnCost = 30, prefabName = "Volture", spawnType = COMMON, biome = Heightmap.Biome.AshLands, enabled = true, dropsEnabled = false} },
+            // DeepNorth Creatures
+            {"Barka", new CreatureValues {spawnCost = 70, prefabName = "Barka", spawnType = RARE, biome = Heightmap.Biome.DeepNorth, enabled = true, dropsEnabled = false} },
+            {"Elaking", new CreatureValues {spawnCost = 30, prefabName = "Elaking", spawnType = COMMON, biome = Heightmap.Biome.DeepNorth, enabled = true, dropsEnabled = false} },
+            {"ElakingMole", new CreatureValues {spawnCost = 50, prefabName = "ElakingMole", spawnType = RARE, biome = Heightmap.Biome.DeepNorth, enabled = true, dropsEnabled = false} },
+            {"TrollFrost", new CreatureValues {spawnCost = 100, prefabName = "TrollFrost", spawnType = ELITE, biome = Heightmap.Biome.DeepNorth, enabled = true, dropsEnabled = false} },
+            {"JotunWarrior", new CreatureValues {spawnCost = 50, prefabName = "JotunWarrior", spawnType = COMMON, biome = Heightmap.Biome.DeepNorth, enabled = true, dropsEnabled = false} },
+            {"JotunWitch", new CreatureValues {spawnCost = 70, prefabName = "JotunWitch", spawnType = RARE, biome = Heightmap.Biome.DeepNorth, enabled = true, dropsEnabled = false} },
+            {"DvergerDeepNorth", new CreatureValues {spawnCost = 50, prefabName = "DvergerDeepNorth", spawnType = COMMON, biome = Heightmap.Biome.DeepNorth, enabled = true, dropsEnabled = false} },
+            {"BlobMork", new CreatureValues {spawnCost = 30, prefabName = "BlobMork", spawnType = COMMON, biome = Heightmap.Biome.DeepNorth, enabled = true, dropsEnabled = false} },
+            {"FallenWarrior", new CreatureValues {spawnCost = 50, prefabName = "FallenWarrior", spawnType = COMMON, biome = Heightmap.Biome.DeepNorth, enabled = true, dropsEnabled = false} },
+            {"Seal", new CreatureValues {spawnCost = 30, prefabName = "Seal", spawnType = COMMON, biome = Heightmap.Biome.DeepNorth, enabled = true, dropsEnabled = false} },
+            {"Moose", new CreatureValues {spawnCost = 50, prefabName = "Moose", spawnType = COMMON, biome = Heightmap.Biome.DeepNorth, enabled = true, dropsEnabled = false} },
             // Boss Creatures
             {"Eikthyr", new CreatureValues {spawnCost = 40, prefabName = "Eikthyr", spawnType = UNIQUE, biome = Heightmap.Biome.Meadows, enabled = true, dropsEnabled = false} },
             {"TheElder", new CreatureValues {spawnCost = 180, prefabName = "gd_king", spawnType = UNIQUE, biome = Heightmap.Biome.BlackForest, enabled = true, dropsEnabled = false} },
@@ -88,6 +100,7 @@ namespace ValheimFortress.Data
             {"Yagluth", new CreatureValues {spawnCost = 450, prefabName = "GoblinKing", spawnType = UNIQUE, biome = Heightmap.Biome.Plains, enabled = true, dropsEnabled = false} },
             {"TheQueen", new CreatureValues {spawnCost = 600, prefabName = "SeekerQueen", spawnType = UNIQUE, biome = Heightmap.Biome.Mistlands, enabled = true, dropsEnabled = false} },
             {"Fader", new CreatureValues {spawnCost = 800, prefabName = "Fader", spawnType = UNIQUE, biome = Heightmap.Biome.AshLands, enabled = true, dropsEnabled = false} },
+            {"FrozenKing", new CreatureValues {spawnCost = 1000, prefabName = "FrozenKing", spawnType = UNIQUE, biome = Heightmap.Biome.DeepNorth, enabled = true, dropsEnabled = false} },
         };
 
         public static void UpdateSpawnableCreatures(SpawnableCreatureCollection spawnables)

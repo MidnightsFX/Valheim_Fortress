@@ -1,8 +1,11 @@
-using Jotunn.Managers;
+﻿using Jotunn.Managers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using ValheimFortress.Common;
+using ValheimFortress.Data;
 
 namespace ValheimFortress.Challenge
 {
@@ -51,6 +54,8 @@ namespace ValheimFortress.Challenge
         private ListStringZNetProperty api_between_wave_phrases;
         private BoolZNetProperty api_ordered_phrases;
         private IntZNetProperty api_phase_message_index;
+        // Caller asked for a silent run: every announcement returns early. On the ZDO for the same reason.
+        private BoolZNetProperty api_suppress_announcements;
 
         // Whether to mark the spawn points on the minimap for the duration of the run. Transient: the overlay
         // is client-local and only drawn/cleared by the owner that drives the run (see DrawSpawnLocationOverlay).
@@ -64,6 +69,33 @@ namespace ValheimFortress.Challenge
         private BoolZNetProperty api_stopped;
         private BoolZNetProperty api_stop_requested;
         private IntZNetProperty api_ended_at;
+
+        // The run's wave template (gzip+base64 YAML), held on the runner's own ZDO. A peer that takes ownership
+        // mid-run reads it from here. The physical shrines broadcast the template to every connected peer over
+        // the shared VF_levelsyaml_rpc instead; that RPC's client handler is bound to whichever shrine registered
+        // it first (Jotunn returns the existing RPC for a repeated name), so the runner never received it and a
+        // new owner ended the run early, while the broadcast overwrote that first shrine's template on clients.
+        private StringZNetProperty api_wave_template;
+
+        // Run progress for GetChallengeState: creatures the wave template plans in total, and creatures spawned so
+        // far over the whole run (phase_spawned_total resets each phase). Kills = spawned - alive.
+        internal const string ExpectedKey = "api_expected_total";
+        internal const string SpawnedKey = "api_spawned_total";
+        private IntZNetProperty api_expected_total;
+        private IntZNetProperty api_spawned_total;
+
+        // Claimable runs (HoldRewardsUntilClaimed) and boss progress for GetChallengeState / ClaimChallenge.
+        internal const string ClaimableKey = "api_claimable";
+        internal const string BossesKey = "api_bosses_planned";
+        internal const string BossesSpawnedKey = "api_bosses_spawned";
+        internal const string BossesAliveKey = "api_bosses_alive";
+        internal const string ClaimRpc = "VF_ApiClaimChallenge";
+        private BoolZNetProperty api_hold_rewards;
+        private BoolZNetProperty api_claimable;
+        private BoolZNetProperty api_claim_requested;
+        private IntZNetProperty api_bosses_planned;
+        private IntZNetProperty api_bosses_spawned;
+        private IntZNetProperty api_bosses_alive;
 
         public override void Awake()
         {
@@ -103,12 +135,23 @@ namespace ValheimFortress.Challenge
             api_between_wave_phrases = new ListStringZNetProperty("api_between_wave_phrases", zNetView, new List<string>() { });
             api_ordered_phrases = new BoolZNetProperty("api_ordered_phrases", zNetView, false);
             api_phase_message_index = new IntZNetProperty("api_phase_message_index", zNetView, 0);
+            api_suppress_announcements = new BoolZNetProperty("api_suppress_announcements", zNetView, false);
             api_spawn_portals = new BoolZNetProperty("api_spawn_portals", zNetView, false);
             api_total_phases = new IntZNetProperty(TotalPhasesKey, zNetView, 0);
             api_completed = new BoolZNetProperty(CompletedKey, zNetView, false);
             api_stopped = new BoolZNetProperty(StoppedKey, zNetView, false);
             api_stop_requested = new BoolZNetProperty(StopRequestedKey, zNetView, false);
             api_ended_at = new IntZNetProperty("api_ended_at", zNetView, 0);
+            api_wave_template = new StringZNetProperty("api_wave_template", zNetView, "");
+            api_expected_total = new IntZNetProperty(ExpectedKey, zNetView, 0);
+            api_spawned_total = new IntZNetProperty(SpawnedKey, zNetView, 0);
+            api_hold_rewards = new BoolZNetProperty("api_hold_rewards", zNetView, false);
+            api_claimable = new BoolZNetProperty(ClaimableKey, zNetView, false);
+            api_claim_requested = new BoolZNetProperty("api_claim_requested", zNetView, false);
+            api_bosses_planned = new IntZNetProperty(BossesKey, zNetView, 0);
+            api_bosses_spawned = new IntZNetProperty(BossesSpawnedKey, zNetView, 0);
+            api_bosses_alive = new IntZNetProperty(BossesAliveKey, zNetView, 0);
+            zNetView.Register(ClaimRpc, RPC_ClaimChallenge);
             zNetView.Register(StopRpc, RPC_StopChallenge);
 
             // Reuse the same wave-config RPC the other shrines use; Jotunn returns the existing RPC for a
@@ -128,11 +171,25 @@ namespace ValheimFortress.Challenge
             Dictionary<String, short> scaledRewards, Dictionary<String, short> fixedRewards,
             short difficulty, bool hard, bool boss, bool siege, bool enableCreatureDrops,
             Dictionary<String, short> creatureDropOverrides, string startMessage, string endMessage,
-            bool drawMapOverlay, List<string> betweenWavePhrases, bool orderedPhrases, bool spawnPortals)
+            bool drawMapOverlay, List<string> betweenWavePhrases, bool orderedPhrases, bool spawnPortals,
+            bool holdRewardsUntilClaimed = false, bool suppressAnnouncements = false)
         {
             wave_phases_definitions = waves;
             availablePhases = waves.hordePhases.Count;
             api_total_phases.ForceSet(availablePhases);
+            StoreWaveTemplate(waves);
+            int expected = 0;
+            foreach (List<HoardConfig> phase in waves.hordePhases) { foreach (HoardConfig horde in phase) { expected += horde.amount; } }
+            api_expected_total.ForceSet(expected);
+            api_spawned_total.ForceSet(0);
+            int bosses = 0;
+            foreach (List<HoardConfig> phase in waves.hordePhases) { foreach (HoardConfig horde in phase) { if (horde != null && IsUnique(horde.prefab)) { bosses += horde.amount; } } }
+            api_bosses_planned.ForceSet(bosses);
+            api_bosses_spawned.ForceSet(0);
+            api_bosses_alive.ForceSet(0);
+            api_hold_rewards.ForceSet(holdRewardsUntilClaimed);
+            api_claimable.ForceSet(false);
+            api_claim_requested.ForceSet(false);
             api_spawn_portals.ForceSet(spawnPortals);
 
             SetWaveSpawnPoints(spawnPoints);
@@ -156,6 +213,7 @@ namespace ValheimFortress.Challenge
             api_between_wave_phrases.ForceSet(betweenWavePhrases ?? new List<string>() { });
             api_ordered_phrases.ForceSet(orderedPhrases);
             api_phase_message_index.ForceSet(0);
+            api_suppress_announcements.ForceSet(suppressAnnouncements);
 
             start_challenge.ForceSet(true);
         }
@@ -209,13 +267,26 @@ namespace ValheimFortress.Challenge
                 StopChallenge();
                 return;
             }
+            if (api_claim_requested.Get())
+            {
+                ClaimNow();
+                return;
+            }
+            // Completed and holding its rewards: nothing to run until the caller claims or stops it.
+            if (api_claimable.Get()) { return; }
 
             // Kick off the challenge once BeginApiChallenge has staged the data.
             if (start_challenge.Get() == true)
             {
                 if (wave_definition_ready.Get() == true && spawn_locations_ready.Get() == true)
                 {
-                    SendUpdatedPhaseConfigs();
+                    if (wave_phases_definitions == null) { LoadWaveTemplate(); }
+                    if (wave_phases_definitions == null)
+                    {
+                        Jotunn.Logger.LogWarning("API challenge runner has no wave definition to start; ending the run.");
+                        StopChallenge();
+                        return;
+                    }
                     StartChallengeMode();
                 }
                 return;
@@ -228,8 +299,11 @@ namespace ValheimFortress.Challenge
                 ReconcileIfDue();
                 CheckProgressWatchdog();
 
-                // Lost the wave definition (e.g. ownership transfer before the RPC arrived). We can't
-                // reconstruct an API-supplied wave, so finish gracefully and still grant rewards.
+                // A new owner (ownership moved mid-run) picks the template up from the runner ZDO.
+                if (wave_phases_definitions == null) { LoadWaveTemplate(); }
+
+                // Still no template (a run started by an older version, or unreadable data): finish
+                // gracefully and still grant rewards.
                 if (wave_phases_definitions == null)
                 {
                     Jotunn.Logger.LogWarning("API challenge runner lost its wave definition; finishing the run.");
@@ -267,7 +341,29 @@ namespace ValheimFortress.Challenge
         // and schedules the runner object for removal.
         private void FinishChallenge()
         {
+            // HoldRewardsUntilClaimed: the run is over but waits for ClaimChallenge to pay out and end it.
+            if (api_hold_rewards.Get() && !api_claimable.Get())
+            {
+                Jotunn.Logger.LogInfo("API challenge complete; rewards held until claimed.");
+                challenge_active.Set(false);
+                api_claimable.Set(true);
+                return;
+            }
+            ClaimNow();
+        }
+
+        // Ends the run with its rewards: removes any creatures still alive (stragglers when claimed early), pays out
+        // and tears the run down. Owner only.
+        private void ClaimNow()
+        {
+            if (api_ended_at.Get() > 0) { return; }
             Jotunn.Logger.LogInfo("API challenge complete! Spawning rewards.");
+            // Stragglers are removed, not killed: keep the alive count as it was so Killed does not go up for them.
+            int stragglers = spawned_creatures.Get();
+            DestroyAllSpawnedCreatures();
+            spawned_creatures.Set(stragglers);
+            api_claim_requested.Set(false);
+            api_claimable.Set(false);
             AnnounceToNearbyPlayers(string.IsNullOrEmpty(api_wave_end_msg) ? "$shrine_challenge_complete" : api_wave_end_msg);
             api_completed.Set(true);
 
@@ -303,6 +399,24 @@ namespace ValheimFortress.Challenge
             else { api_stop_requested.ForceSet(true); }
         }
 
+        private void RPC_ClaimChallenge(long sender)
+        {
+            if (zNetView == null || !zNetView.IsValid()) { return; }
+            if (zNetView.IsOwner()) { ClaimNow(); }
+            else { api_claim_requested.ForceSet(true); }
+        }
+
+        private static bool IsUnique(string prefab)
+        {
+            return Monsters.SpawnableCreatures.Values.Any(v => v != null && v.prefabName == prefab && v.spawnType == CONST.UNIQUE);
+        }
+
+        protected override void OnReconciled(List<SpawnedCreatureRecord> survivors)
+        {
+            int alive = survivors.Count(r => IsUnique(r.Name));
+            if (api_bosses_alive.Get() != alive) { api_bosses_alive.Set(alive); }
+        }
+
         // Tears down all challenge state; the runner object is removed a little later (see Update).
         private void EndRun()
         {
@@ -315,7 +429,7 @@ namespace ValheimFortress.Challenge
             siege_mode.Set(false);
             force_next_phase.Set(false);
             wave_phases_definitions = new PhasedWaveTemplate() { hordePhases = new List<List<HoardConfig>> { } };
-            SendUpdatedPhaseConfigs();
+            api_wave_template.Set("");
             currentPhase.Set(0);
             wave_definition_ready.Set(false);
             spawn_locations_ready.Set(false);
@@ -328,9 +442,50 @@ namespace ValheimFortress.Challenge
             api_ended_at.Set(ZNet.instance != null ? Math.Max(1, (int)ZNet.instance.GetTimeSeconds()) : 1);
         }
 
+        protected override void OnCreaturesRegistered(List<SpawnedCreatureRecord> added)
+        {
+            if (api_spawned_total != null) { api_spawned_total.Set(api_spawned_total.Get() + added.Count); }
+            int bosses = added.Count(r => IsUnique(r.Name));
+            if (bosses > 0)
+            {
+                api_bosses_spawned.Set(api_bosses_spawned.Get() + bosses);
+                api_bosses_alive.Set(api_bosses_alive.Get() + bosses);
+            }
+        }
+
+        private void StoreWaveTemplate(PhasedWaveTemplate waves)
+        {
+            try
+            {
+                api_wave_template.ForceSet(CONST.yamlserializer.Serialize(waves).CompressToBase64());
+            }
+            catch (Exception ex)
+            {
+                Jotunn.Logger.LogWarning($"API challenge runner could not store its wave template: {ex.Message}");
+            }
+        }
+
+        private void LoadWaveTemplate()
+        {
+            string stored = api_wave_template.Get();
+            if (string.IsNullOrEmpty(stored)) { return; }
+            try
+            {
+                PhasedWaveTemplate waves = CONST.yamldeserializer.Deserialize<PhasedWaveTemplate>(stored.DecompressFromBase64());
+                if (waves?.hordePhases == null || waves.hordePhases.Count == 0) { return; }
+                wave_phases_definitions = waves;
+                availablePhases = waves.hordePhases.Count;
+                if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"API challenge runner loaded its wave template from the ZDO ({availablePhases} phases)."); }
+            }
+            catch (Exception ex)
+            {
+                Jotunn.Logger.LogWarning($"API challenge runner could not read its wave template: {ex.Message}");
+            }
+        }
+
         private void AnnounceToNearbyPlayers(string message)
         {
-            if (string.IsNullOrEmpty(message)) { return; }
+            if (string.IsNullOrEmpty(message) || SuppressAnnouncements()) { return; }
             List<Player> nearby_players = new List<Player> { };
             Player.GetPlayersInRange(this.transform.position, VFConfig.ShrineAnnouncementRange.Value, nearby_players);
             foreach (Player localplayer in nearby_players)
@@ -355,6 +510,8 @@ namespace ValheimFortress.Challenge
         // Between-wave phrase for this run. Returns null (use the built-in pool) when the caller supplied none.
         // Ordered mode walks the list in order and wraps; random mode picks any entry. The cursor is ZDO-backed
         // so ordering stays correct if ownership transfers mid-run.
+        public override bool SuppressAnnouncements() { return api_suppress_announcements.Get(); }
+
         public override string SelectPhasePauseMessage()
         {
             List<string> phrases = api_between_wave_phrases.Get();

@@ -57,8 +57,11 @@ namespace ValheimFortress.Challenge
 
         public static void PhasePausePhrase(GameObject shrine)
         {
+            GenericShrine generic_shrine = shrine.GetComponent<GenericShrine>();
+            // Silent run: stop before picking a phrase so the ordered-phrase cursor doesn't move.
+            if (generic_shrine != null && generic_shrine.SuppressAnnouncements()) { return; }
             // Let the shrine supply its own phrase (the API runner does this); otherwise use the built-in pool.
-            string selected_message = shrine.GetComponent<GenericShrine>()?.SelectPhasePauseMessage();
+            string selected_message = generic_shrine?.SelectPhasePauseMessage();
             if (string.IsNullOrEmpty(selected_message))
             {
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Picking and sending phase waiting text from {shrine_phase_warnings.Count} phrases."); }
