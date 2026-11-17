@@ -384,11 +384,12 @@ namespace ValheimFortress.Challenge
             TouchProgressWatchdog();
         }
 
-        // Called after newly spawned creatures are written to the ZDO (count = how many). The API runner keeps a
-        // whole-run total for its progress state; the physical shrines need nothing.
+        // Called after newly spawned creatures are written to the ZDO. The API runner keeps whole-run totals for its
+        // progress state; the physical shrines need nothing.
         protected virtual void OnCreaturesRegistered(List<SpawnedCreatureRecord> added) { }
 
-        // Called after each reconcile with the creatures still alive (the API runner tracks its bosses from it).
+        // Called after each reconcile with the creatures still alive (the API runner tracks its bosses and
+        // CompleteWhenDead creatures from it).
         protected virtual void OnReconciled(List<SpawnedCreatureRecord> survivors) { }
 
         // Throttled entry point for owner-side reconciliation; call once per Update from the owner region.

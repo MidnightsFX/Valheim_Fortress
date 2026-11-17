@@ -377,7 +377,8 @@ namespace ValheimFortress
 
         /// <summary>When above 0, the next phase also starts once this many seconds have passed since the last one
         /// began, whether or not the creatures of earlier phases are dead (never before the current phase has finished
-        /// spawning). 0: a phase starts only once every creature is dead. Added in schema 5.</summary>
+        /// spawning, and after the 10 second regroup every phase after the first has). 0: a phase starts only once every
+        /// creature is dead. Added in schema 5.</summary>
         [DataMember(EmitDefaultValue = false, IsRequired = false)]
         public int PhaseIntervalSeconds { get; set; }
 
@@ -392,7 +393,8 @@ namespace ValheimFortress
         [DataMember(EmitDefaultValue = false, IsRequired = false)]
         public bool LoopPhases { get; set; }
 
-        /// <summary>Creature prefab names whose death ends the run: once one of them has spawned and none is left
+        /// <summary>Creatures whose death ends the run, named as in <see cref="VFHoardEntry.Creature"/> or by prefab
+        /// name: once one of them has spawned and none is left
         /// alive, the run completes (rewards are given and its other creatures removed), whatever phases remain.
         /// Added in schema 5.</summary>
         [DataMember(EmitDefaultValue = false, IsRequired = false)]
@@ -478,7 +480,7 @@ namespace ValheimFortress
         /// <summary>The run's total number of phases.</summary>
         public int Phases { get; set; }
 
-        /// <summary>Challenge creatures still alive.</summary>
+        /// <summary>Challenge creatures still alive. Once the run has ended, the creatures it removed.</summary>
         public int Alive { get; set; }
 
         /// <summary>True once every phase was cleared (rewards, if any, were given).</summary>
@@ -493,7 +495,8 @@ namespace ValheimFortress
         /// <summary>Creatures spawned so far over the whole run (0 on an older Valheim Fortress).</summary>
         public int Spawned { get; set; }
 
-        /// <summary>Creatures killed so far: <see cref="Spawned"/> minus <see cref="Alive"/>.</summary>
+        /// <summary>Creatures killed so far: <see cref="Spawned"/> minus <see cref="Alive"/>, so not ones the run
+        /// removed when it was claimed or stopped.</summary>
         public int Killed => System.Math.Max(0, Spawned - Alive);
 
         /// <summary>True when every phase is cleared and the run holds its rewards until <see cref="API.ClaimChallenge"/>.</summary>

@@ -89,6 +89,8 @@ For example, the meadows wildshrine will accept boar trophies, deer trophies and
 - The mountain shrine accepts trophies from the mountain.
 - The plains shrine accepts trophies from the plains.
 - The mistland shrine accepts trophies from the mistlands.
+- The ashlands shrine accepts trophies from the ashlands.
+- The deep north shrine accepts trophies from the deep north.
 
 </details>
 
@@ -211,7 +213,7 @@ Creatures have the following definition structure, which is also listed inside t
 #  spawnCost: 5            |- This is how many points from the wave pool it costs to spawn one creature, smaller values allow many more spawns.
 #  prefab: "Neck"          |- This is the creatures prefab, which will be used to spawn it.
 #  spawnType: "common"     |- This can either be: "common" or "rare" or "unique", uniques are "bosses", most of the wave will be made up of common spawns, with a few rare spawns per wave.
-#  biome: "Meadows"        |- This must be one of the following values: "Meadows", "BlackForest", "Swamp", "Mountain", "Plains", "Mistlands". The biome determines the levels that will recieve this spawn, and how the spawn might be adjusted to
+#  biome: "Meadows"        |- This must be one of the following values: "Meadows", "BlackForest", "Swamp", "Mountain", "Plains", "Mistlands", "AshLands", "DeepNorth". The biome determines the levels that will recieve this spawn, and how the spawn might be adjusted to
 #                             fit higher difficulty waves. eg: a greydwarf spawning into a swamp level wave will recieve 1 bonus star, since it is from the black forest, which is 1 biome behind the swamp.
 ```
 
@@ -446,7 +448,6 @@ If you like this mod maybe you'll like my other work
 - A big thank you to Margmas, Venture, Redseiko and Probablykory for providing some examples and answers to my silly questions (and continuing to do so!)
 - The valheim team for continuing to develop valheim, even after their initial roadmap!
 	- The continued blogposts about upcoming Valheim content, which got my gears grinding to make this mod
-- Unity Ultimate VFX for some or partial visual effects
 - Traslations credits to: Azathoth
 
 <!-- TOC --><a name="known-issues"></a>

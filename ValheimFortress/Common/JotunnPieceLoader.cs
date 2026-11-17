@@ -68,7 +68,6 @@ namespace ValheimFortress.Common
         private static bool BatchAddPieces() {
             foreach (PieceDefinition piecedef in resourceDefinitions) {
                 GameObject PiecePrefab = Assets.LoadAsset<GameObject>($"Assets/Custom/Pieces/{piecedef.Category}/{piecedef.prefab}.prefab");
-                Sprite PieceSprite = Assets.LoadAsset<Sprite>($"Assets/Custom/Icons/{piecedef.icon}.png");
 
                 if(piecedef.setupScripts != null) {
                     piecedef.setupScripts(PiecePrefab);
@@ -78,7 +77,6 @@ namespace ValheimFortress.Common
                     PieceTable = PieceTables.Hammer,
                     CraftingStation = $"{piecedef.requiredWorkstation_cfg.Value}",
                     Enabled = piecedef.enabled_cfg.Value,
-                    Icon = PieceSprite,
                     Category = piecedef.Category.ToString(),
                     Requirements = piecedef.recipe.recipeReqs.ToArray()
                 };

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using static ValheimFortress.Data.WaveStyles;
 
 namespace ValheimFortress.Challenge
@@ -757,7 +758,7 @@ namespace ValheimFortress.Challenge
                         tributeAmount = 2,
                         rewards = new Dictionary<string, short>
                         {
-                            { "haremeat", 35 },
+                            { "HareMeat", 35 },
                             { "ScaleHide", 45 },
                             { "CopperScrap", 65 },
                         },
@@ -784,7 +785,7 @@ namespace ValheimFortress.Challenge
                         tributeAmount = 3,
                         rewards = new Dictionary<string, short>
                         {
-                            { "bugmeat", 55 },
+                            { "BugMeat", 55 },
                             { "Carapace", 45 },
                             { "RoyalJelly", 35 },
                         },
@@ -840,7 +841,7 @@ namespace ValheimFortress.Challenge
                         {
                             { "Chain", 55 },
                             { "Bilebag", 45 },
-                            { "BlackCore", 15 },
+                            { "BlackCore", 65 },
                         },
                         hardMode = false,
                         siegeMode = false,
@@ -892,9 +893,9 @@ namespace ValheimFortress.Challenge
                         tributeAmount = 2,
                         rewards = new Dictionary<string, short>
                         {
-                            { "MushroomJotunpuffs", 35 },
+                            { "MushroomJotunPuffs", 35 },
                             { "JuteBlue", 45 },
-                            { "DvergrNeedle", 10 }, // still drops like 90
+                            { "DvergrNeedle", 80 },
                         },
                         hardMode = false,
                         siegeMode = false,
@@ -1041,7 +1042,7 @@ namespace ValheimFortress.Challenge
                             biome = Heightmap.Biome.DeepNorth,
                             waveFormat = WaveStyleName.Normal,
                             levelWarningLocalization = "$deepnorth_warning_wilderness",
-                            onlySelectMonsters = new List<string> {"Barka", "Seal", "Moose"},
+                            onlySelectMonsters = new List<string> {"Barka", "Moose"},
                             commonSpawnModifiers = new SpawnModifiers {linearIncreaseRandomWaveAdjustment = true},
                             rareSpawnModifiers = new SpawnModifiers {linearIncreaseRandomWaveAdjustment = true},
                             eliteSpawnModifiers = new SpawnModifiers {linearIncreaseRandomWaveAdjustment = true}
@@ -1056,7 +1057,7 @@ namespace ValheimFortress.Challenge
                             {"MemorialCoal", 100 },
                             {"Leatherstraps", 50 },
                             {"NornThread", 50 },
-                            {"BloodGoldKey", 1 }
+                            {"BloodGoldKey", 1000 }
                         },
                         hardMode = false,
                         siegeMode = false,
@@ -1083,8 +1084,8 @@ namespace ValheimFortress.Challenge
                         {
                             {"ElakingHairBundle", 50},
                             {"MoleClaws", 50},
-                            {"MoldKeys", 5},
-                            {"OOzeMork", 50},
+                            {"MoldKeys", 160},
+                            {"OozeMork", 50},
                             {"NornThread", 50}
                         },
                         hardMode = false,
@@ -1107,6 +1108,8 @@ namespace ValheimFortress.Challenge
                 }
             }
         };
+
+        private static readonly List<WildShrineConfiguration> DefaultDefinitions = new List<WildShrineConfiguration>(WildLevelDefinitions);
 
         public static WildShrineConfiguration GetWildShrineConfigurationForSpecificShrine(string shrine_name)
         {
@@ -1139,6 +1142,17 @@ namespace ValheimFortress.Challenge
                     WaveCreatureSettings.Validate(entry.wildShrineLevelsConfig[i]?.wildLevelDefinition?.creatureRules, $"WildShrines.yaml {entry.definitionForWildShrine} level {i + 1}");
                 }
             }
+
+            // WildShrines.yaml is only written when it is missing, so one from an older version lacks the shrines added
+            // since. Those are still placed in the world, and without settings they throw on every hover.
+            List<string> added = new List<string>();
+            foreach (WildShrineConfiguration builtin in DefaultDefinitions)
+            {
+                if (WildLevelDefinitions.Any(entry => string.Equals(entry?.definitionForWildShrine, builtin.definitionForWildShrine, StringComparison.OrdinalIgnoreCase))) { continue; }
+                WildLevelDefinitions.Add(builtin);
+                added.Add(builtin.definitionForWildShrine);
+            }
+            if (added.Count > 0) { Jotunn.Logger.LogInfo($"WildShrines.yaml has no entry for {string.Join(", ", added)}; using the built-in settings. Add an entry to change them."); }
         }
 
         public static string YamlWildShrineDefinition()

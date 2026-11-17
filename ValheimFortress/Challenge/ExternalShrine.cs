@@ -1,5 +1,4 @@
-﻿using Jotunn.Managers;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -79,6 +78,9 @@ namespace ValheimFortress.Challenge
         private IntZNetProperty api_phase_started_at;
         private ListStringZNetProperty api_complete_when_dead;
         private BoolZNetProperty api_required_seen;
+        // Set by the reconcile once the CompleteWhenDead creatures are down; Update ends the run on it.
+        private bool required_creatures_down;
+
         // The run's wave template (gzip+base64 YAML), held on the runner's own ZDO. A peer that takes ownership
         // mid-run reads it from here. The physical shrines broadcast the template to every connected peer over
         // the shared VF_levelsyaml_rpc instead; that RPC's client handler is bound to whichever shrine registered
@@ -169,10 +171,6 @@ namespace ValheimFortress.Challenge
             zNetView.Register(ClaimRpc, RPC_ClaimChallenge);
             zNetView.Register(StopRpc, RPC_StopChallenge);
 
-            // Reuse the same wave-config RPC the other shrines use; Jotunn returns the existing RPC for a
-            // repeated name so registering it again here is safe.
-            WaveDefinitionRPC = NetworkManager.Instance.AddRPC("VF_levelsyaml_rpc", VFConfig.OnServerRecieveConfigs, OnClientReceivePhaseConfigs);
-
             spawn_controller = this.gameObject.GetComponent<Spawner>();
             if (spawn_controller == null) { spawn_controller = this.gameObject.AddComponent<Spawner>(); }
             availablePhases = 0;
@@ -246,38 +244,23 @@ namespace ValheimFortress.Challenge
 
         private int Now => ZNet.instance != null ? (int)ZNet.instance.GetTimeSeconds() : 0;
 
-        // A timed phase is due once the interval has passed since the last one began, its spawning is done, and fewer
-        // creatures than the cap are alive.
+        // A timed phase is due once the interval has passed since the last one began, a phase is left to start (or the
+        // run loops), its spawning is done, and fewer creatures than the cap are alive.
         private bool TimedPhaseDue()
         {
             int interval = api_phase_interval.Get();
-            if (interval <= 0 || phase_spawn_in_flight.Get()) { return false; }
-            if (Now - api_phase_started_at.Get() < interval) { return false; }
+            if (interval <= 0 || Now - api_phase_started_at.Get() < interval) { return false; }
+            if (api_loop_from.Get() < 0 && currentPhase.Get() >= wave_phases_definitions.hordePhases.Count) { return false; }
+            if (phase_spawn_in_flight.Get())
+            {
+                // Only the spawn coroutine clears the flag, and it dies with an owner that leaves or reloads mid-spawn.
+                // The watchdog cannot help while creatures such as the boss are alive, so timed waves would stop for good.
+                if (spawn_controller != null && spawn_controller.IsSpawningPhase) { return false; }
+                Jotunn.Logger.LogWarning("API challenge: the last phase's spawn was lost with its owner; starting the next timed phase.");
+                phase_spawn_in_flight.Set(false);
+            }
             int cap = api_max_alive.Get();
             return cap <= 0 || spawned_creatures.Get() < cap;
-        }
-
-        // The run's required creatures (CompleteWhenDead): one has been alive, and none is now. Read from the spawn records
-        // and the creatures' ZDOs, as alive_creature_list follows each phase's plan rather than who is alive.
-        private bool RequiredCreaturesDown()
-        {
-            List<string> required = api_complete_when_dead.Get();
-            if (required == null || required.Count == 0 || ZDOMan.instance == null) { return false; }
-            bool any_alive = false;
-            foreach (SpawnedCreatureRecord record in spawned_creature_records.Get())
-            {
-                if (required.Contains(record.Name) && ZDOMan.instance.GetZDO(record.Id) != null)
-                {
-                    any_alive = true;
-                    break;
-                }
-            }
-            if (any_alive)
-            {
-                if (api_required_seen.Get() == false) { api_required_seen.Set(true); }
-                return false;
-            }
-            return api_required_seen.Get();
         }
 
         public override void StartChallengeMode()
@@ -335,8 +318,13 @@ namespace ValheimFortress.Challenge
                 ClaimNow();
                 return;
             }
-            // Completed and holding its rewards: nothing to run until the caller claims or stops it.
-            if (api_claimable.Get()) { return; }
+            // Completed and holding its rewards: nothing to run until the caller claims or stops it, but the creatures
+            // left are still counted so Killed and BossesAlive follow what players do meanwhile.
+            if (api_claimable.Get())
+            {
+                ReconcileIfDue();
+                return;
+            }
 
             // Kick off the challenge once BeginApiChallenge has staged the data.
             if (start_challenge.Get() == true)
@@ -374,7 +362,7 @@ namespace ValheimFortress.Challenge
                     return;
                 }
 
-                if (RequiredCreaturesDown())
+                if (required_creatures_down)
                 {
                     FinishChallenge();
                     return;
@@ -423,22 +411,23 @@ namespace ValheimFortress.Challenge
             {
                 Jotunn.Logger.LogInfo("API challenge complete; rewards held until claimed.");
                 challenge_active.Set(false);
+                // The spawner keeps placing a phase in flight (a timed run's boss can die mid-spawn) until it sees
+                // the run as no longer spawnable, which needs both flags down.
+                wave_definition_ready.Set(false);
+                phase_spawn_in_flight.Set(false);
+                ReconcileSpawnedCreatures();
                 api_claimable.Set(true);
                 return;
             }
             ClaimNow();
         }
 
-        // Ends the run with its rewards: removes any creatures still alive (stragglers when claimed early), pays out
-        // and tears the run down. Owner only.
+        // Ends the run with its rewards: pays out, then tears the run down, which removes any creatures still alive
+        // (stragglers when claimed early). Owner only.
         private void ClaimNow()
         {
             if (api_ended_at.Get() > 0) { return; }
             Jotunn.Logger.LogInfo("API challenge complete! Spawning rewards.");
-            // Stragglers are removed, not killed: keep the alive count as it was so Killed does not go up for them.
-            int stragglers = spawned_creatures.Get();
-            DestroyAllSpawnedCreatures();
-            spawned_creatures.Set(stragglers);
             api_claim_requested.Set(false);
             api_claimable.Set(false);
             AnnounceToNearbyPlayers(string.IsNullOrEmpty(api_wave_end_msg) ? "$shrine_challenge_complete" : api_wave_end_msg);
@@ -492,6 +481,16 @@ namespace ValheimFortress.Challenge
         {
             int alive = survivors.Count(r => IsUnique(r.Name));
             if (api_bosses_alive.Get() != alive) { api_bosses_alive.Set(alive); }
+
+            // CompleteWhenDead: one of the creatures has been alive, and none is now.
+            List<string> required = api_complete_when_dead.Get();
+            if (required.Count == 0) { return; }
+            if (survivors.Any(r => required.Contains(r.Name)))
+            {
+                if (!api_required_seen.Get()) { api_required_seen.Set(true); }
+                return;
+            }
+            required_creatures_down = api_required_seen.Get();
         }
 
         // Tears down all challenge state; the runner object is removed a little later (see Update).
@@ -500,7 +499,12 @@ namespace ValheimFortress.Challenge
             challenge_active.Set(false);
             start_challenge.Set(false);
             RemoteLocationPortals.ClearMapOverlay();
+            // Creatures removed here were not killed: the alive counts keep them so Killed (spawned - alive) and
+            // BossesDead stay true to the fight. Reconcile first so ones that died just before still count as killed.
+            ReconcileSpawnedCreatures();
+            int removed = spawned_creatures.Get();
             DestroyAllSpawnedCreatures();
+            spawned_creatures.Set(removed);
             boss_mode.Set(false);
             hard_mode.Set(false);
             siege_mode.Set(false);
@@ -584,11 +588,11 @@ namespace ValheimFortress.Challenge
             return api_creature_drops_enabled.Get();
         }
 
+        public override bool SuppressAnnouncements() { return api_suppress_announcements.Get(); }
+
         // Between-wave phrase for this run. Returns null (use the built-in pool) when the caller supplied none.
         // Ordered mode walks the list in order and wraps; random mode picks any entry. The cursor is ZDO-backed
         // so ordering stays correct if ownership transfers mid-run.
-        public override bool SuppressAnnouncements() { return api_suppress_announcements.Get(); }
-
         public override string SelectPhasePauseMessage()
         {
             List<string> phrases = api_between_wave_phrases.Get();

@@ -20,8 +20,13 @@ namespace ValheimFortress.Challenge
 
         public int GetCurrentHorde() { return CurrentCompletedHordes; }
 
+        // True from TrySpawningPhase until this spawner finishes the phase: unlike the shrine's ZDO flag, it is false on
+        // a peer whose spawn coroutine never ran or died (an owner change or reload mid-spawn).
+        public bool IsSpawningPhase { get; private set; }
+
         public void TrySpawningPhase(float wave_regroup_duration, bool send_message, List<HoardConfig> phase_hoard_configs, GameObject shrine, Vector3[] remote_spawn_locations)
         {
+            IsSpawningPhase = true;
             Jotunn.Logger.LogInfo($"Attempting phase spawn with {phase_hoard_configs.Count} hordes.");
             // Jotunn.Logger.LogInfo($"Starting Coroutine with: wave_regroup-{wave_regroup_duration}, send_message-{send_message}, phase_hoard_configs-{phase_hoard_configs}, shrine-{shrine}, remote_spawn_locations-{remote_spawn_locations}");
             StartCoroutine(SpawnPhaseController(wave_regroup_duration, send_message, phase_hoard_configs, shrine, remote_spawn_locations));
@@ -55,7 +60,7 @@ namespace ValheimFortress.Challenge
                 yield return new WaitForSeconds(5);
             }
             CurrentCompletedHordes = 0;
-            // record the wave completed
+            IsSpawningPhase = false;
             shrine.phaseCompleted();
 
 

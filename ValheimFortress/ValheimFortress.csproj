@@ -169,11 +169,21 @@
     <PostBuildEvent>xcopy "$(ProjectDir)\README.md" "$(ProjectDir)\Package\README.md" /q /y /i
 </PostBuildEvent>
   </PropertyGroup>
+  <!-- The Unity project (..\ValheimFortressUnity) builds vfbundle into AssetsEmbedded itself (menu Valheim Fortress/Build
+       Asset Bundle). Its prefabs reference the game's scripts, so it needs the game and BepInEx assemblies, which are
+       not committed: every build copies them in. -->
   <PropertyGroup>
-    <PreBuildEvent>xcopy "C:\Users\carls\Documents\projects\Valheim_Stuff\Unity_Valheim_mod_data\JotunnModUnity\AssetBundles\StandaloneWindows\vfbundle" "$(ProjectDir)\AssetsEmbedded\vfbundle" /q /y /i
-
-</PreBuildEvent>
+    <UNITY_FOLDER>$(SolutionDir)ValheimFortressUnity</UNITY_FOLDER>
   </PropertyGroup>
+  <ItemGroup>
+    <UnityAssemblies Include="$(BEPINEX_PATH)/core/BepInEx.dll;$(BEPINEX_PATH)/core/0Harmony.dll;$(BEPINEX_PATH)/core/Mono.Cecil.dll;$(BEPINEX_PATH)/core/MonoMod.Utils.dll;$(BEPINEX_PATH)/core/MonoMod.RuntimeDetour.dll" />
+    <UnityAssemblies Include="$(VALHEIM_MANAGED)/Assembly-CSharp.dll;$(VALHEIM_MANAGED)/assembly_valheim.dll;$(VALHEIM_MANAGED)/assembly_utils.dll;$(VALHEIM_MANAGED)/assembly_postprocessing.dll;$(VALHEIM_MANAGED)/assembly_sunshafts.dll;$(VALHEIM_MANAGED)/assembly_guiutils.dll;$(VALHEIM_MANAGED)/assembly_lux.dll;$(VALHEIM_MANAGED)/assembly_simplemeshcombine.dll;$(VALHEIM_MANAGED)/assembly_googleanalytics.dll" />
+    <UnityAssemblies Include="$(VALHEIM_MANAGED)/PlayFab.dll;$(VALHEIM_MANAGED)/PlayFabParty.dll;$(VALHEIM_MANAGED)/Splatform.dll;$(VALHEIM_MANAGED)/Splatform.Steam.dll;$(VALHEIM_MANAGED)/SoftReferenceableAssets.dll" />
+    <UnityAssemblies Include="$(VALHEIM_MANAGED)/com.rlabrecque.steamworks.net.dll;$(VALHEIM_MANAGED)/gui_framework.dll" />
+  </ItemGroup>
+  <Target Name="CopyToUnity" AfterTargets="Build" Condition="Exists('$(UNITY_FOLDER)')">
+    <Copy SourceFiles="@(UnityAssemblies);$(TargetDir)Jotunn.dll" DestinationFolder="$(UNITY_FOLDER)/Assets/Assemblies" SkipUnchangedFiles="true" Condition="Exists('%(FullPath)')" />
+  </Target>
   <!-- BEGIN mod-tools (managed block; replaced by `mod-tools setup`) -->
   <PropertyGroup>
     <RepoRoot Condition=" '$(RepoRoot)' == '' ">$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../'))</RepoRoot>

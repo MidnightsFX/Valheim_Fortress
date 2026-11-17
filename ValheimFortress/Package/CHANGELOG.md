@@ -1,9 +1,16 @@
   **0.41.0**
 ---
 ```
-- API Changes
-  - Supports other mods sending time based waves
-  
+- Adds wild shrines for the Ashlands and the Deep North
+- Adds Deep North creature definitions
+	- Servers with existing configs get the new wild shrines and creatures with their default settings.
+- Improves loot drop prevention for creatures that are spawned by the challenge shrines
+- The Mistlands wild shrine no longer gives coins in place of some meat and mushroom rewards in newly generated configs.
+- API updates
+	- Supports a boss initial wave
+	- Run waves without announcements
+	- Run waves until rewards are claimed
+	- Allow ending challenges early
 ```
 
   **0.40.0**

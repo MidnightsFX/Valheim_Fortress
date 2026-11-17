@@ -1,0 +1,15 @@
+assets/custom/locations/vfortress/vf_wild_shrine_blue1.prefab
+assets/custom/locations/vfortress/vf_wild_shrine_blue2.prefab
+assets/custom/locations/vfortress/vf_wild_shrine_blue3.prefab
+assets/custom/locations/vfortress/vf_wild_shrine_green1.prefab
+assets/custom/locations/vfortress/vf_wild_shrine_green2.prefab
+assets/custom/locations/vfortress/vf_wild_shrine_purple1.prefab
+assets/custom/locations/vfortress/vf_wild_shrine_red1.prefab
+assets/custom/locations/vfortress/vf_wild_shrine_yellow1.prefab
+assets/custom/pieces/misc/vfpiece_turret.prefab
+assets/custom/pieces/misc/vfshine_of_gladiator.prefab
+assets/custom/pieces/misc/vfshrine_of_challenge.prefab
+assets/custom/pieces/misc/vfstone_stakes.prefab
+assets/custom/pieces/vfortress/vf_creature_notify.prefab
+assets/custom/pieces/vfortress/vf_portal.prefab
+assets/custom/pieces/vfortress/vf_portal_destroy.prefab

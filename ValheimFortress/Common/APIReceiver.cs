@@ -143,7 +143,7 @@ namespace ValheimFortress
 
             // Spawner.SpawnHorde randomly indexes into whatever spawn locations it's given, so any number
             // (>= 1, already validated above) is fine; creatures emerge from a randomly chosen point per spawn.
-            PhasedWaveTemplate waves = BuildWaveTemplate(def);
+            PhasedWaveTemplate waves = BuildWaveTemplate(def, out bool first_phase_added);
             if (waves == null || waves.hordePhases == null || waves.hordePhases.Count == 0)
             {
                 Jotunn.Logger.LogWarning("VF-API: RunChallenge produced an empty wave template; nothing to run.");
@@ -172,11 +172,10 @@ namespace ValheimFortress
                 def.Difficulty, def.HardMode, def.BossMode, def.SiegeMode, def.EnableCreatureDrops, creature_drop_overrides,
                 def.WaveStartMessage, def.WaveEndMessage, def.DrawMapOverlay, def.BetweenWavePhrases, def.OrderedPhrases,
                 def.SpawnPortalVisuals, def.HoldRewardsUntilClaimed, def.SuppressAnnouncements);
-                
-            // A loop starts again after the first phase when that phase is the caller's own (FirstPhase).
-            bool has_first_phase = (def.ExplicitPhases == null || def.ExplicitPhases.Count == 0) && def.FirstPhase != null && def.FirstPhase.Count > 0;
-            int loop_from = def.LoopPhases ? (has_first_phase && waves.hordePhases.Count > 1 ? 1 : 0) : -1;
-            shrine.SetTiming(def.PhaseIntervalSeconds, def.MaxAliveCreatures, loop_from, def.CompleteWhenDead);
+
+            // A loop starts again after the caller's FirstPhase, so the boss it brings is not spawned again.
+            int loop_from = def.LoopPhases ? (first_phase_added && waves.hordePhases.Count > 1 ? 1 : 0) : -1;
+            shrine.SetTiming(def.PhaseIntervalSeconds, def.MaxAliveCreatures, loop_from, ToPrefabNames(def.CompleteWhenDead));
 
             Jotunn.Logger.LogInfo($"VF-API: started challenge with {waves.hordePhases.Count} phases at {rewardLocation}.");
             return shrine;
@@ -290,8 +289,19 @@ namespace ValheimFortress
             };
         }
 
-        private static PhasedWaveTemplate BuildWaveTemplate(VFChallengeDefinition def)
+        // Spawned creatures are recorded by prefab name, while callers name creatures as VFHoardEntry.Creature does
+        // (TheElder is gd_king): accept either.
+        private static List<string> ToPrefabNames(List<string> creatures)
         {
+            if (creatures == null) { return null; }
+            return creatures.Where(name => !string.IsNullOrEmpty(name))
+                .Select(name => Monsters.SpawnableCreatures.TryGetValue(name, out CreatureValues values) && values != null ? values.prefabName : name)
+                .Distinct().ToList();
+        }
+
+        private static PhasedWaveTemplate BuildWaveTemplate(VFChallengeDefinition def, out bool first_phase_added)
+        {
+            first_phase_added = false;
             // Explicit per-phase mode takes precedence when supplied.
             if (def.ExplicitPhases != null && def.ExplicitPhases.Count > 0)
             {
@@ -340,26 +350,22 @@ namespace ValheimFortress
             };
 
             PhasedWaveTemplate generated = Levels.generateRandomWaveWithOptions(cld, def.HardMode, def.BossMode, def.SiegeMode, max_creatures);
-            if (generated?.hordePhases != null && def.FinalPhase != null && def.FinalPhase.Count > 0)
-            {
-                AppendFinalPhase(generated, def.FinalPhase, def.CreatureRules);
-            }
-            if (generated?.hordePhases != null && def.FirstPhase != null && def.FirstPhase.Count > 0)
-            {
-                PrependFirstPhase(generated, def.FirstPhase, def.CreatureRules);
-            }
-            return generated;
-        }
+            if (generated?.hordePhases == null) { return generated; }
 
-        // Schema 5: FirstPhase adds one explicit phase before the generated waves (a boss the waves come to help).
-        private static void PrependFirstPhase(PhasedWaveTemplate template, List<VFHoardEntry> first_phase, List<VFCreatureRule> rules)
-        {
+            // Rules run once over the finished template, so wave 1 is the FirstPhase and wave -1 the FinalPhase. ApplyRules
+            // resets every horde's settings first, so the entries' own settings go on after it.
             List<KeyValuePair<HoardConfig, VFHoardEntry>> entry_settings = new List<KeyValuePair<HoardConfig, VFHoardEntry>>();
-            List<HoardConfig> horde_phase = BuildPhase(first_phase, entry_settings);
-            if (horde_phase.Count == 0) { return; }
-            template.hordePhases.Insert(0, horde_phase);
-            WaveCreatureSettings.ApplyRules(template, rules);
-            ApplyEntrySettings(entry_settings);
+            List<HoardConfig> final_phase = BuildPhase(def.FinalPhase, entry_settings);
+            List<HoardConfig> first_phase = BuildPhase(def.FirstPhase, entry_settings);
+            if (final_phase.Count > 0) { generated.hordePhases.Add(final_phase); }
+            if (first_phase.Count > 0) { generated.hordePhases.Insert(0, first_phase); }
+            if (final_phase.Count > 0 || first_phase.Count > 0)
+            {
+                WaveCreatureSettings.ApplyRules(generated, def.CreatureRules);
+                ApplyEntrySettings(entry_settings);
+            }
+            first_phase_added = first_phase.Count > 0;
+            return generated;
         }
 
         private static PhasedWaveTemplate BuildExplicitTemplate(List<List<VFHoardEntry>> phases, List<VFCreatureRule> rules)
@@ -377,18 +383,6 @@ namespace ValheimFortress
             WaveCreatureSettings.ApplyRules(template, rules);
             ApplyEntrySettings(entry_settings);
             return template;
-        }
-
-        // Schema 4: FinalPhase adds one explicit phase after the generated waves (a boss fight, for example).
-        // Rules are resolved again over the whole run so wave -1 means that final phase.
-        private static void AppendFinalPhase(PhasedWaveTemplate template, List<VFHoardEntry> final_phase, List<VFCreatureRule> rules)
-        {
-            List<KeyValuePair<HoardConfig, VFHoardEntry>> entry_settings = new List<KeyValuePair<HoardConfig, VFHoardEntry>>();
-            List<HoardConfig> horde_phase = BuildPhase(final_phase, entry_settings);
-            if (horde_phase.Count == 0) { return; }
-            template.hordePhases.Add(horde_phase);
-            WaveCreatureSettings.ApplyRules(template, rules);
-            ApplyEntrySettings(entry_settings);
         }
 
         private static List<HoardConfig> BuildPhase(List<VFHoardEntry> phase, List<KeyValuePair<HoardConfig, VFHoardEntry>> entry_settings)

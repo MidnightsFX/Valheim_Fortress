@@ -12,17 +12,15 @@ namespace ValheimFortress.Challenge
         {
             public static void Prefix(Character __instance)
             {
-                //Jotunn.Logger.LogInfo($"[Humanoid] Checking for removal of drops {__instance.m_nview.GetZDO().GetBool("VFDrops", true)} == false ?.");
                 if (__instance.m_nview.GetZDO().GetBool("VFDrops", true) == false) {
-                    //Jotunn.Logger.LogInfo($"Skipping CharacterDrop");
                     __instance.m_onDeath = null;
                 }
             }
         }
 
-        // Corpses lingering after the challenge complete drop loot since the
-        // challenge ends and nothing references it anymore. This surpresses it
-
+        // A dying creature's ragdoll takes its loot list from CharacterDrop directly (Ragdoll.SaveLootList), outside
+        // m_onDeath, and drops it when the corpse fades. The spawner only removes CharacterDrop on the peer that spawned
+        // the creature, so another peer's copy, or one reloaded after its run ended, still has it.
         [HarmonyPatch(typeof(CharacterDrop), nameof(CharacterDrop.GenerateDropList))]
         public static class SuppressChallengeDrops
         {

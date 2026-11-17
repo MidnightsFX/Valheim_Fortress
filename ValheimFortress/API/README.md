@@ -21,8 +21,9 @@ All calls go through reflection, so you never need a hard reference to the Valhe
 > if they drift too far, Valheim Fortress logs a clear warning telling you to re-copy `API.cs`. Re-copy
 > `API.cs` from the release you build against. **Note:** the 0.36.0 release changed the wire format
 > (simplified reward maps + schema version), 0.38.0 added creature rules (schema version 2), 0.39.0
-> added spawn modifiers (schema version 3), and 0.40.0 added challenge handles, spawn portals and health
-> multipliers (schema version 4); re-copy `API.cs` when updating to any of them. Definitions from an older
+> added spawn modifiers (schema version 3), 0.40.0 added challenge handles, spawn portals and health
+> multipliers (schema version 4), and 0.41.0 added timed and looping phases, claims, silent runs and run
+> progress (schema version 5); re-copy `API.cs` when updating to any of them. Definitions from an older
 > copy still run on a newer Valheim Fortress; only a copy newer than the installed version logs a warning.
 
 ### Required references
@@ -257,7 +258,30 @@ definition.FirstPhase = new List<ValheimFortress.VFHoardEntry> {
 definition.PhaseIntervalSeconds = 180;  // a new wave every 3 minutes, dead or not
 definition.MaxAliveCreatures = 40;      // but none while 40 or more challenge creatures are up
 definition.LoopPhases = true;           // after the last wave, start again from the first generated one
-definition.CompleteWhenDead = new List<string> { "Eikthyr" };  // creature prefab names
+definition.CompleteWhenDead = new List<string> { "Eikthyr" };  // creature names, as in VFHoardEntry.Creature
+```
+
+Every phase after the first also waits through a 10 second regroup before it spawns, and the next timed phase
+waits for the current one to finish spawning, so waves come somewhat further apart than `PhaseIntervalSeconds`.
+`FirstPhase` counts as wave 1 for creature rules. In a looping run `Spawned` keeps counting past `Expected`.
+
+### Hold the rewards, or end with them early (schema 5)
+
+With `HoldRewardsUntilClaimed`, a run whose last phase is cleared (or whose `CompleteWhenDead` creature falls)
+does not pay out: it becomes `Claimable` and waits. `ClaimChallenge` then gives the rewards and ends it. Called
+on a run still going, `ClaimChallenge` pays out at once and removes the creatures left; they do not count as
+killed. `StopChallenge` ends either kind without rewards. Check `API.SupportsClaim` first.
+
+```csharp
+definition.HoldRewardsUntilClaimed = true;
+definition.SuppressAnnouncements = true;  // no start, end or between-wave messages for this run
+string handle = ValheimFortress.API.StartChallenge(definition, spawnPoints, rewardLocation);
+
+// Later:
+ValheimFortress.VFChallengeState state = ValheimFortress.API.GetChallengeState(handle);
+if (state != null && state.Claimable && state.BossesDead) {
+    ValheimFortress.API.ClaimChallenge(handle);
+}
 ```
 
 ## Reference
@@ -279,6 +303,8 @@ definition.CompleteWhenDead = new List<string> { "Eikthyr" };  // creature prefa
 | `string StartChallenge(VFChallengeDefinition definition, Vector3[] spawnPoints, Vector3 rewardLocation)` | Starts a challenge and returns its handle, or `null`. |
 | `VFChallengeState GetChallengeState(string handle)` | The run's state as this peer sees it, or `null` for an invalid handle. |
 | `bool StopChallenge(string handle)` | Ends the run without rewards. True when the request was sent. |
+| `bool SupportsClaim` | True when `ClaimChallenge` exists (schema 5). |
+| `bool ClaimChallenge(string handle)` | Ends the run with its rewards: a claimable run now, or a running one early (its creatures are removed). True when the request was sent. |
 
 ### `VFChallengeState`
 
@@ -288,12 +314,15 @@ definition.CompleteWhenDead = new List<string> { "Eikthyr" };  // creature prefa
 | `bool Starting` | Between the start call and the first wave. |
 | `bool Active` | Waves are running. |
 | `int Phase`, `int Phases` | Phases started so far, and the total. |
-| `int Alive` | Challenge creatures still alive. |
-| `bool Completed` | Every phase was cleared; rewards, if any, were given. |
+| `int Alive` | Challenge creatures still alive. Once the run has ended, the creatures it removed. |
+| `bool Completed` | The run ended with its rewards given (every phase cleared, or claimed). |
 | `bool Stopped` | The run was ended with `StopChallenge`. |
-| `int Expected` | Creatures the run's wave template plans in total. |
-| `int Spawned` | Creatures spawned so far over the whole run. |
-| `int Killed` | `Spawned - Alive`; with `Expected` this gives the run's progress. |
+| `int Expected` | Creatures the run's wave template plans in total (schema 5). |
+| `int Spawned` | Creatures spawned so far over the whole run (schema 5). |
+| `int Killed` | `Spawned - Alive`: creatures that died, not ones the run removed. With `Expected` this gives the run's progress. |
+| `bool Claimable` | The run is over and holds its rewards until `ClaimChallenge` (schema 5). |
+| `int Bosses`, `int BossesSpawned`, `int BossesAlive` | Unique creatures the run plans, has spawned, and has alive (schema 5). |
+| `bool BossesDead` | The run planned bosses and every one has spawned and died. |
 
 ### `VFChallengeDefinition`
 
@@ -316,8 +345,11 @@ full amount.
 
 Timing (schema 5): `PhaseIntervalSeconds` starts the next phase after that many seconds even with creatures alive
 (0: only once all are dead), `MaxAliveCreatures` holds a timed phase back while that many are alive (0: no limit),
-`LoopPhases` starts again from the first generated phase after the last, and `CompleteWhenDead` (creature prefab
-names) ends the run once one of them has spawned and none is alive.
+`LoopPhases` starts again from the first generated phase after the last, and `CompleteWhenDead` (creature names
+or prefab names) ends the run once one of them has spawned and none is alive.
+
+Ending (schema 5): `HoldRewardsUntilClaimed` makes a finished run wait as `Claimable` until `ClaimChallenge`.
+`SuppressAnnouncements` skips the start, end and between-wave messages.
 
 Explicit mode: `ExplicitPhases` (overrides tuned fields when set). Each `VFHoardEntry` has `Creature`,
 `Amount`, `Stars` and optional `Modifiers` and `HealthMultiplier`.
@@ -355,4 +387,4 @@ only: renders for the instance driving the run (single-player or the P2P host) a
 headless dedicated server. Defaults to false. `SpawnPortalVisuals` — when true, a spawn portal opens at
 each spawn point while the run is active (schema 4).
 
-Supported biomes for generation: Meadows, BlackForest, Swamp, Mountain, Plains, Mistlands, AshLands.
+Supported biomes for generation: Meadows, BlackForest, Swamp, Mountain, Plains, Mistlands, AshLands, DeepNorth.

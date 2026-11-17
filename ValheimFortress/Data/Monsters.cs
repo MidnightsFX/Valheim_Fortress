@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using ValheimFortress.Challenge;
 
 namespace ValheimFortress.Data
@@ -90,7 +91,6 @@ namespace ValheimFortress.Data
             {"DvergerDeepNorth", new CreatureValues {spawnCost = 50, prefabName = "DvergerDeepNorth", spawnType = COMMON, biome = Heightmap.Biome.DeepNorth, enabled = true, dropsEnabled = false} },
             {"BlobMork", new CreatureValues {spawnCost = 30, prefabName = "BlobMork", spawnType = COMMON, biome = Heightmap.Biome.DeepNorth, enabled = true, dropsEnabled = false} },
             {"FallenWarrior", new CreatureValues {spawnCost = 50, prefabName = "FallenWarrior", spawnType = COMMON, biome = Heightmap.Biome.DeepNorth, enabled = true, dropsEnabled = false} },
-            {"Seal", new CreatureValues {spawnCost = 30, prefabName = "Seal", spawnType = COMMON, biome = Heightmap.Biome.DeepNorth, enabled = true, dropsEnabled = false} },
             {"Moose", new CreatureValues {spawnCost = 50, prefabName = "Moose", spawnType = COMMON, biome = Heightmap.Biome.DeepNorth, enabled = true, dropsEnabled = false} },
             // Boss Creatures
             {"Eikthyr", new CreatureValues {spawnCost = 40, prefabName = "Eikthyr", spawnType = UNIQUE, biome = Heightmap.Biome.Meadows, enabled = true, dropsEnabled = false} },
@@ -103,6 +103,8 @@ namespace ValheimFortress.Data
             {"FrozenKing", new CreatureValues {spawnCost = 1000, prefabName = "FrozenKing", spawnType = UNIQUE, biome = Heightmap.Biome.DeepNorth, enabled = true, dropsEnabled = false} },
         };
 
+        private static readonly Dictionary<String, CreatureValues> DefaultCreatures = new Dictionary<string, CreatureValues>(SpawnableCreatures);
+
         public static void UpdateSpawnableCreatures(SpawnableCreatureCollection spawnables)
         {
             SpawnableCreatures.Clear();
@@ -111,6 +113,12 @@ namespace ValheimFortress.Data
                 if (VFConfig.EnableDebugMode.Value) { Jotunn.Logger.LogInfo($"Updating Creature Entry {entry.Key} Prefab:{entry.Value.prefabName} SpawnCost:{entry.Value.spawnCost} Biome:{entry.Value.biome} SpawnType:{entry.Value.spawnType}"); }
                 SpawnableCreatures.Add(entry.Key, entry.Value);
             }
+
+            // SpawnableCreatures.yaml is only written when it is missing, so one from an older version lacks the creatures
+            // added since, and the built-in wild shrines that use them would spawn nothing.
+            List<string> added = DefaultCreatures.Keys.Where(key => !SpawnableCreatures.ContainsKey(key)).ToList();
+            foreach (string key in added) { SpawnableCreatures.Add(key, DefaultCreatures[key]); }
+            if (added.Count > 0) { Jotunn.Logger.LogInfo($"SpawnableCreatures.yaml has no entry for {string.Join(", ", added)}; using the built-in settings. Add an entry to change or disable them."); }
         }
 
         public static string YamlCreatureDefinition()

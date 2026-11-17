@@ -23,7 +23,6 @@ namespace ValheimFortress
             challengeAlter.Name = "Alter of Challenge";
             challengeAlter.Category = PieceCategory.Misc;
             challengeAlter.prefab = "VFshrine_of_challenge";
-            challengeAlter.icon = "shrine_of_challenge";
             challengeAlter.enabled = true;
             challengeAlter.requiredWorkstation = "piece_workbench";
             challengeAlter.recipe = new PieceCostDefinition() {
@@ -45,7 +44,6 @@ namespace ValheimFortress
             arenaAlter.Name = "Alter of Arena";
             arenaAlter.Category = PieceCategory.Misc;
             arenaAlter.prefab = "VFshine_of_gladiator";
-            arenaAlter.icon = "alter_of_arena";
             arenaAlter.enabled = true;
             arenaAlter.requiredWorkstation = "piece_workbench";
             arenaAlter.recipe = new PieceCostDefinition() {
@@ -69,7 +67,6 @@ namespace ValheimFortress
             stoneSpikes.Name = "Stone Spikes";
             stoneSpikes.Category = PieceCategory.Misc;
             stoneSpikes.prefab = "VFstone_stakes";
-            stoneSpikes.icon = "stone_spikes";
             stoneSpikes.enabled = true;
             stoneSpikes.requiredWorkstation = "piece_stonecutter";
             stoneSpikes.recipe = new PieceCostDefinition()
@@ -86,7 +83,6 @@ namespace ValheimFortress
             autoBallista.Name = "Auto Ballista";
             autoBallista.Category = PieceCategory.Misc;
             autoBallista.prefab = "VFpiece_turret";
-            autoBallista.icon = "modified_turret";
             autoBallista.enabled = true;
             autoBallista.requiredWorkstation = "piece_artisanstation";
             autoBallista.recipe = new PieceCostDefinition() {

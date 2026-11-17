@@ -89,6 +89,8 @@ For example, the meadows wildshrine will accept boar trophies, deer trophies and
 - The mountain shrine accepts trophies from the mountain.
 - The plains shrine accepts trophies from the plains.
 - The mistland shrine accepts trophies from the mistlands.
+- The ashlands shrine accepts trophies from the ashlands.
+- The deep north shrine accepts trophies from the deep north.
 
 </details>
 
@@ -199,7 +201,7 @@ Creatures have the following definition structure, which is also listed inside t
 #  spawnCost: 5            |- This is how many points from the wave pool it costs to spawn one creature, smaller values allow many more spawns.
 #  prefab: "Neck"          |- This is the creatures prefab, which will be used to spawn it.
 #  spawnType: "common"     |- This can either be: "common" or "rare" or "unique", uniques are "bosses", most of the wave will be made up of common spawns, with a few rare spawns per wave.
-#  biome: "Meadows"        |- This must be one of the following values: "Meadows", "BlackForest", "Swamp", "Mountain", "Plains", "Mistlands". The biome determines the levels that will recieve this spawn, and how the spawn might be adjusted to
+#  biome: "Meadows"        |- This must be one of the following values: "Meadows", "BlackForest", "Swamp", "Mountain", "Plains", "Mistlands", "AshLands", "DeepNorth". The biome determines the levels that will recieve this spawn, and how the spawn might be adjusted to
 #                             fit higher difficulty waves. eg: a greydwarf spawning into a swamp level wave will recieve 1 bonus star, since it is from the black forest, which is 1 biome behind the swamp.
 ```
 
@@ -434,7 +436,6 @@ If you like this mod maybe you'll like my other work
 - A big thank you to Margmas, Venture, Redseiko and Probablykory for providing some examples and answers to my silly questions (and continuing to do so!)
 - The valheim team for continuing to develop valheim, even after their initial roadmap!
 	- The continued blogposts about upcoming Valheim content, which got my gears grinding to make this mod
-- Unity Ultimate VFX for some or partial visual effects
 - Traslations credits to: Azathoth
 
 <!-- TOC --><a name="known-issues"></a>
@@ -444,6 +445,14 @@ If you like this mod maybe you'll like my other work
 - Mobs can form a 'spawn tower' (especially common when using the Arena spawner with high spawn limits)
 - Automated turret likes to fire off into space instead of hitting its target occassionally (its aim isn't perfect, so sometimes this is intended)
 	- If you can reliably reproduce this issue please report it on the Github or Discord
+
+## Building from source
+- `ValheimFortress.sln` builds the mod. Every build also copies the game and BepInEx assemblies into `ValheimFortressUnity/Assets/Assemblies`, which the Unity project needs and git ignores.
+- `ValheimFortressUnity` is the mod's Unity project (Unity 6000.0.75f1, the version the game runs). Its prefabs, textures and materials live under `Assets/Custom`, and none come from paid asset packs.
+- Menu **Valheim Fortress/Build Asset Bundle** builds `vfbundle` into `ValheimFortress/AssetsEmbedded` and lists what it holds in `ValheimFortressUnity/vfbundle.txt`. Rebuild the mod afterwards to embed it.
+- The wild shrines are one base prefab and a variant per biome. **Valheim Fortress/Rebuild Wild Shrines** rewrites the variants from the table in `Assets/Editor/VFWildShrines.cs`, so change a shrine there.
+- `ValheimFortressUnity/Tools/generate_vfx_textures.py` regenerates the particle textures and their materials.
+- Materials and textures named `JVLmock_` are placeholders for the game's own, which Jotunn swaps in when the prefab is registered. A texture mock names the game texture; a material mock such as `JVLmock_TraderRune__default` names a game prefab and the child whose material it takes, which is needed when that material only loads with its prefab.
 
 ---
 

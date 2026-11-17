@@ -13,8 +13,8 @@ namespace ValheimFortress.Challenge
         const String RARE = CONST.RARE;
         const String ELITE = CONST.ELITE;
         const String UNIQUE = CONST.UNIQUE;
-        static readonly private Heightmap.Biome[] biomes = { Heightmap.Biome.Meadows, Heightmap.Biome.BlackForest, Heightmap.Biome.Swamp, Heightmap.Biome.Mountain, Heightmap.Biome.Plains, Heightmap.Biome.Mistlands, Heightmap.Biome.AshLands,
-        Heightmap.Biome.DeepNorth};
+        static readonly private Heightmap.Biome[] biomes = { Heightmap.Biome.Meadows, Heightmap.Biome.BlackForest, Heightmap.Biome.Swamp, Heightmap.Biome.Mountain,
+            Heightmap.Biome.Plains, Heightmap.Biome.Mistlands, Heightmap.Biome.AshLands, Heightmap.Biome.DeepNorth };
         static readonly private String[] spawntypes = { COMMON, RARE, ELITE, UNIQUE };
 
         // Reference used to build a wave template

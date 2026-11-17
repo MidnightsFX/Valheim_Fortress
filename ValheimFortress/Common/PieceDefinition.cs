@@ -23,7 +23,6 @@ namespace ValheimFortress.Common
         public string DisplayName { get; set; }
         public PieceCategory Category { get; set; }
         public string prefab { get; set; }
-        public string icon { get; set; }
 
         public BepInEx.Configuration.ConfigEntry<bool> enabled_cfg { get; set; }
         public bool enabled { get; set; } = true;
